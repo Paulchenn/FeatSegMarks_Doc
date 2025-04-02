@@ -1,0 +1,16 @@
+
+TeXFiles/.DS_Store
+*.aux
+*.auxlock
+*.bbl
+*.bcf
+*.blg
+*.glo
+*.ist
+*.lof
+*.log
+*.lot
+*.out
+*.xml
+*.gz
+*.toc
