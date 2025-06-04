@@ -16,3 +16,4 @@ TeXFiles/.DS_Store
 *.toc
 *.fdb_latexmk
 *.fls
+build/thesis.synctex(busy)
