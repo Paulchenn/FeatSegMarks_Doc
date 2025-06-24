@@ -1,24 +1,193 @@
 \chapter{Stand der Technik}
 \label{ch:StandTechnik}
+Die Extraktion robuster und invarianter Merkmale bildet eine zentrale Grundlage für bildbasierte Regelverfahren im Visual Servoing. 
+Klassische Methoden wie SIFT (Abkürzung) oder ORB (Abkürzung) liefern stabilisierte Featurepunkte, stoßen jedoch bei komplexen Szenen und hohen 
+Echtzeitanforderungen an ihre Grenzen. Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und 
+segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen 
+verbessern kann.
+In diesem Abschnitt wird der aktuelle Stand der Technik vorgestellt: Zunächst werden klassische und moderne Verfahren zur 
+Feature-Extraktion verglichen. Anschließend folgt ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und 
+Mask R-CNN, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in 
+Feature-Extraktion auszeichnen.
+
+\section{Klassische Verfahren der Feature-Extraktion}
+\label{sec:KlassischeVerfahren}
+Klassische Verfahren der Feature-Extraktion basieren auf fest definierten Algorithmen, die charakteristische Bildpunkte 
+anhand geometrischer und struktureller Merkmale erkennen. Diese Techniken ermöglichen eine robuste 
+Detektion und Beschreibung von Features, insbesondere hinsichtlich Skalierung, Rotation und Beleuchtung, und bilden die 
+Grundlage vieler etablierter Anwendungen im Bereich der Robotik und Bildverarbeitung.
+
+\subsection{SIFT}
+Das SIFT-Verfahren, eingeführt von David Lowe im Jahr 2004, ist eines 
+der bekanntesten klassischen Verfahren zur Merkmalsextraktion in der Computer Vision.Es wurde entwickelt, um 
+robuste lokale Merkmale in Bildern zu identifizieren, die invariant gegenüber Skalierung, Rotation und teilweise 
+auch Beleuchtungsänderungen sowie perspektivischen Transformationen sind. Der Algorithmus besteht aus mehreren 
+aufeinanderfolgenden Schritten. Zunächst wird eine sogenannte Scale Space erstellt, in dem das Originalbild mehrfach mit 
+Gauß-Filtern unterschiedlicher Standardabweichung gefiltert wird. Durch Subtraktion benachbarter gefilterter 
+Bilder entstehen Differenzen von Gaußbildern (DoG), in denen potenzielle Keypoints als lokale Extrema (Minima oder Maxima)
+detektiert werden. Diese Kandidatenpunkte werden anschließend auf ihre Stabilität geprüft, indem beispielsweise Kantenpunkte 
+verworfen werden, die zu sensitiv gegenüber Rauschen sind. Danach wird jedem Keypoint eine Orientierung zugewiesen, die auf 
+lokalen Gradienten basiert, wodurch das Verfahren rotationsinvariant wird. Im letzten Schritt wird um jeden Keypoint ein 
+Deskriptor generiert: Dabei handelt es sich um einen Vektor, der die lokalen Gradienteninformationen in der Umgebung 
+zusammenfasst und somit den Charakter des lokalen Bildausschnitts beschreibt. Der SIFT-Deskriptor ist 128-dimensional 
+und ermöglicht eine robuste Wiedererkennung von Merkmalen auch unter veränderten Bedingungen. Aufgrund seiner Robustheit
+wird SIFT in vielen Anwendungen wie Objekterkennung, Bildregistrierung oder Robotik eingesetzt, obwohl es im Vergleich zu
+modernen, lernbasierten Methoden relativ rechenintensiv ist.
+
+\subsection{SURF}
+Das SURF-Verfahren (Speeded-Up Robust Features), entwickelt von Herbert Bay et al. im Jahr 2006, ist ein beschleunigter 
+und optimierter Nachfolger des bekannten SIFT-Verfahrens zur robusten Merkmalsextraktion in Bildern. 
+Ziel von SURF ist es, bei vergleichbarer Robustheit eine deutlich höhere Rechengeschwindigkeit zu erreichen, sodass sich 
+das Verfahren besser für Echtzeitanwendungen eignet. Die zentrale Idee besteht darin, die aufwendige Faltung mit Gauss-Filtern 
+durch Integralbilder und Approximierungen mit Box-Filtern zu ersetzen, was eine erheblich schnellere Berechnung ermöglicht. 
+SURF beginnt wie SIFT mit der Detektion interessanter Punkte, allerdings verwendet es anstelle der Differenz von 
+Gauss-Bildern eine Hessian-Matrix-basierte Detektion. Die Determinante dieser Matrix wird effizient mithilfe von 
+Integralbildern berechnet, wodurch verschiedene Skalenebenen deutlich schneller durchlaufen werden können. 
+Zur Beschreibung der Merkmale generiert SURF einen Deskriptor, der auf den Verteilungen von Helligkeitsgradienten basiert – 
+ähnlich wie bei SIFT, jedoch in kompakterer und effizienterer Form. Typischerweise ist der SURF-Deskriptor 64-dimensional 
+(eine erweiterte Version ist 128-dimensional) und enthält Informationen über die lokale Struktur eines Bildbereichs. 
+Ein weiterer Unterschied zu SIFT liegt in der Verwendung von Haar-Wavelet-Filtern zur Extraktion der Gradienteninformationen, 
+die durch die Nutzung von Integralbildern ebenfalls sehr schnell berechnet werden können. Durch seine Invarianz gegenüber 
+Rotation, Skalierung und partieller Beleuchtungsveränderung eignet sich SURF gut für Aufgaben wie Objektwiedererkennung, 
+Bildregistrierung und Robotik. Allerdings ist SURF – im Gegensatz zu SIFT – durch Patente eingeschränkt und nicht 
+vollständig frei verfügbar, was den Einsatz in Open-Source-Projekten erschwert. 
+
+\subsection{ORB}
+Das ORB-Verfahren, vorgestellt von Rublee et al. im Jahr 2011, ist ein effizientes und 
+patentfreies Verfahren zur Merkmalsextraktion, das speziell für Echtzeitanwendungen und eingebettete Systeme entwickelt wurde. 
+ORB kombiniert zwei bekannte Verfahren – FAST (Features from Accelerated Segment Test) zur Detektion von Keypoints und 
+BRIEF (Binary Robust Independent Elementary Features) zur Beschreibung – und erweitert diese um wichtige Eigenschaften 
+wie Rotationsinvarianz und Robustheit gegenüber Skalierung. Ziel ist es, eine leistungsfähige Alternative zu SIFT und SURF 
+zu bieten, die deutlich schneller arbeitet und frei verwendbar ist. Im ersten Schritt verwendet ORB den FAST-Algorithmus, 
+um schnell Ecken im Bild zu detektieren. Diese Punkte sind jedoch nicht automatisch skalen- oder rotationsinvariant. 
+Um dies zu kompensieren, erweitert ORB FAST um eine Harris-Korner-Messung, um stabilere Keypoints auszuwählen. 
+Anschließend wird jedem Keypoint eine Hauptorientierung zugewiesen, indem die Intensitätsverteilungen im lokalen Bildumfeld 
+analysiert werden. Das ist entscheidend für die Rotationstoleranz des Verfahrens. Im zweiten Schritt greift ORB auf den 
+BRIEF-Deskriptor zurück, der sehr kompakt und effizient ist. BRIEF funktioniert auf Basis binärer Vergleiche von 
+Pixelintensitäten innerhalb eines Patchs. ORB erweitert BRIEF zu rBRIEF (rotated BRIEF), indem die Sampling-Punkte 
+entsprechend der berechneten Orientierung des Keypoints angepasst werden, was eine robuste Rotationstoleranz gewährleistet. 
+Das Ergebnis sind binäre Deskriptoren, die sehr speicher- und rechenfreundlich sind, sich aber dennoch gut zum Matching eignen.
+ORB ist skalierbar, echtzeitfähig und frei von Lizenzbeschränkungen, was es besonders attraktiv für mobile Anwendungen, 
+Augmented Reality und Robotik macht. Trotz seiner Effizienz kann ORB in Bezug auf Genauigkeit und Wiedererkennung in sehr 
+komplexen Szenen leicht hinter modernen lernbasierten Verfahren zurückfallen. 
+
+\section{Moderne Verfahren der Feature-Extraktion}
+\label{sec:ModerneVerfahren}
+Moderne Verfahren der Feature-Extraktion nutzen tiefenlernbasierte Modelle, um Merkmale direkt aus Bilddaten zu lernen. 
+Einige Ansätze bieten eine hohe Robustheit gegenüber komplexen Szenen, Beleuchtungsänderungen und Verdeckungen. Sie ermöglichen
+eine präzisere und anpassungsfähigere Merkmalserkennung als klassische Methoden.
+
+\subsection{SuperPoint}
+SuperPoint ist ein lernbasiertes Verfahren zur Detektion und Beschreibung von lokalen Bildmerkmalen, das 2018 von DeTone, 
+Malisiewicz und Rabin vorgestellt wurde. Es unterscheidet sich grundlegend von klassischen Ansätzen wie SIFT oder ORB, 
+da es ein neuronales Netzwerk verwendet, das sowohl Keypoints erkennt als auch ihre Deskriptoren berechnet – und das in 
+einem gemeinsamen, vollkonvolutionalen Pipeline. SuperPoint wurde insbesondere für Echtzeitanwendungen in der Robotik und 
+Augmented Reality entwickelt und zeichnet sich durch hohe Wiederholbarkeit, Robustheit und Geschwindigkeit aus. Das Verfahren 
+basiert auf einem zweistufigen Trainingsansatz. Zunächst wird ein „MagicPoint“-Netzwerk auf synthetisch erzeugten Bildern
+mit künstlichen Punkten trainiert. Dieses Netzwerk lernt, robuste Keypoints zu erkennen, allerdings nur in stark vereinfachten 
+Szenen. In einem zweiten Schritt wird das Netzwerk mit echten Bildern und Homographie-Anpassung selbstüberwacht weitertrainiert. 
+Dabei werden Bildpaare durch bekannte Transformationen verknüpft, sodass das Netzwerk lernt, konsistente Keypoints und 
+passende Deskriptoren zu erzeugen – ganz ohne manuelle Annotation. Das SuperPoint-Netzwerk erzeugt zwei Ausgaben: eine 
+Keypoint-Heatmap und eine dichte Deskriptormatrix. Die Heatmap zeigt, wo sich im Bild relevante Punkte befinden, während 
+die Deskriptoren die Bildumgebung dieser Punkte als Vektoren beschreiben. Dadurch eignet sich SuperPoint besonders gut für 
+Aufgaben wie SLAM (Simultaneous Localization and Mapping), Visual Odometry oder Structure from Motion. Ein großer Vorteil 
+von SuperPoint ist die Kombination aus hoher Genauigkeit und Echtzeitfähigkeit auf GPU-Hardware. Es ist robuster gegenüber 
+Skalierung, Rotation und sogar moderaten Beleuchtungsänderungen. Gleichzeitig ermöglicht das gemeinsame Lernen von Detektion 
+und Beschreibung eine bessere Abstimmung zwischen diesen beiden Komponenten im Vergleich zu modularen Verfahren.
+
+\subsection{R2D2}
+Repeatable and Reliable Detector and Descriptor (R2D2) ist ein lernbasiertes Verfahren zur lokalen Merkmalsextraktion, 
+das 2019 von Revaud et al. eingeführt wurde. Ziel dieses Ansatzes ist es, Bildpunkte zu identifizieren, die sowohl 
+wiederholbar (also unter verschiedenen Ansichten des gleichen Objekts stabil) als auch diskriminativ (gut unterscheidbar
+von anderen Punkten) sind. Im Gegensatz zu klassischen Methoden wie SIFT oder ORB, die fest programmierte Schritte für 
+Keypoint-Detektion und Deskriptor-Bildung verwenden, setzt R2D2 auf ein neuronales Netz, das diese Eigenschaften direkt 
+lernt. Das Kernprinzip von R2D2 besteht darin, ein vollkonvolutionales Netzwerk zu trainieren, das drei Karten ausgibt: 
+eine Deskriptorkarte, eine Wiederholbarkeitskarte und eine Zuverlässigkeitskarte. Die Deskriptorkarte enthält Vektoren, 
+die lokale Bildregionen beschreiben. Die Wiederholbarkeitskarte zeigt, wie stabil ein Punkt bei Transformationen (z.B. Rotation, Skalierung) ist, 
+während die Zuverlässigkeitskarte angibt, wie gut sich ein Punkt zum Matching eignet. Die Kombination dieser drei Informationen erlaubt es, 
+besonders robuste und eindeutig zuzuordnende Punkte auszuwählen. Im Training nutzt R2D2 Bildpaare mit bekannten geometrischen Transformationen 
+(z.B. Homographien), um die gewünschten Eigenschaften der Keypoints zu erzwingen. Die Verlustfunktion belohnt Punkte, 
+die unter diesen Transformationen wieder auftauchen (hohe Wiederholbarkeit), und bestraft Punkte, deren Deskriptoren zu 
+ähnlich oder zu unspezifisch sind (niedrige Zuverlässigkeit). Dadurch entsteht ein Verfahren, das sowohl präzise als auch 
+effizient ist – eine wichtige Eigenschaft für visuelle SLAM-Systeme oder Structure-from-Motion. R2D2 ist insbesondere für 
+schwierige Bildbedingungen wie starke Perspektivwechsel oder Wiederholungsmuster (z.B. Zäune, Fensterreihen) geeignet. 
+Durch die gleichzeitige Optimierung von Detektor- und Deskriptoreigenschaften hebt sich das Verfahren von Ansätzen wie 
+SuperPoint ab, die diese Komponenten getrennt behandeln. 
 
 
+\subsection{LoFTR}
+Local Feature TRansformer (LoFTR) ist ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung, das 2021 
+von Sun et al. vorgestellt wurde. Im Gegensatz zu klassischen Methoden wie SIFT oder auch hybriden Deep-Learning-Ansätzen 
+wie SuperPoint + SuperGlue, verzichtet LoFTR vollständig auf die explizite Detektion einzelner Keypoints. 
+Stattdessen verfolgt es einen „detector-free“ Ansatz, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- 
+oder Patch-Ebene berechnet werden. Dies ermöglicht eine deutlich robustere Zuordnung – insbesondere in texturarmen oder stark 
+verzerrten Szenen, in denen klassische Verfahren oft versagen. Der Kern von LoFTR ist ein Transformer-basiertes Netzwerk, 
+das Bildpaare gleichzeitig verarbeitet und über sogenannte coarse-to-fine Matching-Strategien hochpräzise Korrespondenzen 
+berechnet. Zunächst werden die Bildmerkmale durch ein geteiltes CNN extrahiert, anschließend mit einem „coarse-level transformer“ 
+global abgestimmt, um grobe Korrespondenzen zu finden. Danach verfeinert ein „fine-level transformer“ die Matches lokal, 
+um subpixelgenaue Punktpaarungen zu erzeugen. Dabei nutzt LoFTR sowohl Selbst-Attention innerhalb eines Bildes als auch 
+Cross-Attention zwischen den beiden Bildern – ähnlich wie es in der Sprachverarbeitung bei Übersetzungsmodellen bekannt ist. 
+Ein bedeutender Vorteil von LoFTR ist die Fähigkeit, auch in schwierigen Szenarien wie extremen Blickwinkeländerungen, 
+schwacher Textur oder Wiederholungsmustern robuste Matches zu liefern. Dies macht es besonders wertvoll für Anwendungen wie 
+Structure-from-Motion, visuelle Lokalisierung und SLAM. Trotz des rechnerischen Aufwands ermöglicht eine optimierte 
+Implementierung sogar den Einsatz in Echtzeitumgebungen mit GPU-Beschleunigung. 
 
 
+\section{Segmentierungsbasierte Merkmalsextraktion}
+\label{sec:Merkmalsextraktion}
 
-\section{Sektion}
-\lipsum[1]
+\subsection{Mask R-CNN}
+Mask R-CNN ist ein leistungsstarkes neuronales Netzwerk zur Instanzsegmentierung, das 2017 von Kaiming He et al. vorgestellt wurde. 
+Es erkennt nicht nur Objekte in Bildern und lokalisiert sie mit Bounding Boxes, sondern erzeugt zusätzlich für jedes Objekt eine binäre 
+Maske, die dessen exakten Umriss pixelgenau abbildet. Die Architektur besteht aus mehreren Modulen: Ein Convolutional Neural Network (CNN)
+extrahiert Bildmerkmale, ein Region Proposal Network (RPN) schlägt relevante Regionen vor, und mittels Region of Interest (RoI) Align werden diese Merkmale präzise 
+auf jede Region übertragen. Für jede erkannte Region erfolgen drei parallele Vorhersagen – Objektklasse, genaue Bounding Box und Segmentierungsmaske –, 
+wodurch das Modell End-to-End trainierbar und für anspruchsvolle Anwendungen wie Medizinbildverarbeitung, Robotik oder autonomes Fahren besonders geeignet ist.
+Die Entwicklung von Mask R-CNN basiert auf zwei wichtigen Vorläufermodellen, Fast R-CNN und Faster R-CNN, die schrittweise die Grundlage für 
+seine heutige Architektur gelegt haben.
+Fast R-CNN wurde 2015 von Ross Girshick entwickelt und war eine effiziente Weiterentwicklung des ursprünglichen R-CNN. Es verarbeitet das 
+gesamte Bild zunächst durch ein gemeinsames CNN und wendet anschließend RoI Pooling auf vorgeschlagene Regionen an, 
+um Feature-Vektoren zu extrahieren. Diese Regionen stammen jedoch aus einem externen, nicht lernbaren Verfahren wie Selective Search, was die 
+Geschwindigkeit begrenzt. Das Modell klassifiziert jede Region und optimiert gleichzeitig deren Bounding Box.
+Faster R-CNN wurde 2016 von Shaoqing Ren et al. vorgestellt und löst das Geschwindigkeitsproblem von Fast R-CNN durch die Einführung eines lernbasierten RPN. 
+Dieses RPN generiert Regionsvorschläge direkt aus dem Feature-Map, wodurch das gesamte Modell vollständig  end-to-end trainierbar wird. 
+Die restliche Architektur bleibt ähnlich: RoI Pooling erzeugt Merkmalsvektoren, die zur Klassifikation und Lokalisierung verwendet werden. 
+Faster R-CNN bildet somit die direkte Grundlage für Mask R-CNN, liefert jedoch keine Segmentierungsmaske.
+Durch die kontinuierliche Weiterentwicklung dieser Modellreihe konnte Mask R-CNN schließlich eine leistungsfähige Lösung für die präzise Instanzsegmentierung 
+realisieren, die klassische Objekterkennungsverfahren deutlich übertrifft.
 
+\subsection{U-Net}
+U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, das 2015 von Olaf Ronneberger et al. speziell für die 
+semantische Segmentierung entwickelt wurde. Es wurde ursprünglich für medizinische Bilddaten konzipiert, eignet sich 
+jedoch auch hervorragend für technische Anwendungen, bei denen eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist – 
+etwa in der industriellen Objekterkennung, Robotik oder Visual Servoing. Der Name „U-Net“ stammt von der charakteristischen
+U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht. Der Encoder-Pfad (auch „Contracting Path“ 
+genannt) extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die 
+räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird. Der Decoder-Pfad 
+(auch „Expanding Path“) rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese 
+mit den hochauflösenden Features aus dem Encoder über Skip-Verbindungen. Diese Verbindungen sorgen dafür, dass feine Details 
+aus den frühen Layern nicht verloren gehen – ein entscheidender Vorteil gegenüber früheren Segmentierungsmodellen. 
+Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird. U-Net kann auch auf 
+kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. 
+In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z.B. Schrauben, Leitungen), die dann 
+gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können. 
 
-
-
-\subsection{Subsektion}
-\lipsum[1]
-
-
-
-\subsubsection{Subsubsektion}
-\lipsum[1-5]
-
+\subsection{DeepLabV3+}
+DeepLabV3+ ist ein leistungsstarkes neuronales Netzwerk zur semantischen Segmentierung, das 2018 von Liang-Chieh Chen et al.
+vorgestellt wurde. Es erweitert die vorherige DeepLab-Reihe und kombiniert präzise Lokalisierungsfähigkeiten mit der Fähigkeit, 
+kontextuelle Informationen auf mehreren Skalen zu erfassen. DeepLabV3+ ist besonders gut darin, Objekte mit komplexen Formen, 
+variablen Größen und feinen Kanten pixelgenau zu segmentieren – was es ideal für Anwendungen in der autonomen Navigation, 
+Robotik und Industrievision macht. Das Herzstück von DeepLabV3+ ist der sogenannte Atrous Spatial Pyramid Pooling (ASPP)-Block. 
+Dieser verwendet dilated (atrous) Convolutions, um Informationen in verschiedenen räumlichen Auflösungen zu erfassen, ohne die 
+Auflösung der Feature-Maps zu stark zu reduzieren. Das bedeutet: Das Netzwerk kann große Objekte vollständig erfassen und 
+gleichzeitig feine Details erhalten – ein Balanceakt, den viele klassische CNNs nicht leisten können. Im Gegensatz zu seinem 
+Vorgänger DeepLabV3 fügt DeepLabV3+ einen Decoder-Pfad hinzu, der die Segmentierungsergebnisse räumlich verfeinert. Dieser Teil 
+des Netzwerks verbessert die Kantenschärfe und Detailgenauigkeit der Segmentierung deutlich – ein entscheidender Vorteil in 
+Anwendungsbereichen, wo millimetergenaue Trennung von Objekten gefragt ist. Als Backbone für die Feature-Extraktion kann 
+DeepLabV3+ auf leistungsstarke Netzwerke wie Xception oder ResNet zurückgreifen, was die Genauigkeit weiter erhöht. 
+Die Architektur ist vollständig konvolutional und eignet sich daher gut für Bilder beliebiger Größe. Sie ist zudem modular 
+und flexibel, was sie zu einem beliebten Basismodell in vielen Forschungsarbeiten macht. DeepLabV3+ ist besonders nützlich, 
+wenn man Segmentierungsmasken für nachgelagerte Aufgaben wie Merkmalsextraktion oder Objektverfolgung benötigt. 
 
 
 
