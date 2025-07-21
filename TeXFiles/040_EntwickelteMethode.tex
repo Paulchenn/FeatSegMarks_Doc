@@ -6,20 +6,34 @@
 
 
 
-\section{Sektion}
+%\section{Sektion}
+%\sectionmark{Sek} % short form for headlines on pages
+%\lipsum[1]
+
+\section{Kopplung der Modelle}
 \sectionmark{Sek} % short form for headlines on pages
-\lipsum[1]
+%\lipsum[1]
+In diesem Bericht werden zwei Modelle zur Bildverarbeitung vorgestellt: XFeat und SDbOA.
+XFeat vereint eine effiziente Keypoint-Detektion, kompakte Deskriptoren und ein innovatives Match-Refinement-Modul in einem einzigen Netzwerk. Auch bei groben Merkmalen ermöglicht das Modell eine präzise Bildzuordnung und erreicht bei Aufgaben wie Kamera-Pose-Schätzung und visueller Lokalisierung vergleichbare oder sogar bessere Ergebnisse als etablierte Verfahren wie SuperPoint oder DISK – bei deutlich kürzeren Laufzeiten. 
 
+Das Modell SDbOA verfolgt einen anderen Ansatz: Es zielt darauf ab, neuronale Netze von einer textur-basierten hin zu einer strukturorientierten Merkmalsverarbeitung zu bewegen, um die Robustheit gegenüber Manipulationen zu erhöhen. Durch gezielte Formdeformationen entlang der Objektkanten und die Verwendung eines Generators mit weichen Rand- und Texturrestriktionen werden semantisch konsistente Trainingsdaten erzeugt, die die Netzwerkstabilität unter Störbedingungen verbessern.
 
+Ein zentraler Aspekt bei der Gestaltung von Bildverarbeitungssystemen ist die Frage, ob man die einzelnen Module – etwa Generator und Feature-Extraktor – getrennt oder gemeinsam trainiert. 
 
+Beim getrennten Training wird der Generator unabhängig optimiert, beispielsweise darauf, „schöne“ deformierte Bilder zu erzeugen. Dies geschieht typischerweise mittels L1- oder adversarial Verlustfunktionen. Parallel dazu wird ein Modell wie XFeat separat auf die Extraktion von Keypoints und Deskriptoren trainiert, meist unter Verwendung realer oder augmentierter Bilddaten. Die beiden Komponenten arbeiten anschließend sequentiell: Das erzeugte Bild durchläuft den Generator und wird danach von XFeat verarbeitet. Die Lernziele sind dabei klar getrennt – der Generator fokussiert sich auf die Bildqualität, während XFeat unabhängig versucht, aus den Inputs möglichst robuste Merkmale zu extrahieren. 
+
+Im Gegensatz dazu verfolgt das gekoppelte Training eine enge Verzahnung beider Module. Hier wird der Generator direkt zusammen mit XFeat trainiert, sodass seine Bildausgaben gezielt darauf abgestimmt werden, jene Merkmale zu fördern, die XFeat für eine optimale Featureextraktion benötigt. Die Verlustfunktionen des Generators basieren in diesem Fall nicht auf klassischer Bildästhetik, sondern auf den Qualitätskriterien von XFeat, etwa in Bezug auf Keypoint-Detection oder Deskriptor-Matching. Dadurch wird der Generator explizit auf die Aufgabenstellung hin angepasst und innerhalb der Ziel-Domäne feinabgestimmt. Dies führt zu einer deutlich besseren Abstimmung beider Komponenten, was sich positiv auf die Robustheit und Gesamtperformance des Systems auswirken kann.
+Während die getrennte Strategie leichter zu implementieren ist und eine generische Nutzung erlaubt, bietet die gekoppelte Variante eine deutlich tiefere Integration und höhere Effektivität – insbesondere dann, wenn die Qualität der extrahierten Features im Fokus steht.
+
+Der Ansatz des gekoppelten Trainings findet nicht nur in theoretischen Studien Anwendung, sondern wird auch in aktuellen generativen Frameworks erfolgreich eingesetzt. Das Modell CoopInit (Zhao, Xie \& Li, 2023) kombiniert kooperatives Lernen mit klassischem adversarial Training, um Generative Adversarial Networks (GANs) robuster und stabiler zu machen. Besonders bei Aufgaben wie Bildsynthese oder bei der sogenannten unpaired Image-to-Image Translation zeigt sich die Stärke dieser Methode. Dabei handelt es sich um die Übertragung von Bildern zwischen unterschiedlichen Darstellungsformen, ohne dass für jedes Bild ein passendes Gegenstück existiert. Das Modell lernt stattdessen, typische Merkmale jeder Bilddomäne zu erkennen und diese strukturell zu übersetzen. Durch das gekoppelte Training von Generator und energie-basiertem Diskriminator entstehen stabilere Lernprozesse, eine bessere Modedeckung und insgesamt eine höhere Synthesequalität. Damit bestätigt sich, dass die gemeinsame Optimierung von Netzwerksmodulen auch in modernen Deep-Learning-Anwendungen eine zentrale Rolle spielt.
 
 \subsection{Subsektion}
-\lipsum[1]
+%\lipsum[1]
 
 
 
 \subsubsection{Subsubsektion}
-\lipsum[1-5]
+%\lipsum[1-5]
 
 
 
