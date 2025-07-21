@@ -1,9 +1,25 @@
 \chapter{Einführung}
 \label{ch:Einfuehrung}
-\lipsum[1-3]
-
-
-
+Im Rahmen des Masterstudiengangs „Robotik und Künstliche Intelligenz in der Produktion“ ist die Durchführung eines 
+Forschungs- und Entwicklungsprojekts vorgesehen. Im Sommersemester 2025 wurde dabei das Thema „Berechnung von Merkmalspunkten aus 
+Segmentierungsmasken für Visual Servoing“ bearbeitet. Das grundsätzliche Ziel des Projekts war es, ein Konzept zur robusten Featureextraktion aus 
+Segmentierungsmasken zu entwickeln, das für bildbasierte Regelungsverfahren in Robotersystemen eingesetzt werden kann. Im Vordergrund 
+stand die Verbesserung der Robustheit und Dynamik visueller Steuerungsverfahren, die bisher häufig durch begrenzte Merkmalsqualität eingeschränkt sind.
+Gerade in der industriellen Robotik kommt der visuellen Regelung eine immer größere Bedeutung zu. 
+Verfahren des Visual Servoing nutzen Kamerabilder zur direkten Steuerung von Roboterbewegungen und ermöglichen damit flexible und adaptive 
+Automatisierung. Die Qualität und Verlässlichkeit solcher Systeme hängt jedoch stark von der Güte der verwendeten Bildmerkmale ab. 
+Klassische Feature-Detektoren wie Scale-Invariant Feature Transform (SIFT) oder Oriented FAST and Rotated BRIEF (ORB) sind zwar effizient, jedoch 
+oft anfällig für Skalierungs-, Rotations- oder Beleuchtungsänderungen – insbesondere in komplexen oder schwach texturierten Szenen.
+Aktuelle Forschungsarbeiten zeigen vielversprechende Ansätze, um diese Probleme zu überwinden. So zielt Accelerated Features (XFeat) auf eine 
+besonders effiziente und hardware-unabhängige Featureextraktion, die sowohl schnell als auch genau ist und sich damit ideal für ressourcenbeschränkte 
+Systeme wie mobile Roboter eignet. Gleichzeitig zeigt die Arbeit von He et al. (2023), dass viele neuronale Netze eine starke Texturabhängigkeit 
+(Texture-Bias) aufweisen, was zu fehlerhaften Objektinterpretationen führen kann. Durch gezielte Formveränderungen in der Datenaugmentation 
+kann dieses Problem reduziert werden, indem Netzwerke stärker auf strukturelle Objektformen (Shape-Bias) trainiert werden.
+In diesem Kontext gewinnt die Nutzung von Segmentierungsmasken als strukturelle Grundlage für die Featureberechnung zunehmend an Bedeutung. 
+Mithilfe moderner neuronaler Netze wie Mask Region-based Convolutional Neural Networks (Mask R-CNN) lassen sich Objekte nicht nur erkennen, sondern auch präzise von ihrer Umgebung abgrenzen. 
+Diese Masken liefern zusätzliche semantische Information, die für eine robuste und gezielte Merkmalsextraktion genutzt werden kann. 
+Die Verbindung solcher Segmentierungsansätze mit effizienten Feature-Architekturen wie XFeat sowie der Einsatz von robustheitssteigernden 
+Trainingsmethoden wie bei He et al. bietet ein vielversprechendes Potenzial für zuverlässigere und schnellere visuelle Regelungsverfahren.
 
 
 \section{Zielstellung}
