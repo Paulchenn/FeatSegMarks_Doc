@@ -1,0 +1,61 @@
+\chapter{Konzept zur robusten Featureextraktion}
+\label{ch:SDbOA}
+
+\section{Architektur zur Online-Generierung formverzerrter Bilder}
+\label{SDbOA}
+
+Die Qualität von Merkmalen, die für Visual Servoing eingesetzt werden, hängt entscheidend von der Robustheit des zugrundeliegenden Detektions- und Deskriptorsystems ab. Traditionelle Verfahren der Merkmalsextraktion sind oft anfällig für texturbedingte Bildartefakte und variierende Umgebungsbedingungen, was die Leistungsfähigkeit der visuellen Regelung beeinträchtigt. Zur Überwindung dieser Limitationen zielt die vorliegende Arbeit auf die Stärkung des \textbf{Shape-Bias} gegenüber dem \textbf{Texture-Bias} ab, inspiriert durch die Forschung von \textcite{Zhang_2023_arXiv}. Hierbei wird die Merkmalserkennung verstärkt auf die strukturelle Form von Objekten trainiert, anstatt auf feine, oft unzuverlässige Texturmerkmale.
+
+Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bilddaten implementiert, der sich an der Architektur von \textcite{Geng_2023_ICCV} orientiert. Dieses Verfahren nutzt ein \textbf{\ac{GAN}}, das in der Lage ist, Bilder so zu modifizieren, dass sie eine reduzierte Textur, aber gleichzeitig verstärkte und deformierte Kanten aufweisen. Der Fokus dieser Methode liegt auf der gezielten Manipulation von Trainingsdaten, um einen nachfolgenden Keypoint-Detektor und -Deskriptor – in diesem Fall \textbf{XFeat} – verstärkt auf Kantenmerkmale und nicht auf Texturmerkmale zu trainieren.
+
+\subsection{Aufbau der Augmentierungsarchitektur}
+\label{sec:Aufbau_SDbOA}
+
+Die Architektur zur Online-Generierung formverzerrter Bilder ist als eigenständiges Modul konzipiert, das in die Trainingspipeline integriert wird. Wie in Abbildung~\ref{fig:Ablauf_SDbOA} dargestellt, basiert das Training des Generators auf einer \textbf{zweistufigen Strategie} zur Verbesserung der Bildtreue und der Korrelation zwischen Kantenkarten und Textur.
+
+Der Workflow beginnt mit dem \textbf{Trainingsstart} auf dem Datensatz \textbf{ImageNet256}. Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, wenn der gesamte Datensatz verarbeitet wurde.
+
+\subsubsection{Phase 1: Erzeugung von Textur-reduzierten Bildern ohne Kantenverformung}
+In der ersten Phase wird der Generator des GAN trainiert, um ein "grob-generiertes" Bild zu erzeugen, das hauptsächlich auf Textur- und Forminformationen basiert, aber noch keine Kantenverformung enthält.
+\begin{itemize}
+\item \textbf{Eingabe:} Das Generator-Netzwerk verwendet eine erweiterte Kantenkarte ($E_extend$) und eine durch Bilineare Interpolation und Downsampling erzeugte, textur-reduzierte Version des Originalbildes ($I_{txt}$) als Eingabe.
+\item \textbf{Ziel:} Ziel dieser Phase ist es, eine grundlegende Korrelation zwischen der Form und der zugehörigen Textur aufzubauen.
+\item \textbf{Verlustfunktion:} Der Generator wird mit der Verlustfunktion $L_{1st}$ trainiert, die sich aus der Summe des \textbf{Adversarial Loss} ($L_{gan}$), eines \textbf{Feature Matching Loss} und eines \textbf{Auxiliary Classification Loss} (referenziert aus ACGAN) zusammensetzt.
+\end{itemize}
+
+\subsubsection{Phase 2: Fine-Tuning mit Kantenverformung}
+Die zweite Phase dient dem Fine-Tuning des Generators, um die Empfindlichkeit gegenüber Kantenverformungen zu verringern und das Training zu stabilisieren.
+\begin{itemize}
+\item \textbf{Eingabe:} Der Generator erhält nun die verformte Kantenkarte ($E_{deform}$) und das textur-reduzierte Bild ($I_{txt}$).
+\item \textbf{Verlustfunktion:} Die Verlustfunktion wird um zwei zusätzliche Terme erweitert, um die Feinabstimmung zu steuern. Die endgültige Verlustfunktion $L_{2nd}$ ist die Summe aus:
+\begin{itemize}
+\item \textbf{Adversarial Loss} ($L_{gan}$)
+\item \textbf{Cross-Entropy Classification Loss} ($L_{cls}$), um die Korrelation zwischen Kantenkarte und Textur zu stärken.
+\item \textbf{Shape-Preservation Loss} ($L_{edge}$), definiert als die $L_1$-Norm zwischen der verformten Kantenkarte ($E_{deform}$) und einer aus dem synthetisierten Bild extrahierten Kantenkarte. Dieser Term dient als weiche Einschränkung, um die generierte Form nahe an der verformten Kantenkarte zu halten.
+\end{itemize}
+\item \textbf{Zweck:} Durch diese gezielte Überwachung wird die Fähigkeit des Generators verbessert, plausible Bilder aus verformten Kantenkarten zu erzeugen, ohne die grundlegende Objekterkennung zu beeinträchtigen.
+\end{itemize}
+
+Die Validierung und Optimierung am Ende jeder Epoche laufen wie im Diagramm beschrieben ab: Der \textbf{Durchschnittsverlust (Average Loss)} wird mit dem besten bisherigen Verlust verglichen, um die Lernrate anzupassen und die besten Gewichte zu speichern.
+
+Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor eine verbesserte Robustheit gegenüber Beleuchtungsänderungen, Oberflächenbeschaffenheit und Skalierung aufweist, da seine Merkmalserkennung von der variablen Textur entkoppelt wird.
+
+\begin{figure}[htpb]
+\centering
+% Die PDF-Datei (erste Seite) wird eingebunden
+% trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+\includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthC]{Figures/pdf/Ablauf_SDbOA.pdf} % trim = L B R O
+\caption{Ablauf SDbOA}
+\label{fig:Ablauf_SDbOA}
+\end{figure}
+
+\section{Kopplung von Segmentierung und Featureextraktion}
+\label{sec:KopplungSegmentierungFeatureextraktion}
+
+...
+
+\section{Implementierung der Pipeline}
+\label{sec:Implementierung}
+
+...
+
