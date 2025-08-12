@@ -20,3 +20,4 @@ build/thesis.synctex(busy)
 *.fdb_latexmk
 *.fls
 *.DS_Store
+thesis.pdf
