@@ -12,14 +12,14 @@ Klassische Feature-Detektoren wie Scale-Invariant Feature Transform (SIFT) oder 
 oft anfällig für Skalierungs-, Rotations- oder Beleuchtungsänderungen – insbesondere in komplexen oder schwach texturierten Szenen.
 Aktuelle Forschungsarbeiten zeigen vielversprechende Ansätze, um diese Probleme zu überwinden. So zielt Accelerated Features (XFeat) auf eine 
 besonders effiziente und hardware-unabhängige Featureextraktion, die sowohl schnell als auch genau ist und sich damit ideal für ressourcenbeschränkte 
-Systeme wie mobile Roboter eignet. Gleichzeitig zeigt die Arbeit von He et al. (2023), dass viele neuronale Netze eine starke Texturabhängigkeit 
+Systeme wie mobile Roboter eignet. Gleichzeitig zeigt die Arbeit, dass viele neuronale Netze eine starke Texturabhängigkeit 
 (Texture-Bias) aufweisen, was zu fehlerhaften Objektinterpretationen führen kann. Durch gezielte Formveränderungen in der Datenaugmentation 
-kann dieses Problem reduziert werden, indem Netzwerke stärker auf strukturelle Objektformen (Shape-Bias) trainiert werden.
+kann dieses Problem reduziert werden, indem Netzwerke stärker auf strukturelle Objektformen (Shape-Bias) trainiert werden~\cite{potje2024xfeat}.
 In diesem Kontext gewinnt die Nutzung von Segmentierungsmasken als strukturelle Grundlage für die Featureberechnung zunehmend an Bedeutung. 
 Mithilfe moderner neuronaler Netze wie Mask Region-based Convolutional Neural Networks (Mask R-CNN) lassen sich Objekte nicht nur erkennen, sondern auch präzise von ihrer Umgebung abgrenzen. 
-Diese Masken liefern zusätzliche semantische Information, die für eine robuste und gezielte Merkmalsextraktion genutzt werden kann. 
+Diese Masken liefern zusätzliche semantische Information, die für eine robuste und gezielte Merkmalsextraktion genutzt werden kann~\cite{he2017maskrcnn}. 
 Die Verbindung solcher Segmentierungsansätze mit effizienten Feature-Architekturen wie XFeat sowie der Einsatz von robustheitssteigernden 
-Trainingsmethoden wie bei He et al. bietet ein vielversprechendes Potenzial für zuverlässigere und schnellere visuelle Regelungsverfahren.
+Trainingsmethoden bietet ein vielversprechendes Potenzial für zuverlässigere und schnellere visuelle Regelungsverfahren.
 
 
 \section{Zielstellung}
