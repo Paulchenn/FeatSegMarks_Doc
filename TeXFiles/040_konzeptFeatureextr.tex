@@ -16,9 +16,9 @@ Die Architektur zur Online-Generierung formverzerrter Bilder ist als eigenständ
 Der Workflow beginnt mit dem \textbf{Trainingsstart} auf dem Datensatz \textbf{ImageNet256}. Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, wenn der gesamte Datensatz verarbeitet wurde.
 
 \subsubsection{Phase 1: Erzeugung von Textur-reduzierten Bildern ohne Kantenverformung}
-In der ersten Phase wird der Generator des GAN trainiert, um ein "grob-generiertes" Bild zu erzeugen, das hauptsächlich auf Textur- und Forminformationen basiert, aber noch keine Kantenverformung enthält.
+In der ersten Phase wird der Generator des \ac{GAN} trainiert, um ein \enquote{grob-generiertes} Bild zu erzeugen, das hauptsächlich auf Textur- und Forminformationen basiert, aber noch keine Kantenverformung enthält.
 \begin{itemize}
-\item \textbf{Eingabe:} Das Generator-Netzwerk verwendet eine erweiterte Kantenkarte ($E_extend$) und eine durch Bilineare Interpolation und Downsampling erzeugte, textur-reduzierte Version des Originalbildes ($I_{txt}$) als Eingabe.
+\item \textbf{Eingabe:} Das Generator-Netzwerk verwendet eine erweiterte Kantenkarte ($E_{extend}$) und eine durch Bilineare Interpolation und Downsampling erzeugte, textur-reduzierte Version des Originalbildes ($I_{txt}$) als Eingabe.
 \item \textbf{Ziel:} Ziel dieser Phase ist es, eine grundlegende Korrelation zwischen der Form und der zugehörigen Textur aufzubauen.
 \item \textbf{Verlustfunktion:} Der Generator wird mit der Verlustfunktion $L_{1st}$ trainiert, die sich aus der Summe des \textbf{Adversarial Loss} ($L_{gan}$), eines \textbf{Feature Matching Loss} und eines \textbf{Auxiliary Classification Loss} (referenziert aus ACGAN) zusammensetzt.
 \end{itemize}
