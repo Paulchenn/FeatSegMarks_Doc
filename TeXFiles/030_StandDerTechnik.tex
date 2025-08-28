@@ -1,15 +1,11 @@
 \chapter{Grundlagen und Stand der Technik}
 \label{ch:StandTechnik}
 Die Extraktion robuster und invarianter Merkmale bildet eine zentrale Grundlage für bildbasierte Regelverfahren im Visual Servoing. 
-Klassische Methoden wie \ac{SIFT} oder \ac{ORB} liefern stabilisierte Featurepunkte, stoßen jedoch bei komplexen Szenen und hohen 
-Echtzeitanforderungen an ihre Grenzen. Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und 
-segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen 
-verbessern kann. ?? QUELLE ??
+Klassische Methoden wie \ac{SIFT} oder \ac{ORB} liefern stabilisierte Featurepunkte, stoßen bei komplexen Szenen und hohen Echtzeitanforderungen an ihre Grenzen.
+Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen verbessern kann. ?? QUELLE ??
 
-In diesem Kapitel werden Grundlagen sowie der aktuelle Stand der Technik beleuchtet. Zunächst erfolgt ein Vergleich klassischer und moderner Verfahren zur 
-Feature-Extraktion. Anschließend ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und 
-\ac{Mask R-CNN}, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in 
-Feature-Extraktion auszeichnen~\cite{potje2024xfeat}.
+In diesem Kapitel werden Grundlagen sowie der aktuelle Stand der Technik beleuchtet. Zunächst erfolgt ein Vergleich klassischer und moderner Verfahren zur Feature-Extraktion.
+Anschließend ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und Mask~\ac{R-CNN}, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in Feature-Extraktion auszeichnen~\cite{potje2024xfeat}.
 
 
 
@@ -35,7 +31,7 @@ Der Algorithmus besteht aus mehreren aufeinanderfolgenden Schritten:
     \item \textbf{Deskriptorgenerierung:} Um jeden Keypoint wird ein Deskriptor generiert: Dabei handelt es sich um einen Vektor, der die lokalen Gradienteninformationen in der Umgebung zusammenfasst und somit den Charakter des lokalen Bildausschnitts beschreibt. Der \ac{SIFT}-Deskriptor ist 128-dimensional und ermöglicht eine robuste Wiedererkennung von Merkmalen auch unter veränderten Bedingungen.
 \end{enumerate}
 Aufgrund der Robustheit des \ac{SIFT}-Verfahrens, wird dieses in vielen Anwendungen wie Objekterkennung, Bildregistrierung oder Robotik eingesetzt.
-Problematisch ist jedoch, dass \ac{SIFT} im Vergleich zu modernen, lernbasierten Methoden relativ rechenintensiv und daher aufwändiger zu implementieren ist.~\cite{lowe2004distinctive}.
+Problematisch ist, dass \ac{SIFT} im Vergleich zu modernen, lernbasierten Methoden relativ rechenintensiv und daher aufwändiger zu implementieren ist.~\cite{lowe2004distinctive}.
 
 
 
@@ -68,7 +64,7 @@ Diese zeichnet sich durch ein effizientes und patentfreies Verfahren zur Merkmal
 wie Rotationsinvarianz und Robustheit gegenüber Skalierung.
 Ziel ist eine leistungsfähige Alternative zu \ac{SIFT} und \ac{SURF}, die schneller arbeitet und frei verwendbar ist.
 \begin{enumerate}
-    \item \textbf{Keypoint-Detektion:} \ac{ORB} nutzt den \ac{FAST}-Algorithmus, der durch die Analyse von Intensitätsunterschieden in einem Kreis um einen Pixel schnelle Eckpunkte detektiert. Diese Punkte sind jedoch weder automatisch skalen- noch rotationsinvariant. Um dies zu kompensieren, wird im \ac{ORB}-Verfahren der \ac{FAST}-Algorithmus um eine Harris-Korner-Messung erweitert, um stabilere Keypoints auszuwählen.
+    \item \textbf{Keypoint-Detektion:} \ac{ORB} nutzt den \ac{FAST}-Algorithmus, der durch die Analyse von Intensitätsunterschieden in einem Kreis um einen Pixel schnelle Eckpunkte detektiert. Diese Punkte sind weder automatisch skalen- noch rotationsinvariant. Um dies zu kompensieren, wird im \ac{ORB}-Verfahren der \ac{FAST}-Algorithmus um eine Harris-Korner-Messung erweitert, um stabilere Keypoints auszuwählen.
     \item \textbf{Orientierungszuweisung:} Anschließend wird jedem Keypoint eine Hauptorientierung zugewiesen. Hierzu wird die Intensitätsverteilungen im lokalen Bildumfeld betrachtet. Diese Orientierung wird genutzt, um die Detektion und Beschreibung der Keypoints zu rotieren und somit rotationsinvariant zu machen.
     \item \textbf{Deskriptorgenerierung:} Im dritten Schritt wird der \ac{BRIEF}-Deskriptor verwendet, der auf binären Vergleichen von Pixelintensitäten basiert. Hier wird \ac{BRIEF} zu rotated \ac{BRIEF} erweitert, indem die Pixelvergleiche entsprechend der berechneten Orientierung des Keypoints angepasst werden. Dies gewährleistet, dass die Deskriptoren ebenfalls rotationsinvariant sind. Ergebnis ist ein speicher- sowie rechenfreundlicher binärer Vektor.
 \end{enumerate}
@@ -104,97 +100,126 @@ Ein weiterer Vorteil von SuperPoint ist die Kombination aus hoher Genauigkeit un
 SuperPoint ist robust gegenüber Skalierung, Rotation sowie moderaten Beleuchtungsänderungen.
 Des Weiteren ermöglicht das gemeinsame Lernen von Detektion und Beschreibung eine bessere Abstimmung zwischen diesen beiden Komponenten im Vergleich zu modularen Verfahren~\cite{detone2018superpoint}.
 
-\subsection{R2D2}
-Repeatable and Reliable Detector and Descriptor (R2D2) ist ein lernbasiertes Verfahren zur lokalen Merkmalsextraktion, 
-das 2019 von Revaud et al. eingeführt wurde. Ziel dieses Ansatzes ist es, Bildpunkte zu identifizieren, die sowohl 
-wiederholbar (also unter verschiedenen Ansichten des gleichen Objekts stabil) als auch diskriminativ (gut unterscheidbar
-von anderen Punkten) sind. Im Gegensatz zu klassischen Methoden wie \ac{SIFT} oder \ac{ORB}, die fest programmierte Schritte für 
-Keypoint-Detektion und Deskriptor-Bildung verwenden, setzt R2D2 auf ein neuronales Netz, das diese Eigenschaften direkt 
-lernt. Das Kernprinzip von R2D2 besteht darin, ein vollkonvolutionales Netzwerk zu trainieren, das drei Karten ausgibt: 
-eine Deskriptorkarte, eine Wiederholbarkeitskarte und eine Zuverlässigkeitskarte. Die Deskriptorkarte enthält Vektoren, 
-die lokale Bildregionen beschreiben. Die Wiederholbarkeitskarte zeigt, wie stabil ein Punkt bei Transformationen (z.B. Rotation, Skalierung) ist, 
-während die Zuverlässigkeitskarte angibt, wie gut sich ein Punkt zum Matching eignet. Die Kombination dieser drei Informationen erlaubt es, 
-besonders robuste und eindeutig zuzuordnende Punkte auszuwählen. Im Training nutzt R2D2 Bildpaare mit bekannten geometrischen Transformationen 
-(z.B. Homographien), um die gewünschten Eigenschaften der Keypoints zu erzwingen. Die Verlustfunktion belohnt Punkte, 
-die unter diesen Transformationen wieder auftauchen (hohe Wiederholbarkeit), und bestraft Punkte, deren Deskriptoren zu 
-ähnlich oder zu unspezifisch sind (niedrige Zuverlässigkeit). Dadurch entsteht ein Verfahren, das sowohl präzise als auch 
-effizient ist – eine wichtige Eigenschaft für visuelle SLAM-Systeme oder Structure-from-Motion. R2D2 ist insbesondere für 
-schwierige Bildbedingungen wie starke Perspektivwechsel oder Wiederholungsmuster (z.B. Zäune, Fensterreihen) geeignet. 
-Durch die gleichzeitige Optimierung von Detektor- und Deskriptoreigenschaften hebt sich das Verfahren von Ansätzen wie 
-SuperPoint ab, die diese Komponenten getrennt behandeln~\cite{revaud2019r2d2}. 
 
 
-\subsection{LoFTR}
-Local Feature TRansformer (LoFTR) ist ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung, das 2021 
-von Sun et al. vorgestellt wurde. Im Gegensatz zu klassischen Methoden wie \ac{SIFT} oder auch hybriden Deep-Learning-Ansätzen 
-wie SuperPoint + SuperGlue, verzichtet LoFTR vollständig auf die explizite Detektion einzelner Keypoints. 
-Stattdessen verfolgt es einen „detector-free“ Ansatz, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- 
-oder Patch-Ebene berechnet werden. Dies ermöglicht eine deutlich robustere Zuordnung – insbesondere in texturarmen oder stark 
-verzerrten Szenen, in denen klassische Verfahren oft versagen. Der Kern von LoFTR ist ein Transformer-basiertes Netzwerk, 
-das Bildpaare gleichzeitig verarbeitet und über sogenannte coarse-to-fine Matching-Strategien hochpräzise Korrespondenzen 
-berechnet. Zunächst werden die Bildmerkmale durch ein geteiltes CNN extrahiert, anschließend mit einem „coarse-level transformer“ 
-global abgestimmt, um grobe Korrespondenzen zu finden. Danach verfeinert ein „fine-level transformer“ die Matches lokal, 
-um subpixelgenaue Punktpaarungen zu erzeugen. Dabei nutzt LoFTR sowohl Selbst-Attention innerhalb eines Bildes als auch 
-Cross-Attention zwischen den beiden Bildern – ähnlich wie es in der Sprachverarbeitung bei Übersetzungsmodellen bekannt ist. 
-Ein bedeutender Vorteil von LoFTR ist die Fähigkeit, auch in schwierigen Szenarien wie extremen Blickwinkeländerungen, 
-schwacher Textur oder Wiederholungsmustern robuste Matches zu liefern. Dies macht es besonders wertvoll für Anwendungen wie 
-Structure-from-Motion, visuelle Lokalisierung und SLAM. Trotz des rechnerischen Aufwands ermöglicht eine optimierte 
-Implementierung sogar den Einsatz in Echtzeitumgebungen mit GPU-Beschleunigung~\cite{sun2021loftr}. 
+
+\subsection{\acl{R2D2}}
+Ein weiteres lernbasiertes Verfahren zur lokalen Merkmalsextraktion ist das 2019 von~\textcite{revaud2019r2d2} vorgestellte \ac{R2D2}-Verfahren.
+Ziel des Ansatzes ist, Bildpunkte zu identifizieren, die sowohl wiederholbar\footnote{unter verschiedenen Ansichten des gleichen Objekts stabil}, als auch diskriminativ\footnote{gut unterscheidbar von anderen Punkten} sind. 
+Im Gegensatz zu klassischen Methoden, die fest programmierte Schritte für Keypoint-Detektion und Deskriptor-Bildung verwenden, setzt \ac{R2D2} auf ein neuronales Netz, das diese Eigenschaften direkt lernt.
+Das Kernprinzip von \ac{R2D2} besteht darin, ein vollkonvolutionales Netzwerk zu trainieren, das drei Karten ausgibt:
+\begin{enumerate}
+    \item Eine Deskriptorkarte mit Vektoren, die lokale Bildregionen beschreiben,
+    \item eine Wiederholbarkeitskarte, die zeigt, wie stabil ein Punkt bei Transformationen (z.B. Rotation, Skalierung) ist und
+    \item eine Zuverlässigkeitskarte, die angibt wie gut sich ein Punkt zum Matching eignet.
+\end{enumerate}
+Die Kombination dieser drei Informationen erlaubt besonders robuste und eindeutig zuzuordnende Punkte auszuwählen.
+Im Training nutzt \ac{R2D2} Bildpaare mit bekannten geometrischen Transformationen (z.B. Homographien), um die gewünschten Eigenschaften der Keypoints zu erzwingen.
+Die Verlustfunktion belohnt Punkte, die unter diesen Transformationen wieder auftauchen (hohe Wiederholbarkeit), und bestraft Punkte, deren Deskriptoren zu 
+ähnlich oder zu unspezifisch sind (niedrige Zuverlässigkeit).
+Dies macht das \ac{R2D2}-Verfahren sowohl präzise als auch effizient.
+Insbesondere für schwierige Bildbedingungen, wie bspw.~starke Perspektivwechsel oder Wiederholungsmuster (z.B. Zäune, Fensterreihen), ist das Verfahren geeignet. 
+Durch die gleichzeitige Optimierung von Detektor- und Deskriptoreigenschaften hebt sich das Verfahren von Ansätzen wie SuperPoint ab, die diese Komponenten getrennt behandeln~\cite{revaud2019r2d2}. 
+
+
+
+
+\subsection{\acl{LoFTR}}
+\textcite{sun2021loftr} stellten 2021 das \ac{LoFTR}-Verfahren vor, ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung.
+Im Gegensatz zu klassischen Methoden, wie bspw.~\ac{SIFT}, oder hybriden Deep-Learning-Ansätzen wie SuperPoint + SuperGlue ?? WAS IST DAS ??, verzichtet \ac{LoFTR} vollständig auf die explizite Detektion einzelner Keypoints. 
+Stattdessen wird ein „detector-free“ Ansatz verfolgt, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- oder Patch-Ebene berechnet werden.
+Dies ermöglicht eine deutlich robustere Zuordnung, insbesondere in texturarmen oder stark verzerrten Szenen, in denen klassische Verfahren oft versagen.
+
+Der Kern von \ac{LoFTR} ist ein Transformer-basiertes Netzwerk, das Bildpaare gleichzeitig verarbeitet und über sogenannte coarse-to-fine Matching-Strategien hochpräzise Korrespondenzen berechnet.
+Zunächst werden die Bildmerkmale durch ein geteiltes \acl{CNN} extrahiert und anschließend mit einem „coarse-level transformer“ global abgestimmt, um grobe Korrespondenzen zu finden.
+Danach verfeinert ein „fine-level transformer“ die Matches lokal, um subpixelgenaue Punktpaarungen zu erzeugen.
+Dabei nutzt \ac{LoFTR} sowohl Selbst-Attention innerhalb eines Bildes als auch Cross-Attention zwischen den beiden Bildern.
+
+Ein bedeutender Vorteil von \ac{LoFTR} ist die Fähigkeit, auch in schwierigen Szenarien wie extremen Blickwinkeländerungen, schwacher Textur oder Wiederholungsmustern robuste Matches zu liefern.
+Dies macht es besonders wertvoll für Anwendungen wie Structure-from-Motion, visuelle Lokalisierung und \ac{SLAM}.
+Obwohl des rechnerischen Aufwands ermöglicht eine optimierte Implementierung den Einsatz in Echtzeitumgebungen mit \ac{GPU}-Beschleunigung~\cite{sun2021loftr}. 
+
+
+
 
 
 \section{Segmentierungsbasierte Merkmalsextraktion}
 \label{sec:Merkmalsextraktion}
 
-\subsection{Mask R-CNN}
-Mask R-CNN ist ein leistungsstarkes neuronales Netzwerk zur Instanzsegmentierung, das 2017 von Kaiming He et al. vorgestellt wurde. 
-Es erkennt nicht nur Objekte in Bildern und lokalisiert sie mit Bounding Boxes, sondern erzeugt zusätzlich für jedes Objekt eine binäre 
-Maske, die dessen exakten Umriss pixelgenau abbildet. Die Architektur besteht aus mehreren Modulen: Ein Convolutional Neural Network (CNN)
-extrahiert Bildmerkmale, ein Region Proposal Network (RPN) schlägt relevante Regionen vor, und mittels Region of Interest (RoI) Align werden diese Merkmale präzise 
-auf jede Region übertragen. Für jede erkannte Region erfolgen drei parallele Vorhersagen – Objektklasse, genaue Bounding Box und Segmentierungsmaske –, 
-wodurch das Modell End-to-End trainierbar und für anspruchsvolle Anwendungen wie Medizinbildverarbeitung, Robotik oder autonomes Fahren besonders geeignet ist.
-Die Entwicklung von Mask R-CNN basiert auf zwei wichtigen Vorläufermodellen, Fast R-CNN und Faster R-CNN, die schrittweise die Grundlage für 
-seine heutige Architektur gelegt haben.
-Fast R-CNN wurde 2015 von Ross Girshick entwickelt und war eine effiziente Weiterentwicklung des ursprünglichen R-CNN. Es verarbeitet das 
-gesamte Bild zunächst durch ein gemeinsames CNN und wendet anschließend RoI Pooling auf vorgeschlagene Regionen an, 
-um Feature-Vektoren zu extrahieren. Diese Regionen stammen jedoch aus einem externen, nicht lernbaren Verfahren wie Selective Search, was die 
-Geschwindigkeit begrenzt. Das Modell klassifiziert jede Region und optimiert gleichzeitig deren Bounding Box.
-Faster R-CNN wurde 2016 von Shaoqing Ren et al. vorgestellt und löst das Geschwindigkeitsproblem von Fast R-CNN durch die Einführung eines lernbasierten RPN. 
-Dieses RPN generiert Regionsvorschläge direkt aus dem Feature-Map, wodurch das gesamte Modell vollständig  end-to-end trainierbar wird. 
-Die restliche Architektur bleibt ähnlich: RoI Pooling erzeugt Merkmalsvektoren, die zur Klassifikation und Lokalisierung verwendet werden. 
-Faster R-CNN bildet somit die direkte Grundlage für Mask R-CNN, liefert jedoch keine Segmentierungsmaske.
-Durch die kontinuierliche Weiterentwicklung dieser Modellreihe konnte Mask R-CNN schließlich eine leistungsfähige Lösung für die präzise Instanzsegmentierung 
-realisieren, die klassische Objekterkennungsverfahren deutlich übertrifft~\cite{he2017maskrcnn}.
+\subsection{Mask \acl{R-CNN}}
+Mask~\ac{R-CNN} ist ein leistungsstarkes neuronales Netzwerk zur Instanzsegmentierung, vorgestellt 2017 von~\textcite{he2017maskrcnn}. 
+%Es erkennt nicht nur Objekte in Bildern und lokalisiert sie mit Bounding Boxes, sondern erzeugt zusätzlich für jedes Objekt eine binäre Maske, die dessen exakten Umriss pixelgenau abbildet.
+Die Architektur besteht aus
+\begin{itemize}
+    \item einem Backbone-Netzwerk (bspw. ResNet oder FPN) zur Extraktion von Bildmerkmalen,
+    \item einem \ac{RPN} zur Generierung von Regionsvorschlägen,
+    \item einem \ac{RoI} Align-Modul zur präzisen Extraktion von Merkmalen für jede vorgeschlagene Region und
+    \item drei parallelen Vorhersagen mit Objektklasse, genauer Boudning Box sowie Segmentierungsmaske.
+\end{itemize}
+Aufgrund diesen Aufbaus ist das Modell Ende-zu-Ende trainierbar und für anspruchsvolle Anwendungen wie Medizinbildverarbeitung, Robotik oder autonomes Fahren geeignet~\cite{he2017maskrcnn}.
+
+Die Entwicklung von Mask~\ac{R-CNN} basiert auf zwei wichtigen Vorläufermodellen,
+\begin{enumerate}
+    \item Fast~\ac{R-CNN} und
+    \item Faster~\ac{R-CNN},
+\end{enumerate}
+die schrittweise die Grundlage für die heutige Architektur von Mask~\ac{R-CNN} legten.
+
+Ersteres wurde 2015 von~\textcite{girshick2015fastrcnn} ptäsentiert und ist eine Weiterentwicklung des ursprünglichen~\ac{R-CNN}.
+Fast~\ac{R-CNN} verarbeitet das gesamte Bild zunächst durch ein gemeinsames \ac{CNN} und wendet anschließend \ac{RoI} Pooling auf vorgeschlagene Regionen an, um Feature-Vektoren zu extrahieren.
+Diese Regionen stammen aus einem externen, nicht lernbaren Verfahren, bspw. Selective Search.
+Dies ist begrenzt die Geschwindigkeit des Verfahrens.
+Das Modell klassifiziert jede Region und optimiert gleichzeitig deren Bounding Boxen~\cite{girshick2015fastrcnn}.
+
+Faster~\ac{R-CNN} wurde 2016 von~\textcite{ren2016fasterrcnnrealtimeobject} vorgestellt und löst das Geschwindigkeitsproblem von Fast~\ac{R-CNN} durch die Einführung eines lernbasierten \ac{RPN}. 
+Dieses \ac{RPN} generiert Regionsvorschläge direkt aus der Feature-Map, wodurch das gesamte Modell vollständig  Ende-zu-Ende trainierbar wird. 
+Die restliche Architektur bleibt ähnlich zu der von Fast~\ac{R-CNN}. Faster~\ac{R-CNN} bildet die direkte Grundlage für Mask~\ac{R-CNN}~\cite{ren2016fasterrcnnrealtimeobject}.
+
+
+
 
 \subsection{U-Net}
-U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, das 2015 von Olaf Ronneberger et al. speziell für die 
-semantische Segmentierung entwickelt wurde. Es wurde ursprünglich für medizinische Bilddaten konzipiert, eignet sich 
-jedoch auch hervorragend für technische Anwendungen, bei denen eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist – 
-etwa in der industriellen Objekterkennung, Robotik oder Visual Servoing. Der Name „U-Net“ stammt von der charakteristischen
-U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht. Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die 
-räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird. Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese 
-mit den hochauflösenden Features aus dem Encoder über Skip-Verbindungen. Diese Verbindungen sorgen dafür, dass feine Details 
-aus den frühen Layern nicht verloren gehen – ein entscheidender Vorteil gegenüber früheren Segmentierungsmodellen. 
-Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird. U-Net kann auch auf 
-kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. 
-In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z.B. Schrauben, Leitungen), die dann 
-gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können~\cite{ronneberger2015unet}. 
+Das 2015 von~\textcite{ronneberger2015unet} vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, entwickelt speziell für die semantische Segmentierung.
+Obwohl U-Net ursprünglich für medizinische Bilddaten konzipiert wurde, eignet sich dieses auch für technische Anwendungen, soabld eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist.
+beispielsweise in der industriellen Objekterkennung, Robotik oder Visual Servoing~\cite{ronneberger2015unet}.
+
+Der Name \enquote{U-Net} stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht (siehe Abbildung~\ref{fig:UNet_illustration}).
+Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird.
+Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über Skip-Verbindungen.
+Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen – ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen~\cite{ronneberger2015unet}. 
+
+\begin{figure}[htpb]
+    \centering
+    % Die PDF-Datei (erste Seite) wird eingebunden
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/pdf/UNet_illustration.pdf} % trim = L B R O
+    \caption{U-Net Architektur aus~\cite{ronneberger2015unet}}
+    \label{fig:UNet_illustration}
+\end{figure}
+
+Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird.
+U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. 
+In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z.B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können~\cite{ronneberger2015unet}. 
+
+
+
 
 \subsection{DeepLabV3+}
-DeepLabV3+ ist ein leistungsstarkes neuronales Netzwerk zur semantischen Segmentierung, das 2018 von Liang-Chieh Chen et al.
-vorgestellt wurde. Es erweitert die vorherige DeepLab-Reihe und kombiniert präzise Lokalisierungsfähigkeiten mit der Fähigkeit, 
-kontextuelle Informationen auf mehreren Skalen zu erfassen. DeepLabV3+ ist besonders gut darin, Objekte mit komplexen Formen, 
-variablen Größen und feinen Kanten pixelgenau zu segmentieren – was es ideal für Anwendungen in der autonomen Navigation, 
-Robotik und Industrievision macht. Das Herzstück von DeepLabV3+ ist der sogenannte Atrous Spatial Pyramid Pooling (ASPP)-Block. 
-Dieser verwendet dilated (atrous) Convolutions, um Informationen in verschiedenen räumlichen Auflösungen zu erfassen, ohne die 
-Auflösung der Feature-Maps zu stark zu reduzieren. Das bedeutet: Das Netzwerk kann große Objekte vollständig erfassen und 
-gleichzeitig feine Details erhalten – ein Balanceakt, den viele klassische CNNs nicht leisten können. Im Gegensatz zu seinem 
-Vorgänger DeepLabV3 fügt DeepLabV3+ einen Decoder-Pfad hinzu, der die Segmentierungsergebnisse räumlich verfeinert. Dieser Teil 
-des Netzwerks verbessert die Kantenschärfe und Detailgenauigkeit der Segmentierung deutlich – ein entscheidender Vorteil in 
-Anwendungsbereichen, wo millimetergenaue Trennung von Objekten gefragt ist. Als Backbone für die Feature-Extraktion kann 
-DeepLabV3+ auf leistungsstarke Netzwerke wie Xception oder ResNet zurückgreifen, was die Genauigkeit weiter erhöht. 
-Die Architektur ist vollständig konvolutional und eignet sich daher gut für Bilder beliebiger Größe. Sie ist zudem modular 
-und flexibel, was sie zu einem beliebten Basismodell in vielen Forschungsarbeiten macht. DeepLabV3+ ist besonders nützlich, 
-wenn man Segmentierungsmasken für nachgelagerte Aufgaben wie Merkmalsextraktion oder Objektverfolgung benötigt~\cite{chen2018deeplabv3plus}. 
+DeepLabV3+ ist ein leistungsstarkes neuronales Netzwerk zur semantischen Segmentierung, das 2018 von~\cite{chen2018deeplabv3plus} vorgestellt wurde.
+Es erweitert die vorherige DeepLab-Reihe und kombiniert präzise Lokalisierungsfähigkeiten mit der Fähigkeit, kontextuelle Informationen auf mehreren Skalen zu erfassen.
+DeepLabV3+ ist gut darin, Objekte mit komplexen Formen, variablen Größen und feinen Kanten pixelgenau zu segmentieren.
+Dies macht DeepLabV3+ ideal für Anwendungen in der autonomen Navigation, Robotik und Industrievision~\cite{chen2018deeplabv3plus}.
+
+Das Herzstück von DeepLabV3+ ist der sogenannte \ac{ASPP}-Block. 
+Dieser verwendet dilated (atrous) Convolutions, um Informationen in verschiedenen räumlichen Auflösungen zu erfassen, ohne die Auflösung der Feature-Maps zu stark zu reduzieren.
+Folglich kann das Netzwerk große Objekte vollständig erfassen und simultan feine Details erhalten~\cite{chen2018deeplabv3plus}.
+
+Im Gegensatz zu DeepLabV3 verfügt DeepLabV3+ über einen zusätzlichen Decoder-Pfad, der die Segmentierungsergebnisse räumlich verfeinert.
+Dieser Teil des Netzwerks verbessert die Kantenschärfe und Detailgenauigkeit der Segmentierung.
+Als Backbone für die Feature-Extraktion wird bei DeepLabV3+ auf leistungsstarke Netzwerke wie Xception oder ResNet zurückgegriffen, wodurch die Genauigkeit weiter erhöht wird. 
+Die Architektur ist vollständig konvolutional und eignet sich daher gut für Bilder beliebiger Größe.
+Des Weiteren ist DeepLabV3+ aufgrund der modulararität und flexibelität ein beliebtes Basismodell in vielen Forschungsarbeiten.
+DeepLabV3+ ist besonders nützlich, wenn Segmentierungsmasken für nachgelagerte Aufgaben wie Merkmalsextraktion oder Objektverfolgung benötigt werden~\cite{chen2018deeplabv3plus}. 
 
 
 
