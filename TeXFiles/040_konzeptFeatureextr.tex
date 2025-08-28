@@ -6,7 +6,7 @@
 
 Die Qualität von Merkmalen, die für Visual Servoing eingesetzt werden, hängt entscheidend von der Robustheit des zugrundeliegenden Detektions- und Deskriptorsystems ab. Traditionelle Verfahren der Merkmalsextraktion sind oft anfällig für texturbedingte Bildartefakte und variierende Umgebungsbedingungen, was die Leistungsfähigkeit der visuellen Regelung beeinträchtigt. Zur Überwindung dieser Limitationen zielt die vorliegende Arbeit auf die Stärkung des \textbf{Shape-Bias} gegenüber dem \textbf{Texture-Bias} ab, inspiriert durch die Forschung von \textcite{Zhang_2023_arXiv}. Hierbei wird die Merkmalserkennung verstärkt auf die strukturelle Form von Objekten trainiert, anstatt auf feine, oft unzuverlässige Texturmerkmale.
 
-Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bilddaten implementiert, der sich an der Architektur von \textcite{Geng_2023_ICCV} orientiert. Dieses Verfahren nutzt ein \textbf{\ac{GAN}}, das in der Lage ist, Bilder so zu modifizieren, dass sie eine reduzierte Textur, aber gleichzeitig verstärkte und deformierte Kanten aufweisen. Der Fokus dieser Methode liegt auf der gezielten Manipulation von Trainingsdaten, um einen nachfolgenden Keypoint-Detektor und -Deskriptor – in diesem Fall \textbf{XFeat} – verstärkt auf Kantenmerkmale und nicht auf Texturmerkmale zu trainieren.
+Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bilddaten implementiert, der sich an der Architektur von \textcite{He_2023_ICCV} orientiert. Dieses Verfahren nutzt ein \textbf{\ac{GAN}}, das in der Lage ist, Bilder so zu modifizieren, sodass diese eine reduzierte Textur und verstärkte sowie deformierte Kanten aufweisen. Der Fokus dieser Methode liegt auf der gezielten Manipulation von Trainingsdaten, um einen nachfolgenden Keypoint-Detektor und -Deskriptor – in diesem Fall \textbf{XFeat} – verstärkt auf Kantenmerkmale und nicht auf Texturmerkmale zu trainieren.
 
 \subsection{Aufbau der Augmentierungsarchitektur}
 \label{sec:Aufbau_SDbOA}
@@ -41,12 +41,12 @@ Die Validierung und Optimierung am Ende jeder Epoche laufen wie im Diagramm besc
 Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor eine verbesserte Robustheit gegenüber Beleuchtungsänderungen, Oberflächenbeschaffenheit und Skalierung aufweist, da seine Merkmalserkennung von der variablen Textur entkoppelt wird.
 
 \begin{figure}[htpb]
-\centering
-% Die PDF-Datei (erste Seite) wird eingebunden
-% trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
-\includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthC]{Figures/pdf/Ablauf_SDbOA.pdf} % trim = L B R O
-\caption{Ablauf SDbOA}
-\label{fig:Ablauf_SDbOA}
+    \centering
+    % Die PDF-Datei (erste Seite) wird eingebunden
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthC]{Figures/pdf/Ablauf_SDbOA.pdf} % trim = L B R O
+    \caption{Ablauf SDbOA}
+    \label{fig:Ablauf_SDbOA}
 \end{figure}
 
 \section{Kopplung von Segmentierung und Featureextraktion}
