@@ -15,12 +15,12 @@ Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bildda
 
 
 
-\subsection{Aufbau der Augmentierungsarchitektur}
+\subsection{Aufbau der Online-Augmentierung}
 \label{sec:Aufbau_SDbOA}
-
+ 
 Die Architektur zur Online-Generierung formverzerrter Bilder ist als eigenständiges Modul konzipiert, das in die Trainingspipeline von \ac{xFeat} integriert wird. Abbildung~\ref{fig:Ablauf_SDbOA} zeigt schematisch den Ablauf des Generator-Trainings. Inspiriert von~\textcite{He_2023_ICCV} basiert das Netztraining auf einer \textbf{zweistufigen Strategie}. Dies dient dem Ziel Originalgetreue Bilder mit verstärkten Kanten sowie reduzierter Textur zu generieren.
 
-Der Workflow beginnt mit dem \textbf{Trainingsstart} auf dem Datensatz \textbf{ImageNet256}. Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, wenn der gesamte Datensatz verarbeitet wurde.
+Der Workflow beginnt mit dem \textbf{Trainingsstart} auf dem Datensatz \textbf{ImageNet256}~\cite{Uriot2023imageNet}. Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, sobald der gesamte Datensatz verarbeitet ist.
 
 
 
@@ -43,23 +43,22 @@ Entgegen in~\cite{He_2023_ICCV} präsentiert, hat bei der Verwendung von $256 \t
     \label{fig:dsRate_vs_EdgeImg}
 \end{figure}
 
+?? TODO: Variabler blur bei Eingabe netG beschreiben --> Grafik möglich? Wenn nicht auch i. O.
+
 Bei der Generierung der Kantenkarte ist darauf zu achten, dass diese
 \begin{enumerate}
     \item differenzierbar ist, um den Verlust korrekt auf die einzelnen Neuronen zurückrechnen zu können und
     \item für die Bildgröße außreichende Ergebnisse liefert.
 \end{enumerate}
-Bei der Verwendung der in~\cite{He_2023_ICCV} vorgestellten \textit{\ac{EMSE}} hat sich herausgestellt, dass diese in der vorgestellten Form hier nicht angewendet werden kann. Die \textit{\ac{EMSE}} ist weder differenzierbar, noch kann die generierte Kantenkarte bei $256 \times 256$ Pixel großen Bildern (vgl. ImageNet256 ?? QUELLE ??) als Eingabe für das Generator Training genutzt werden.
+Bei der Verwendung der in~\cite{He_2023_ICCV} vorgestellten \textit{\ac{EMSE}} hat sich herausgestellt, dass diese in der vorgestellten Form hier nicht angewendet werden kann. Die \textit{\ac{EMSE}} ist weder differenzierbar, noch kann die generierte Kantenkarte bei $256 \times 256$ Pixel großen Bildern (vgl. ImageNet256~\cite{Uriot2023imageNet}) als Eingabe für das Generator Training genutzt werden.
 
-Aufgrund der genannten Problematiken wird hier die \textit{\ac{DS-EMSE}} eingeführt. ?? BESCHREIBEN TIM ??
+Aufgrund der genannten Problematiken wird hier die \textit{\ac{DS-EMSE}} eingeführt. ?? BESCHREIBEN TIM ?? --> Gerne auch mit Ergebnissen von EMSE und DS-EMSE als Gegenüberstellung. Evtl. auch Diagramm hier möglich ...
 
-
-\begin{itemize}
-\item \textbf{Eingabe:} Das Generator-Netzwerk verwendet eine erweiterte Kantenkarte ($E_{extend}$) und eine durch Bilineare Interpolation und Downsampling erzeugte, textur-reduzierte Version des Originalbildes ($I_{txt}$) als Eingabe.
-\item \textbf{Ziel:} Ziel dieser Phase ist es, eine grundlegende Korrelation zwischen der Form und der zugehörigen Textur aufzubauen.
-\item \textbf{Verlustfunktion:} Der Generator wird mit der Verlustfunktion $L_{1st}$ trainiert, die sich aus der Summe des \textbf{Adversarial Loss} ($L_{gan}$), eines \textbf{Feature Matching Loss} und eines \textbf{Auxiliary Classification Loss} (referenziert aus ACGAN) zusammensetzt.
-\end{itemize}
+?? TODO: Verlustfunktion und Gewichte beschreiben --> ggf. mit Grafik Loss über versch. Lambdas.
 
 \subsubsection{Phase 2: Fine-Tuning mit Kantenverformung}
+?? TODO: Bisher von chatGPT/Gemini geschrieben --> noch überarbeiten !! --> Grafiken, etc.
+
 Die zweite Phase dient dem Fine-Tuning des Generators, um die Empfindlichkeit gegenüber Kantenverformungen zu verringern und das Training zu stabilisieren.
 \begin{itemize}
 \item \textbf{Eingabe:} Der Generator erhält nun die verformte Kantenkarte ($E_{deform}$) und das textur-reduzierte Bild ($I_{txt}$).
@@ -76,6 +75,7 @@ Die Validierung und Optimierung am Ende jeder Epoche laufen wie im Diagramm besc
 
 Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor eine verbesserte Robustheit gegenüber Beleuchtungsänderungen, Oberflächenbeschaffenheit und Skalierung aufweist, da seine Merkmalserkennung von der variablen Textur entkoppelt wird.
 
+?? TODO: Mehr Bezug noch auf Ablaufplan nehmen !!
 \begin{figure}[htpb]
     \centering
     % Die PDF-Datei (erste Seite) wird eingebunden
@@ -90,7 +90,7 @@ Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor ein
 
 
 \section{Aufbau Netzarchitektur}
-
+?? TODO: Architektur beschreiben, v. a., dass Zahlen für Ausgangsgrößen der Schichten stehen.
 \begin{figure}[htpb]
     \centering
     % Die PDF-Datei (erste Seite) wird eingebunden
