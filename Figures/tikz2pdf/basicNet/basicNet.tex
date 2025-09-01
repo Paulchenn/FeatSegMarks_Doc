@@ -1,5 +1,5 @@
 \documentclass[tikz,border=3mm]{standalone}
-\usetikzlibrary{positioning, arrows.meta}
+\usetikzlibrary{positioning, arrows.meta, fit}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -8,6 +8,7 @@
     textBelow/.style        ={rotate=0,     anchor=north east,  align=right,    text=gray,  font=\tiny, inner xsep=0mm},
     textInCent/.style       ={rotate=0,     anchor=east,        align=center,   text=gray,  font=\tiny, inner xsep=0mm},
     textInCentRot/.style    ={rotate=90,                        align=center,   text=gray,  font=\tiny, inner xsep=0mm},
+    textRight/.style        ={rotate=0,     anchor=west,        align=left,                 font=\tiny, inner xsep=0mm},
     %
     image/.style        ={draw, fill=blue,      minimum width=0.45cm,   minimum height=3.5cm,   align=center},
     %
@@ -44,157 +45,144 @@
     noise_vector/.style ={draw, fill=blue,      minimum width=1.5cm,    minimum height=0.5cm,   align=center},
     sum/.style          ={draw, circle, thick, font=\tiny},
     %
-    skiparrow/.style    ={draw, thick, dashed, gray, -Latex},
-    arrow/.style        ={draw, thick, -Latex, color=red}
+    arrow/.style        ={draw, thick, -Latex, color=red},
+    skiparrow/.style    ={draw, thick, dashed, orange, -Latex},
+    poolingarrow/.style ={draw, thick, dashed, gray, -Latex},
+    %
+    legendRect/.style   ={draw, minimum width=4mm, minimum height=4mm}
 ]
 
-% Encoder path
+% =========================== ENCODER-MAP ============================
 \node[image] (input_map) {};
 \node[textInCentRot, text=white] at (input_map) {edge map, $3 \times 256 \times 256$};
 
-\node[conv_layer1, anchor=west] at ([xshift=0.275cm]input_map) (enc_1_1) {};
-\node[textInCentRot] at (enc_1_1) {$64 \times 256 \times 256$};
+\node[conv_layer1, anchor=west] at ([xshift=0.275cm]input_map) (enc_1_1_map) {};
+\node[textInCentRot] at (enc_1_1_map) {$64 \times 256 \times 256$};
 
-\node[conv_layer1, anchor=west] at ([xshift=0.05cm]enc_1_1.east) (enc_1_2_map) {};
+\node[conv_layer1, anchor=west] at ([xshift=0.05cm]enc_1_1_map.east) (enc_1_2_map) {};
 \node[textInCentRot] at (enc_1_2_map) {$64 \times 256 \times 256$};
 
 \node[pool_layer1, anchor=west] at ([xshift=0.05cm]enc_1_2_map.east) (pool_1_map) {};
 \node[textInCentRot] at (pool_1_map) {$64 \times 128 \times 128$};
 
 
-\node[conv_layer2, anchor=west] at ([xshift=-0.175cm, yshift=-2cm]pool_1_map.south) (enc_2_1) {};
-\node[textInCentRot] at (enc_2_1) {$128 \times 128 \times 128$};
+\node[conv_layer2, anchor=west] at ([xshift=-0.175cm, yshift=-2cm]pool_1_map.south) (enc_2_1_map) {};
+\node[textInCentRot] at (enc_2_1_map) {$128 \times 128 \times 128$};
 
-\node[conv_layer2, anchor=west] at ([xshift=0.05cm]enc_2_1.east) (enc_2_2_map) {};
+\node[conv_layer2, anchor=west] at ([xshift=0.05cm]enc_2_1_map.east) (enc_2_2_map) {};
 \node[textInCentRot] at (enc_2_2_map) {$128 \times 128 \times 128$};
 
 \node[pool_layer2, anchor=west] at ([xshift=0.05cm]enc_2_2_map.east) (pool_2_map) {};
 \node[textInCentRot] at (pool_2_map) {$128 \times 64 \times 64$};
 
 
-\node[conv_layer3, anchor=west] at ([xshift=-0.2cm, yshift=-1.75cm]pool_2_map.south) (enc_3_1) {};
-\node[textInCentRot] at (enc_3_1) {$256 \times 64 \times 64$};
+\node[conv_layer3, anchor=west] at ([xshift=-0.2cm, yshift=-1.75cm]pool_2_map.south) (enc_3_1_map) {};
+\node[textInCentRot] at (enc_3_1_map) {$256 \times 64 \times 64$};
 
-\node[conv_layer3, anchor=west] at ([xshift=0.05cm]enc_3_1.east) (enc_3_2) {};
-\node[textInCentRot] at (enc_3_2) {$256 \times 64 \times 64$};
+\node[conv_layer3, anchor=west] at ([xshift=0.05cm]enc_3_1_map.east) (enc_3_2_map) {};
+\node[textInCentRot] at (enc_3_2_map) {$256 \times 64 \times 64$};
 
-\node[conv_layer3, anchor=west] at ([xshift=0.05cm]enc_3_2.east) (enc_3_3_map) {};
+\node[conv_layer3, anchor=west] at ([xshift=0.05cm]enc_3_2_map.east) (enc_3_3_map) {};
 \node[textInCentRot] at (enc_3_3_map) {$256 \times 64 \times 64$};
 
 \node[pool_layer3, anchor=west] at ([xshift=0.05cm]enc_3_3_map.east) (pool_3_map) {};
 \node[textInCentRot] at (pool_3_map) {$256 \times 32 \times 32$};
 
 
-\node[conv_layer4, anchor=west] at ([xshift=-0.225cm, yshift=-1.5cm]pool_3_map.south) (enc_4_1) {};
-\node[textInCentRot] at (enc_4_1) {$512 \times 32^2$};
+\node[conv_layer4, anchor=west] at ([xshift=-0.225cm, yshift=-1.5cm]pool_3_map.south) (enc_4_1_map) {};
+\node[textInCentRot] at (enc_4_1_map) {$512 \times 32^2$};
 
-\node[conv_layer4, anchor=west] at ([xshift=0.05cm]enc_4_1.east) (enc_4_2) {};
-\node[textInCentRot] at (enc_4_2) {$512 \times 32^2$};
+\node[conv_layer4, anchor=west] at ([xshift=0.05cm]enc_4_1_map.east) (enc_4_2_map) {};
+\node[textInCentRot] at (enc_4_2_map) {$512 \times 32^2$};
 
-\node[conv_layer4, anchor=west] at ([xshift=0.05cm]enc_4_2.east) (enc_4_3_map) {};
+\node[conv_layer4, anchor=west] at ([xshift=0.05cm]enc_4_2_map.east) (enc_4_3_map) {};
 \node[textInCentRot] at (enc_4_3_map) {$512 \times 32^2$};
 
 \node[pool_layer4, anchor=west] at ([xshift=0.05cm]enc_4_3_map.east) (pool_4_map) {};
 \node[textInCentRot] at (pool_4_map) {$512 \times 16^2$};
 
 
-\node[conv_layer5, anchor=west] at ([xshift=-0.25cm, yshift=-1.25cm]pool_4_map.south) (enc_5_1) {};
-\node[textInCentRot] at (enc_5_1) {$512 \times 16^2$};
+\node[conv_layer5, anchor=west] at ([xshift=-0.25cm, yshift=-1.25cm]pool_4_map.south) (enc_5_1_map) {};
+\node[textInCentRot] at (enc_5_1_map) {$512 \times 16^2$};
 
-\node[conv_layer5, anchor=west] at ([xshift=0.05cm]enc_5_1.east) (enc_5_2) {};
-\node[textInCentRot] at (enc_5_2) {$512 \times 16^2$};
+\node[conv_layer5, anchor=west] at ([xshift=0.05cm]enc_5_1_map.east) (enc_5_2_map) {};
+\node[textInCentRot] at (enc_5_2_map) {$512 \times 16^2$};
 
-\node[conv_layer5, anchor=west] at ([xshift=0.05cm]enc_5_2.east) (enc_5_3_map) {};
+\node[conv_layer5, anchor=west] at ([xshift=0.05cm]enc_5_2_map.east) (enc_5_3_map) {};
 \node[textInCentRot] at (enc_5_3_map) {$512 \times 16^2$};
 
 \node[pool_layer5, anchor=west] at ([xshift=0.05cm]enc_5_3_map.east) (pool_5_map) {};
 \node[textInCentRot] at (pool_5_map) {$512 \times 8^2$};
 
 
-\draw[arrow] (pool_1_map) -- (enc_2_1);
-\draw[arrow] (pool_2_map) -- (enc_3_1);
-\draw[arrow] (pool_3_map) -- (enc_4_1);
-\draw[arrow] (pool_4_map) -- (enc_5_1);
 
-
-
+% =========================== ENCODER-BLUR ===========================
 \node[pool_layer5, anchor=north] at ([yshift=-1cm]pool_5_map.south) (pool_5_blur) {};
 \node[textInCentRot] at (pool_5_blur) {$512 \times 8^2$};
 
 \node[conv_layer5, anchor=east] at ([xshift=-0.05cm]pool_5_blur.west) (enc_5_3_blur) {};
 \node[textInCentRot] at (enc_5_3_blur) {$512 \times 16^2$};
 
-\node[conv_layer5, anchor=east] at ([xshift=-0.05cm]enc_5_3_blur.west) (enc_5_2) {};
-\node[textInCentRot] at (enc_5_2) {$512 \times 16^2$};
+\node[conv_layer5, anchor=east] at ([xshift=-0.05cm]enc_5_3_blur.west) (enc_5_2_blur) {};
+\node[textInCentRot] at (enc_5_2_blur) {$512 \times 16^2$};
 
-\node[conv_layer5, anchor=east] at ([xshift=-0.05cm]enc_5_2.west) (enc_5_1) {};
-\node[textInCentRot] at (enc_5_1) {$512 \times 16^2$};
+\node[conv_layer5, anchor=east] at ([xshift=-0.05cm]enc_5_2_blur.west) (enc_5_1_blur) {};
+\node[textInCentRot] at (enc_5_1_blur) {$512 \times 16^2$};
 
 
-\node[pool_layer4, anchor=north] at ([yshift=-0.5cm]enc_5_1.south) (pool_4_blur) {};
+\node[pool_layer4, anchor=north] at ([yshift=-0.5cm]enc_5_1_blur.south) (pool_4_blur) {};
 \node[textInCentRot] at (pool_4_blur) {$512 \times 16^2$};
 
 \node[conv_layer4, anchor=east] at ([xshift=-0.05cm]pool_4_blur.west) (enc_4_3_blur) {};
 \node[textInCentRot] at (enc_4_3_blur) {$512 \times 32^2$};
 
-\node[conv_layer4, anchor=east] at ([xshift=-0.05cm]enc_4_3_blur.west) (enc_4_2) {};
-\node[textInCentRot] at (enc_4_2) {$512 \times 32^2$};
+\node[conv_layer4, anchor=east] at ([xshift=-0.05cm]enc_4_3_blur.west) (enc_4_2_blur) {};
+\node[textInCentRot] at (enc_4_2_blur) {$512 \times 32^2$};
 
-\node[conv_layer4, anchor=east] at ([xshift=-0.05cm]enc_4_2.west) (enc_4_1) {};
-\node[textInCentRot] at (enc_4_1) {$512 \times 32^2$};
+\node[conv_layer4, anchor=east] at ([xshift=-0.05cm]enc_4_2_blur.west) (enc_4_1_blur) {};
+\node[textInCentRot] at (enc_4_1_blur) {$512 \times 32^2$};
 
 
-\node[pool_layer3, anchor=north] at ([yshift=-0.5cm]enc_4_1.south) (pool_3_blur) {};
+\node[pool_layer3, anchor=north] at ([yshift=-0.5cm]enc_4_1_blur.south) (pool_3_blur) {};
 \node[textInCentRot] at (pool_3_blur) {$256 \times 32 \times 32$};
 
 \node[conv_layer3, anchor=east] at ([xshift=-0.05cm]pool_3_blur.west) (enc_3_3_blur) {};
 \node[textInCentRot] at (enc_3_3_blur) {$256 \times 64 \times 64$};
 
-\node[conv_layer3, anchor=east] at ([xshift=-0.05cm]enc_3_3_blur.west) (enc_3_2) {};
-\node[textInCentRot] at (enc_3_2) {$256 \times 64 \times 64$};
+\node[conv_layer3, anchor=east] at ([xshift=-0.05cm]enc_3_3_blur.west) (enc_3_2_blur) {};
+\node[textInCentRot] at (enc_3_2_blur) {$256 \times 64 \times 64$};
 
-\node[conv_layer3, anchor=east] at ([xshift=-0.05cm]enc_3_2.west) (enc_3_1) {};
-\node[textInCentRot] at (enc_3_1) {$256 \times 64 \times 64$};
+\node[conv_layer3, anchor=east] at ([xshift=-0.05cm]enc_3_2_blur.west) (enc_3_1_blur) {};
+\node[textInCentRot] at (enc_3_1_blur) {$256 \times 64 \times 64$};
 
 
-\node[pool_layer2, anchor=north] at ([yshift=-0.5cm]enc_3_1.south) (pool_2_blur) {};
+\node[pool_layer2, anchor=north] at ([yshift=-0.5cm]enc_3_1_blur.south) (pool_2_blur) {};
 \node[textInCentRot] at (pool_2_blur) {$128 \times 64 \times 64$};
 
 \node[conv_layer2, anchor=east] at ([xshift=-0.05cm]pool_2_blur.west) (enc_2_2_blur) {};
 \node[textInCentRot] at (enc_2_2_blur) {$128 \times 128 \times 128$};
 
-\node[conv_layer2, anchor=east] at ([xshift=-0.05cm]enc_2_2_blur.west) (enc_2_1) {};
-\node[textInCentRot] at (enc_2_1) {$128 \times 128 \times 128$};
+\node[conv_layer2, anchor=east] at ([xshift=-0.05cm]enc_2_2_blur.west) (enc_2_1_blur) {};
+\node[textInCentRot] at (enc_2_1_blur) {$128 \times 128 \times 128$};
 
 
-\node[pool_layer1, anchor=north] at ([yshift=-0.5cm]enc_2_1.south) (pool_1_blur) {};
+\node[pool_layer1, anchor=north] at ([yshift=-0.5cm]enc_2_1_blur.south) (pool_1_blur) {};
 \node[textInCentRot] at (pool_1_blur) {$64 \times 128 \times 128$};
 
 \node[conv_layer1, anchor=east] at ([xshift=-0.05cm]pool_1_blur.west) (enc_1_2_blur) {};
 \node[textInCentRot] at (enc_1_2_blur) {$64 \times 256 \times 256$};
 
-\node[conv_layer1, anchor=east] at ([xshift=-0.05cm]enc_1_2_blur.west) (enc_1_1) {};
-\node[textInCentRot] at (enc_1_1) {$64 \times 256 \times 256$};
+\node[conv_layer1, anchor=east] at ([xshift=-0.05cm]enc_1_2_blur.west) (enc_1_1_blur) {};
+\node[textInCentRot] at (enc_1_1_blur) {$64 \times 256 \times 256$};
 
-\node[image, anchor=east] at([xshift=-0.05cm]enc_1_1.west) (input_blur) {};
+\node[image, anchor=east] at([xshift=-0.05cm]enc_1_1_blur.west) (input_blur) {};
 \node[textInCentRot, text=white] at (input_blur) {blured image, $3 \times 256 \times 256$};
 
 
-\draw[arrow] (pool_1_blur) -- (enc_2_1);
-\draw[arrow] (pool_2_blur) -- (enc_3_1);
-\draw[arrow] (pool_3_blur) -- (enc_4_1);
-\draw[arrow] (pool_4_blur) -- (enc_5_1);
 
-
-
+% =========================== LATENT-SPACE ===========================
 \node[cat_layer, anchor=west] at ([xshift=0.5cm, yshift=-1cm]pool_5_map.east) (latent) {};
 \node[textInCentRot, anchor=center] at (latent) {$1024 \times 8^2$};
-
-
-\draw[arrow] ([yshift=0.25cm]pool_5_map.south east) -- ([yshift=-0.25cm]latent.north west);
-\draw[arrow] ([yshift=-0.25cm]pool_5_blur.north east) -- ([yshift=0.25cm]latent.south west);
-
-
 
 \node[1x1conv, anchor=south west] at ([xshift=0.5cm]latent.south east) (conv1x1_latSpace) {};
 \node[textInCent, anchor=center] at (conv1x1_latSpace) {$512 \times 8 \times 8$};
@@ -206,12 +194,8 @@
 \node[textInCent, anchor=center] at (sum_node) {$+$};
 
 
-\draw[arrow] (latent.east) -- (conv1x1_latSpace.west);
-\draw[arrow] (noise_conv_1.east) -- (sum_node);
-\draw[arrow] (conv1x1_latSpace.east) -- (sum_node);
 
-
-
+% ============================= DECODER ==============================
 \node[unPool_layer5, anchor=west] at ([xshift=0.5cm]sum_node.east) (unPool_5) {};
 \node[textInCentRot] at (unPool_5) {$512 \times 16^2$};
 
@@ -274,12 +258,41 @@
 \node[textInCentRot, text=white] at (gen_img) {generated img, $3 \times 256 \times 256$};
 
 
+
+% ============================== ARROWS ==============================
+\draw[arrow] (pool_1_map) -- (enc_2_1_map);
+\draw[arrow] (pool_2_map) -- (enc_3_1_map);
+\draw[arrow] (pool_3_map) -- (enc_4_1_map);
+\draw[arrow] (pool_4_map) -- (enc_5_1_map);
+
+
+\draw[arrow] (pool_1_blur) -- (enc_2_1_blur);
+\draw[arrow] (pool_2_blur) -- (enc_3_1_blur);
+\draw[arrow] (pool_3_blur) -- (enc_4_1_blur);
+\draw[arrow] (pool_4_blur) -- (enc_5_1_blur);
+
+
+\draw[arrow] ([yshift=0.25cm]pool_5_map.south east) -- ([yshift=-0.25cm]latent.north west);
+\draw[arrow] ([yshift=-0.25cm]pool_5_blur.north east) -- ([yshift=0.25cm]latent.south west);
+
+
+\draw[arrow] (latent.east) -- (conv1x1_latSpace.west);
+\draw[arrow] (noise_conv_1.east) -- (sum_node);
+\draw[arrow] (conv1x1_latSpace.east) -- (sum_node);
+
+
 \draw[arrow] (sum_node) -- (unPool_5);
 \draw[arrow] (dec_5_3) -- (unPool_4);
 \draw[arrow] (dec_4_3) -- (unPool_3);
 \draw[arrow] (dec_3_3) -- (unPool_2);
 \draw[arrow] (dec_2_2) -- (unPool_1);
 
+
+\draw[poolingarrow] ([yshift=-0.125cm]pool_5_map.north east) -| (unPool_5.north);
+\draw[poolingarrow] ([yshift=-0.125cm]pool_4_map.north east) -| (unPool_4.north);
+\draw[poolingarrow] ([yshift=-0.125cm]pool_3_map.north east) -| (unPool_3.north);
+\draw[poolingarrow] ([yshift=-0.125cm]pool_2_map.north east) -| (unPool_2.north);
+\draw[poolingarrow] ([yshift=-0.125cm]pool_1_map.north east) -| (unPool_1.north);
 
 
 \draw[skiparrow] ([yshift=-0.125cm]enc_5_3_map.north east) -| (dec_5_1.north);
@@ -296,6 +309,50 @@
 
 
 
+% ============================== LEGEND ==============================
+
+    textRight/.style        ={rotate=0,     anchor=west,        align=left,                 font=\tiny, inner xsep=0mm},
+
+\node[textRight, anchor=north west, font=\scriptsize] at ([yshift=-0.5cm]input_blur.south west) (leg_title) {Legende};
+
+% Definiere die Legendeneinträge
+\node[legendRect, fill=blue, anchor=north west] at ([xshift=1mm, yshift=-1mm]leg_title.south west) (leg1) {};
+\node[textRight] at ([xshift=0.1cm]leg1.east) (leg1_txt) {Input / Output};
+
+\node[legendRect, fill=green!40, anchor=west] at ([xshift=0.5cm]leg1_txt.east) (leg2) {};
+\node[textRight] at ([xshift=0.1cm]leg2.east) (leg2_txt) {Conv. + Inst. Norm. + ReLU};
+
+\node[legendRect, fill=cyan!40, anchor=west] at ([xshift=0.5cm]leg2_txt.east) (leg3) {};
+\node[textRight] at ([xshift=0.1cm]leg3.east) (leg3_txt) {Pooling};
+
+\node[legendRect, fill=violet!40, anchor=west] at ([xshift=0.5cm]leg3_txt.east) (leg4) {};
+\node[textRight] at ([xshift=0.1cm]leg4.east) (leg4_txt) {Un-Pooling};
+
+\node[legendRect, fill=red!40, anchor=west] at ([xshift=0.5cm]leg4_txt.east) (leg5) {};
+\node[textRight] at ([xshift=0.1cm]leg5.east) (leg5_txt) {Concatenation};
+
+% Pfeile in der Legende
+\path (leg5_txt.east) ++(0.5cm,0) coordinate (arrow_start);
+\draw[arrow, shorten >=1pt, shorten <=1pt] (arrow_start) -- ++(0.5,0) node[right, anchor=west, xshift=0.1cm, font=\tiny] (leg6) {Data Flow};
+
+\path (leg6.east) ++(0.5cm, 0) coordinate (skiparrow_start);
+\draw[skiparrow, shorten >=1pt, shorten <=1pt] (skiparrow_start) -- ++(0.5,0) node[right, anchor=west, xshift=0.1cm, font=\tiny] (leg7) {Skip Connection};
+
+\path (leg7.east) ++(0.5cm, 0) coordinate (skiparrow_start);
+\draw[poolingarrow, shorten >=1pt, shorten <=1pt] (skiparrow_start) -- ++(0.5,0) node[right, anchor=west, xshift=0.1cm, font=\tiny] (leg8) {Pooling Indices};
+
+\node[draw, rounded corners, fit=(leg1) (leg8), inner sep=1mm] {};
+
+\begin{scope}[
+    shift={([xshift=0cm, yshift=-1cm]input_blur.south)},
+    every node/.style={font=\tiny},
+    textRight/.style    ={rotate=0, anchor=west, align=left, font=\tiny, inner xsep=0mm},
+    legendRect/.style   ={draw, minimum width=4mm, minimum height=4mm},
+]
+
+    % % Zeichne einen Rahmen um die gesamte Legende
+    % \node[draw, rounded corners, fit=(leg1) (leg7), inner sep=4mm, label={[font=\tiny]above:Legende}] {};
+\end{scope}
 
 \end{tikzpicture}
 \end{document}
