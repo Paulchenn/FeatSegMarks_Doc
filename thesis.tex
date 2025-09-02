@@ -56,10 +56,14 @@
 %%%%% integrate packages to be used %%%%%
 
 
+%% For ToDos
+%\usepackage{todonotes}
+
+
 %% Package Comments
 \usepackage{comment}
-\usepackage[colorinlistoftodos]{todonotes}
-\newcommand{\mycomment}[1]{\todo[inline,linecolor=green,backgroundcolor=yellow!25,bordercolor=green,caption={}]{todo: #1}}
+\usepackage[textwidth=3cm]{todonotes} %[colorinlistoftodos]
+\newcommand{\mycomment}[1]{\todo[inline,linecolor=red,backgroundcolor=yellow!25,bordercolor=green,caption={}]{?? TODO: #1}}
 
 
 %% Package Language support:
@@ -107,8 +111,8 @@
 \pgfplotsset{plot coordinates/math parser=false}
 \usetikzlibrary{patterns,arrows,shapes,positioning,shadows,trees,calc,positioning,external}
 \usepackage{tikz}
-\tikzexternalize[prefix=Figures/tikzexternalize_cache/,optimize command away=\includepdf]
-%\tikzexternaldisable
+%\tikzexternalize[prefix=Figures/tikzexternalize_cache/,optimize command away=\includepdf]
+\tikzexternaldisable
 % https://golatex.de//wiki/%5cincludegraphics
 
 %% For tree diagrams
@@ -338,6 +342,8 @@
 	% Display page without headers and footers
 	%\renewcommand{\thepage}{\Roman{page}}
 	\pagestyle{plain} 
+
+	\listoftodos[ToDo's]
 	
 
 	% The title page and, if applicable, the embargo notice are included here
