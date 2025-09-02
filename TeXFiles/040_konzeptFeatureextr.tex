@@ -22,6 +22,8 @@ Die Architektur zur Online-Generierung formverzerrter Bilder ist als eigenständ
 
 Der Workflow beginnt mit dem \textbf{Trainingsstart} auf dem Datensatz \textbf{ImageNet256}~\cite{Uriot2023imageNet}. Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, sobald der gesamte Datensatz verarbeitet ist.
 
+\newpage
+
 
 
 \subsubsection{Phase 1: Erzeugung von Textur-reduzierten Bildern ohne Kantenverformung}
@@ -33,7 +35,7 @@ Die Texturreduktion des Eingangsbilds erfolgt durch ein downsampling des Origina
 \end{equation}
 wobei $I_{orig}$ als Originalbild zu verstehen ist, $DS()$ und $Interp()$ für das downsampling sowie die bilineare Interpolation und $I_{txt}$ als das texturreduzierte Bild.
 
-Entgegen in~\cite{He_2023_ICCV} präsentiert, hat bei der Verwendung von $256 \times 256$, anstelle $32 \times 32$, Pixel großen Bildern keine Verschiebung in Richtung eines Shape-Bias stattgefunden. Ein eigens entworfenes Diagnosetool (siehe~\ref{??}) zeigt, dass diverse Trainings mit verschieden stark texturreduzierten Eingangsbildern nahezu die gesammte Information zur Generierung des neuen Bilds aus der texturreduzierten Eingangsbildern bezieht und die Kantenkarte ignoriert wird. Abbildung~\ref{fig:dsRate_vs_EdgeImg} zeigt das beschriebene Verhalten: Unhabhängig des Grades der Texturreduktion hat die Kantenkarte nahezu keinen Einfluss auf die Bildgenerierung. Dies würde vorraussichtlich in Phase zwei des Trainings, dazu führen, dass keine Kantendeformierung stattfindet.
+Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen findet bei der Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln, anstelle von $32 \times 32$ Pixeln, keine Verschiebung hin zu einem Shape-Bias statt. Ein speziell entwickeltes Diagnosetool \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{??}) demonstriert, dass in mehreren Trainingsläufen mit unterschiedlich stark texturreduzierten Eingangsbildern das Modell die zur Bildgenerierung notwendigen Informationen nahezu vollständig aus den texturreduzierten Bildern extrahiert. Gleichzeitig wird die Kantenkarte weitgehend ignoriert. Dieses Verhalten belegt Abbildung~\ref{fig:dsRate_vs_EdgeImg}. Unabhängig vom Grad der Texturreduktion hat die Kantenkarte nahezu keinen Einfluss auf den Bildgenerierungsprozess. Dies legt die Vermutung nahe, dass in der zweiten Phase des Trainings eine Deformation der Kanten vermieden wird.
 \begin{figure}[htpb]
     \centering
     % Die PDF-Datei (erste Seite) wird eingebunden
@@ -43,21 +45,41 @@ Entgegen in~\cite{He_2023_ICCV} präsentiert, hat bei der Verwendung von $256 \t
     \label{fig:dsRate_vs_EdgeImg}
 \end{figure}
 
-?? TODO: Variabler blur bei Eingabe netG beschreiben --> Grafik möglich? Wenn nicht auch i. O.
+Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen, respektive den Shape-Bias zu fördern, wird ein variabler Gaussian Blur auf die Eingangsbilder angewendet. Dieser Ansatz ermöglicht, die Intensität der Texturreduktion dynamisch zu steuern. Die Implementierung der Unschärfe erfolgt über eine spezielle Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert.
 
-Bei der Generierung der Kantenkarte ist darauf zu achten, dass diese
+Mit einer Wahrscheinlichkeit von $p_{heavy}$ wird ein starkes Downsampling auf die geringe Größe $heavy_{down} \times heavy_{down}$ angewendet.
+Andernfalls wird der Downsampling-Faktor zufällig innerhalb eines Bereichs von $[down_{min}, down_{max}]$ gewählt, wodurch eine moderate Texturreduktion erreicht wird.
+Zusätzlich besteht eine Wahrscheinlichkeit von $p_{zero}$, dass das Eingangsbild vollständig mit Nullwerten gefüllt wird.
+Dies entspricht einem harten Texture-Dropout.
+Unabhängig von der gewählten Methode wird anschließend eine bilineare Interpolation auf die Originalgröße durchgeführt.
+Optional kann dem resultierenden Bild noch leichtes Rauschen mit einer Standardabweichung von $noise_{std}$ hinzugefügt werden.
+\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Ggf. Variabler blur bei Eingabe netG.}
+
+Die Generierung der Kantenkarte muss zwei kritische Anforderungen erfüllen:
 \begin{enumerate}
-    \item differenzierbar ist, um den Verlust korrekt auf die einzelnen Neuronen zurückrechnen zu können und
-    \item für die Bildgröße außreichende Ergebnisse liefert.
+    \item Die Kantenkarte muss differenzierbar sein, um eine korrekte Verlustrückpropagierung zu ermöglichen, und 
+    \item für die gegebene Bildgröße geeignete Ergebnisse liefern.
 \end{enumerate}
-Bei der Verwendung der in~\cite{He_2023_ICCV} vorgestellten \textit{\ac{EMSE}} hat sich herausgestellt, dass diese in der vorgestellten Form hier nicht angewendet werden kann. Die \textit{\ac{EMSE}} ist weder differenzierbar, noch kann die generierte Kantenkarte bei $256 \times 256$ Pixel großen Bildern (vgl. ImageNet256~\cite{Uriot2023imageNet}) als Eingabe für das Generator Training genutzt werden.
+Die ursprüngliche \textit{\ac{EMSE}}-Methode aus~\cite{He_2023_ICCV}, die auf dem nicht-differenzierbaren Canny-Algorithmus basiert und eine ineffiziente CPU-Verarbeitung nutzt, ist für eine nahtlose Integration in eine \textbf{End-to-End}-Trainingspipeline ungeeignet. Um diese Problematiken zu beheben, wird die \textit{\ac{DS-EMSE}}-Methode eingeführt.
 
-Aufgrund der genannten Problematiken wird hier die \textit{\ac{DS-EMSE}} eingeführt. ?? BESCHREIBEN TIM ?? --> Gerne auch mit Ergebnissen von EMSE und DS-EMSE als Gegenüberstellung. Evtl. auch Diagramm hier möglich ...
+Die hier vorgeschlagene \textit{\ac{DS-EMSE}}-Methode überwindet diese Einschränkungen, indem eine vollständig differenzierbare Kantenextraktion implementiert wird. Anstelle des nicht-differenzierbaren Canny-Algorithmus wird der Sobel-Filter verwendet, um die Kanten zu berechnen.
 
-?? TODO: Verlustfunktion und Gewichte beschreiben --> ggf. mit Grafik Loss über versch. Lambdas.
+Die Implementierung umfasst folgende Schritte: \todo[author=Paul]{Überarbeiten!}
+\begin{enumerate}
+\item Das Eingangsbild ($I_{orig}$) wird in ein Graustufenbild konvertiert, um die Komplexität zu reduzieren und sich auf Luminanzunterschiede zu konzentrieren.
+\item Ein zweidimensionales Faltungsnetzwerk (PyTorch) wendet die horizontalen ($K_x$) und vertikalen ($K_y$) Sobel-Filter-Matrizen an. Dies ermöglicht die Berechnung der Ableitungen in beide Richtungen, $G_x$ und $G_y$.
+\item Die Kantenstärke (Magnitude) wird als $\sqrt{G_x^2 + G_y^2}$ berechnet, was die Aggregation der Gradienteninformationen über beide Achsen hinweg darstellt.
+\item Das resultierende Kantenstärkenbild wird normalisiert und invertiert. Dies stellt sicher, dass Kanten einen geringen und Hintergründe einen hohen Wert aufweisen.
+\item Das einkanalige, invertierte Kantenstärkenbild wird auf drei Kanäle repliziert, um der erwarteten Eingabe des Generator-Netzes zu entsprechen.
+\end{enumerate}
+Im Gegensatz zur Canny-basierten \textit{\ac{EMSE}}-Methode, die eine Kantenkarte als binäres (schwarz-weißes) Bild liefert, erzeugt die \textit{\ac{DS-EMSE}}-Methode eine Kantenkarte mit Graustufen. Diese Graustufen-Kantenkarte repräsentiert die Stärke der Kanten an jeder Stelle im Bild und ermöglicht es dem Netzwerk, subtile Gradientenunterschiede zu nutzen. Dies führt zu einer höheren Informationsdichte in der Kantenkarte, was sich positiv auf das Training des Generators auswirkt. Die durchgängige Differenzierbarkeit innerhalb der PyTorch-Umgebung eliminiert die Notwendigkeit von CPU-Transfers und ermöglicht eine nahtlose Integration in die Backpropagation.
+\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Evtl. Grafik EMSE vs. DS-EMSE.}
+
+\todo{Verlustfunktion und Gewichte beschreiben.}
+\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Ggf. Grafik Loss über versch. Lambdas.}
 
 \subsubsection{Phase 2: Fine-Tuning mit Kantenverformung}
-?? TODO: Bisher von chatGPT/Gemini geschrieben --> noch überarbeiten !! --> Grafiken, etc.
+\todo{Überarbeiten! (Grafiken, etc.)}
 
 Die zweite Phase dient dem Fine-Tuning des Generators, um die Empfindlichkeit gegenüber Kantenverformungen zu verringern und das Training zu stabilisieren.
 \begin{itemize}
@@ -75,7 +97,6 @@ Die Validierung und Optimierung am Ende jeder Epoche laufen wie im Diagramm besc
 
 Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor eine verbesserte Robustheit gegenüber Beleuchtungsänderungen, Oberflächenbeschaffenheit und Skalierung aufweist, da seine Merkmalserkennung von der variablen Textur entkoppelt wird.
 
-?? TODO: Mehr Bezug noch auf Ablaufplan nehmen !!
 \begin{figure}[htpb]
     \centering
     % Die PDF-Datei (erste Seite) wird eingebunden
@@ -84,13 +105,17 @@ Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor ein
     \caption{Ablauf SDbOA}
     \label{fig:Ablauf_SDbOA}
 \end{figure}
+\todo{Mehr Bezug noch auf Ablaufplan nehmen !!}
+
+\newpage
 
 
 
 
 
 \section{Aufbau Netzarchitektur}
-?? TODO: Architektur beschreiben, v. a., dass Zahlen für Ausgangsgrößen der Schichten stehen.
+\todo{Architektur beschreiben.}
+\todo[inline]{V. a., dass Zahlen für Ausgangsgrößen der Schichten stehen.}
 \begin{figure}[htpb]
     \centering
     % Die PDF-Datei (erste Seite) wird eingebunden
