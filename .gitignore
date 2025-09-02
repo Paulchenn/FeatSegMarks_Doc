@@ -21,3 +21,4 @@ build/thesis.synctex(busy)
 *.fls
 *.DS_Store
 thesis.pdf
+*.tdo
