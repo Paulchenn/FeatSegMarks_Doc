@@ -35,14 +35,27 @@ Die Texturreduktion des Eingangsbilds erfolgt durch ein downsampling des Origina
 \end{equation}
 wobei $I_{orig}$ als Originalbild zu verstehen ist, $DS()$ und $Interp()$ für das downsampling sowie die bilineare Interpolation und $I_{txt}$ als das texturreduzierte Bild.
 
-Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen findet bei der Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln, anstelle von $32 \times 32$ Pixeln, keine Verschiebung hin zu einem Shape-Bias statt. Ein speziell entwickeltes Diagnosetool \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{??}) demonstriert, dass in mehreren Trainingsläufen mit unterschiedlich stark texturreduzierten Eingangsbildern das Modell die zur Bildgenerierung notwendigen Informationen nahezu vollständig aus den texturreduzierten Bildern extrahiert. Gleichzeitig wird die Kantenkarte weitgehend ignoriert. Dieses Verhalten belegt Abbildung~\ref{fig:dsRate_vs_EdgeImg}. Unabhängig vom Grad der Texturreduktion hat die Kantenkarte nahezu keinen Einfluss auf den Bildgenerierungsprozess. Dies legt die Vermutung nahe, dass in der zweiten Phase des Trainings eine Deformation der Kanten vermieden wird.
-\begin{figure}[htpb]
-    \centering
-    % Die PDF-Datei (erste Seite) wird eingebunden
+Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen findet bei der Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln, anstelle von $32 \times 32$ Pixeln, keine Verschiebung hin zu einem Shape-Bias statt. Ein speziell entwickeltes Diagnosetool \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{??}) demonstriert, dass in mehreren Trainingsläufen mit unterschiedlich stark texturreduzierten Eingangsbildern das Modell die zur Bildgenerierung notwendigen Informationen nahezu vollständig aus den texturreduzierten Bildern extrahiert. Gleichzeitig wird die Kantenkarte weitgehend ignoriert. Dieses Verhalten belegt Abbildung~\ref{fig:Kantenverlust}. Unabhängig vom Grad der Texturreduktion hat die Kantenkarte nahezu keinen Einfluss auf den Bildgenerierungsprozess. Dies legt die Vermutung nahe, dass in der zweiten Phase des Trainings eine Deformation der Kanten vermieden wird.
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[t]{\VarPicWidthF}
+	\centering
     % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
-    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/pdf/dsRate_vs_EdgeImg.pdf} % trim = L B R O
-    \caption{Einfluss auf das Generierte Bild über dem Grad der Texturreduktion}
-    \label{fig:dsRate_vs_EdgeImg}
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/pdf/Ledge_vs_dsRate.pdf} % trim = L B R O
+	\caption{Gradientennorm des Kantenverlusts ($L_{edge}$) in Bezug auf den Kanten-Eingang ($E$) und den Textur-Eingang ($I_{txt}$) als Funktion der Downsampling-Rate.}
+	\label{fig:Sens_Kantenverlust}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{\VarPicWidthF}
+	\centering
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/pdf/ratioEI_vs_dsRate.pdf} % trim = L B R O
+	\caption{Verhältnis der Gradientennormen als Funktion der Downsampling-Rate. Dieser Wert visualisiert die relative Bedeutung des Kanten-Eingangs im Vergleich zum Textur-Eingang für die Generierung von Kanteninformationen.}
+	\label{fig:Verhaeltnis_Sens_Kantenverlust}
+\end{subfigure}
+\caption{Analyse der Nutzung von Kanten- und Texturinformationen durch den Generator bei variierender Downsampling-Rate der Texturkarte.}
+\label{fig:Kantenverlust}
 \end{figure}
 
 Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen, respektive den Shape-Bias zu fördern, wird ein variabler Gaussian Blur auf die Eingangsbilder angewendet. Dieser Ansatz ermöglicht, die Intensität der Texturreduktion dynamisch zu steuern. Die Implementierung der Unschärfe erfolgt über eine spezielle Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert.
@@ -64,18 +77,37 @@ Die ursprüngliche \textit{\ac{EMSE}}-Methode aus~\cite{He_2023_ICCV}, die auf d
 
 Die hier vorgeschlagene \textit{\ac{DS-EMSE}}-Methode überwindet diese Einschränkungen, indem eine vollständig differenzierbare Kantenextraktion implementiert wird. Anstelle des nicht-differenzierbaren Canny-Algorithmus wird der Sobel-Filter verwendet, um die Kanten zu berechnen.
 
-Die Implementierung umfasst folgende Schritte: \todo[author=Paul]{Überarbeiten!}
+Die Implementierung umfasst folgende Schritte:
 \begin{enumerate}
 \item Das Eingangsbild ($I_{orig}$) wird in ein Graustufenbild konvertiert, um die Komplexität zu reduzieren und sich auf Luminanzunterschiede zu konzentrieren.
-\item Ein zweidimensionales Faltungsnetzwerk (PyTorch) wendet die horizontalen ($K_x$) und vertikalen ($K_y$) Sobel-Filter-Matrizen an. Dies ermöglicht die Berechnung der Ableitungen in beide Richtungen, $G_x$ und $G_y$.
-\item Die Kantenstärke (Magnitude) wird als $\sqrt{G_x^2 + G_y^2}$ berechnet, was die Aggregation der Gradienteninformationen über beide Achsen hinweg darstellt.
-\item Das resultierende Kantenstärkenbild wird normalisiert und invertiert. Dies stellt sicher, dass Kanten einen geringen und Hintergründe einen hohen Wert aufweisen.
+\item Ein zweidimensionales Faltungsnetzwerk (PyTorch) wendet die horizontalen ($K_x$) und vertikalen ($K_y$) Sobel-Filter-Matrizen an~\cite{Sobel2014operator}. Dies ermöglicht die Berechnung der Ableitungen sowohl in horizintaler x-Richtung ($G_x$) sowie vertikaler y-Richtung ($G_y$).
+\item Die Kantenstärke (Magnitude) wird als $\sqrt{G_x^2 + G_y^2}$ berechnet. Dies stellt die Aggregation der Gradienteninformationen über beide Achsen hinweg.
+\item Das resultierende Kantenstärkenbild wird normalisiert und invertiert. Dies stellt sicher, dass Kanten einen geringen (schwrze Pixel) und Hintergründe einen hohen (weiße Pixel) Wert aufweisen.
 \item Das einkanalige, invertierte Kantenstärkenbild wird auf drei Kanäle repliziert, um der erwarteten Eingabe des Generator-Netzes zu entsprechen.
 \end{enumerate}
-Im Gegensatz zur Canny-basierten \textit{\ac{EMSE}}-Methode, die eine Kantenkarte als binäres (schwarz-weißes) Bild liefert, erzeugt die \textit{\ac{DS-EMSE}}-Methode eine Kantenkarte mit Graustufen. Diese Graustufen-Kantenkarte repräsentiert die Stärke der Kanten an jeder Stelle im Bild und ermöglicht es dem Netzwerk, subtile Gradientenunterschiede zu nutzen. Dies führt zu einer höheren Informationsdichte in der Kantenkarte, was sich positiv auf das Training des Generators auswirkt. Die durchgängige Differenzierbarkeit innerhalb der PyTorch-Umgebung eliminiert die Notwendigkeit von CPU-Transfers und ermöglicht eine nahtlose Integration in die Backpropagation.
+Im Gegensatz zur Canny-basierten \textit{\ac{EMSE}}-Methode, die eine Kantenkarte als binäres (schwarz-weißes) Bild liefert, erzeugt die \textit{\ac{DS-EMSE}}-Methode eine Kantenkarte mit Graustufen. Diese Graustufen-Kantenkarte repräsentiert die Stärke der Kanten an jeder Stelle im Bild und ermöglicht es dem Netzwerk, subtile Gradientenunterschiede zu nutzen. Dies führt zu einer höheren Informationsdichte in der Kantenkarte, was sich positiv auf das Training des Generators auswirkt. Die durchgängige Differenzierbarkeit innerhalb der PyTorch-Umgebung eliminiert die Notwendigkeit von \ac{CPU}-Transfers und ermöglicht eine nahtlose Integration in die Backpropagation.
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Evtl. Grafik EMSE vs. DS-EMSE.}
 
-\todo{Verlustfunktion und Gewichte beschreiben.}
+\subsubsection{Verlustfunktion und Gewichtung}
+Die Verlustfunktion $L_{1st}$ in der ersten Trainingsphase dient der initialen Generierung eines grob-generierten Bildes. Die von~\textcite{He_2023_ICCV} ursprünglich definierte Verlustfunktion für die erste Phase setzt sich aus dem
+\begin{itemize}
+    \item dem adversarial loss ($L_{gan}$),
+    \item dem $L_1$-Verlust ($L_L1$) sowie
+    \item dem Cross-Entropy-Verlust ($L_{CE}$)
+\end{itemize}
+zusammen:
+\begin{equation}
+    L_{1st} = \lambda_{GAN} L_{gan} + \lambda_{L1} L_{L1} + \lambda_{cls} L_{CE}
+\end{equation}
+
+Dabei entsprechen die Terme den folgenden Komponenten:
+\begin{itemize}
+\item \textbf{Adversarial Loss ($L_{gan}$)}: Dieser Verlustterm ist der zentrale Bestandteil des \ac{GAN}-Trainings. Er regelt die Konkurrenz zwischen dem Generator und dem Diskriminator. Der Generator wird trainiert, um Bilder zu erzeugen, die vom Diskriminator als \enquote{real} eingestuft werden, während der Diskriminator lernt, zwischen echten und generierten Bildern zu unterscheiden. Dieser Mechanismus sorgt für die fotorealistische Qualität der generierten Bilder~\cite{He_2023_ICCV}.
+\item \textbf{$L_1$-Verlust ($L_L1$)}: Dieser Term misst die absolute Differenz zwischen dem generierten Bild ($I_{gen}$) und dem ursprünglichen Bild ($I_{orig}$). Er dient als starke Einschränkung, die sicherstellt, dass die grundlegenden Farben und Texturen des Originalbildes im generierten Bild beibehalten werden. Im Gegensatz zur originalen Arbeit von~\textcite{He_2023_ICCV}, die einen feature matching loss verwendet, wird hier ein direkter $L_1$-Verlust genutzt, eine Technik, die auch in anderen bildgenerierenden Modellen, wie z. B. Pix2Pix \cite{isola2018Pix2Pix}, Anwendung findet.
+\item \textbf{Cross-Entropy-Verlust ($L_{cls}$)}: Dieser Verlustterm ist entscheidend für die Korrelation zwischen der generierten Form und der Texturkategorie. Er stellt sicher, dass das generierte Bild die richtige visuelle Repräsentation für die zugehörige Klasse (z. B. ein Hund, eine Katze) hat. Dies verhindert die Generierung von Bildern mit korrekter Form, aber einer inkorrekten Texturkategorie. Die Implementierung orientiert sich am ACGAN-Ansatz \cite{odena2017ACGAN}, der Klassifizierungsinformationen nutzt, um die Generierung zu steuern.
+\item \textbf{Shape-Preservation Loss ($L_{edge}$)}: Dieser Term misst die $L_1$-Norm zwischen der Kantenkarte des generierten Bildes ($E_{gen}$) und der Eingabe-Kantenkarte ($E_{in}$). Er stellt sicher, dass die Kanten des generierten Bildes denen der Eingabe-Kantenkarte ähneln. Im Unterschied zur Originalarbeit, in der dieser Verlust erst in der zweiten Phase des Trainings (fine-tuning) angewendet wird, wird er hier bereits in der ersten Phase eingeführt. Dies soll sicherstellen, dass das Netzwerk von Beginn an einen starken Fokus auf die Kanten legt und somit eine schnellere Verschiebung hin zu einem ausgeprägten Shape-Bias erfolgt.
+\end{itemize}
+Die $\lambda$-Koeffizienten dienen der Steuerung des Einflusses der einzelnen Terme auf den Gesamtverlust. Ihre optimale Abstimmung ist entscheidend für das Gleichgewicht zwischen der Bildqualität, der Kantenwiedergabe und der korrekten Klassenzuordnung.
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Ggf. Grafik Loss über versch. Lambdas.}
 
 \subsubsection{Phase 2: Fine-Tuning mit Kantenverformung}
