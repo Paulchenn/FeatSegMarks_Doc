@@ -1,0 +1,41 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+	width=\mywidthB,
+	height=\myheightB,
+	scale only axis,
+    %
+	xlabel=Grad der Texturreduktion,
+	xmin=0,
+	xmax=1,
+    %
+	ylabel=Verhältnis,
+	ymin=0,
+	ymax=1,
+    %
+	axis background/.style={fill=white},
+	legend style={
+    font=\small,
+		at={(0.95,0.95)}, % Position relativ zur Achsenbox
+		anchor=north east,
+		legend cell align=left,
+		align=left, draw=black}
+	]
+
+\addplot [color=red50, line width=1pt, mark=*] table[row sep=crcr]{
+0.9375	0.14983308915620266\\
+0.875	0.13105397694875606\\
+0.75	0.12508350294791307\\
+0.5	0.13703592486503224\\
+0	0.1432496221192329\\
+};
+\addlegendentry{\raisebox{7pt}{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$}}
+
+\end{axis}
+\end{tikzpicture}%

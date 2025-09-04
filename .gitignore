@@ -22,3 +22,4 @@ build/thesis.synctex(busy)
 *.DS_Store
 thesis.pdf
 *.tdo
+Figures/tikz2pdf/diagram/diagram.pdf
