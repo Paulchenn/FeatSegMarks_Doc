@@ -1,16 +1,43 @@
-\chapter{Konzept zur robusten Featureextraktion}
-\label{ch:SDbOA}
+\chapter{Konzept, Architektur und Implementierung}
+\label{ch:KonzeptArchitekturImplementierung}
+Nachdem in Kapitel \ref{ch:EntwicklungDerMethodik} die Herausforderungen bei der Adaption des Ansatzes von \textcite{He_2023_ICCV} identifiziert werden, dient das vorliegende Kapitel der detaillierten Ausarbeitung der entwickelten Lösungsansätze. Wir beschreiben hier die finale Architektur und das zugrundeliegende Konzept der Online-Daten-Augmentierung. Der Fokus liegt auf der präzisen Darstellung der Methodik, von der Online-Generierung formverzerrter Bilder über den Aufbau der Netzarchitektur bis hin zur praktischen Implementierung der gesamten Pipeline.
 
 
 
 
 
 \section{Architektur zur Online-Generierung formverzerrter Bilder}
-\label{SDbOA}
+\label{sec:ArchitekturOnlineGenerierung}
 
-Die Qualität von Merkmalen, die für Visual Servoing eingesetzt werden, hängt entscheidend von der Robustheit des zugrundeliegenden Detektions- und Deskriptorsystems ab. Traditionelle Verfahren der Merkmalsextraktion sind oft anfällig für texturbedingte Bildartefakte und variierende Umgebungsbedingungen, was die Leistungsfähigkeit der visuellen Regelung beeinträchtigt. Zur Überwindung dieser Limitationen zielt die vorliegende Arbeit auf die Stärkung des \textbf{Shape-Bias} gegenüber dem \textbf{Texture-Bias} ab, inspiriert durch die Forschung von \textcite{Zhang_2023_arXiv}. Hierbei wird die Merkmalserkennung verstärkt auf die strukturelle Form von Objekten trainiert, anstatt auf feine, oft unzuverlässige Texturmerkmale.
+Die Qualität von Merkmalen, die für Visual Servoing eingesetzt werden, hängt entscheidend von der Robustheit des zugrundeliegenden Detektions- und Deskriptorsystems ab. Traditionelle Verfahren der Merkmalsextraktion sind oft anfällig für texturbedingte Bildartefakte und variierende Umgebungsbedingungen. Dies beeinträchtigt die Leistungsfähigkeit der visuellen Regelung. Zur Überwindung dieser Limitationen zielt diese Arbeit auf die Stärkung des \textbf{Shape-Bias} gegenüber dem \textbf{Texture-Bias} ab, inspiriert durch die Forschung von \textcite{Zhang_2023_arXiv}. Hierbei wird die Merkmalserkennung verstärkt auf die strukturelle Form von Objekten trainiert, anstatt auf feine, oft unzuverlässige Texturmerkmale.
 
-Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bilddaten implementiert, der sich an der Architektur von \textcite{He_2023_ICCV} orientiert. Dieses Verfahren nutzt ein \textbf{\ac{GAN}}, das in der Lage ist, Bilder so zu modifizieren, sodass diese eine reduzierte Textur und verstärkte sowie deformierte Kanten aufweisen. Der Fokus dieser Methode liegt auf der gezielten Manipulation von Trainingsdaten, um einen nachfolgenden Keypoint-Detektor und -Deskriptor – in diesem Fall \textbf{XFeat} – verstärkt auf Kantenmerkmale und nicht auf Texturmerkmale zu trainieren.
+Um dieses Ziel zu erreichen, wird ein Ansatz zur Online-Augmentierung von Bilddaten implementiert, der sich an der Architektur von \textcite{He_2023_ICCV} orientiert. Dieses Verfahren nutzt ein \textbf{\ac{GAN}}, das in der Lage ist, Bilder so zu modifizieren, dass diese eine reduzierte Textur und verstärkte sowie deformierte Kanten aufweisen. Der Fokus dieser Methode liegt auf der gezielten Manipulation von Trainingsdaten, um einen nachfolgenden Keypoint-Detektor und -Deskriptor \textendash~in diesem Fall \textbf{\ac{xFeat}} \textendash~verstärkt auf Kantenmerkmale und nicht auf Texturmerkmale zu trainieren.
+
+\begin{figure}[htpb]
+    \centering
+    % Die PDF-Datei (erste Seite) wird eingebunden
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/pdf/Ablauf_SDbOA.pdf} % trim = L B R O
+    \caption{Ablauf SDbOA}
+    \label{fig:Ablauf_SDbOA}
+\end{figure}
+
+\subsection{Aufbau der Online-Augmentierung}
+Die Architektur zur Online-Generierung formverzerrter Bilder wird als eigenständiges Modul konzipiert und direkt in die Trainingspipeline von \ac{xFeat} integriert. Diese Integration erfolgt online, sodass die generierten Bilder in Echtzeit während des Trainings zur Verfügung stehen. Das gesamte Verfahren, schematisch dargestellt in Abbildung~\ref{fig:Ablauf_SDbOA}, basiert auf einer \textbf{zweistufigen Strategie}, die darauf abzielt, die Fähigkeit des \ac{GAN} zu optimieren, Bilder mit originalgetreuer Form, aber mit reduzierter Textur und verstärkten Kanten zu generieren.
+
+Der Workflow beginnt mit dem Trainingsstart auf dem Datensatz ImageNet256~\cite{Uriot2023imageNet}. Die Wahl dieses Datensatzes gegenüber einem kleinskaligen Datensatz wie CIFAR-10~\cite{Uriot2023imageNet} ist von zentraler Bedeutung für die Übertragbarkeit der Ergebnisse. Bei einer Auflösung von $32 \times 32$ Pixeln ist CIFAR-10~\cite{Uriot2023imageNet} als Datensatz für die robuste Feature-Detektion und -Deskription nicht ausreichend. \ac{xFeat} benötigt eine deutlich höhere Detailgenauigkeit, die nur durch eine höhere Auflösung gewährleistet wird. Obwohl der reguläre ImageNet-Datensatz mit seinen noch höheren Auflösungen ideal wäre, stellt ImageNet256 einen strategischen Zwischenschritt dar. Die höhere Variabilität und die für \ac{xFeat} benötigte Auflösung werden bereitgestellt, während der Trainingsprozess aufgrund der reduzierten Bildgröße im Vergleich zum vollen ImageNet erheblich beschleunigt wird.
+
+Das Training durchläuft mehrere Epochen, die jeweils als abgeschlossen markiert werden, sobald der gesamte Datensatz verarbeitet ist. Die Epoche dient als zentraler Maßstab für den Trainingsfortschritt und die Leistungsbewertung. Die Aufteilung des Trainings in zwei Phasen ermöglicht eine schrittweise Annäherung an das endgültige Ziel der robusten Merkmalsgenerierung.
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -129,15 +156,7 @@ Die Validierung und Optimierung am Ende jeder Epoche laufen wie im Diagramm besc
 
 Dieser multistage Ansatz stellt sicher, dass der trainierte Feature-Detektor eine verbesserte Robustheit gegenüber Beleuchtungsänderungen, Oberflächenbeschaffenheit und Skalierung aufweist, da seine Merkmalserkennung von der variablen Textur entkoppelt wird.
 
-\begin{figure}[htpb]
-    \centering
-    % Die PDF-Datei (erste Seite) wird eingebunden
-    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
-    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/pdf/Ablauf_SDbOA.pdf} % trim = L B R O
-    \caption{Ablauf SDbOA}
-    \label{fig:Ablauf_SDbOA}
-\end{figure}
-\todo{Mehr Bezug noch auf Ablaufplan nehmen !!}
+
 
 \newpage
 
