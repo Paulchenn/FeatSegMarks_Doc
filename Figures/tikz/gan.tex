@@ -1,0 +1,39 @@
+\begin{tikzpicture}[node distance=2cm,>=stealth,thick]
+
+    % Styles
+    \tikzstyle{block} = [rectangle, draw, rounded corners, minimum height=1.2cm, minimum width=3cm, align=center]
+    \tikzstyle{arrow} = [->, thick]
+    \tikzstyle{loss} = [rectangle, draw, dashed, rounded corners, minimum height=1.2cm, minimum width=3cm, align=center, fill=yellow!10]
+
+    % Nodes
+    \node[block, fill=blue, text=white] (input) {Eingangsbild\\ (Texturreduziert + Kanten/TSD)};
+
+    \node[block, fill=red!15, anchor=north, below=1cm of input.south] (gen) {Generator};
+
+    \node[block, fill=orange!15, anchor=north, below left=1cm and 0.5cm of gen.south] (real) {Reales Bild};
+
+    \node[block, fill=orange!15, anchor=north, below right=1cm and 0.5cm of gen.south] (fake) {Generiertes Bild};
+
+    \node[block, fill=blue!15, anchor=north, below right=1cm and 0.5cm of real.south] (disc) {Diskriminator};
+
+    % Loss nodes
+    \node[loss, anchor=east, left=1cm of gen.west] (l1) {L1-Loss};
+    \node[loss, anchor=west, right=1cm of gen.east] (edge) {Kanten-Loss};
+    \node[loss, anchor=east, left=1cm of disc.west] (adv) {Adversarial-Loss};
+    \node[loss, anchor=west, right=1cm of disc.east] (cls) {CE-Loss};
+
+    % Connections
+    \draw[arrow] (input.south) -- (gen.north);
+    \draw[arrow] (gen.south west) -- (real.north);
+    \draw[arrow] (gen.south east) -- (fake.north);
+
+    \draw[arrow] (real.south) -- (disc.north west);
+    \draw[arrow] (fake.south) -- (disc.north east);
+
+    % Loss connections
+    \draw[arrow] (gen.west) -- (l1.east);
+    \draw[arrow] (gen.east) -- (edge.west);
+    \draw[arrow] (disc.west) -- (adv.east);
+    \draw[arrow] (disc.east) -- (cls.west);
+
+\end{tikzpicture}

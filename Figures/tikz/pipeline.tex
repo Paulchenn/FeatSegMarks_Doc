@@ -1,0 +1,36 @@
+\begin{tikzpicture}[node distance=1cm,>=stealth,thick]
+
+        % Styles
+        \tikzstyle{block} = [rectangle, draw, rounded corners, minimum height=1.2cm, minimum width=5.4cm, align=center]
+        \tikzstyle{or}    = [circle,    draw, thick, inner sep=0.5mm]
+        \tikzstyle{arrow} = [->, thick]
+
+        % Nodes
+        \node[block, fill=blue, text=white] (input) {Eingangsbild};
+
+        \node[block, fill=blue!15, anchor=north, below left=1cm and 1cm of input.south] (texture) {Dynamische\\ Texturreduktion};
+
+        \node[block, fill=green!15, anchor=north, below right=1cm and 1cm of input.south] (ds) {Differenzierbare\\ Kantenextraktion (DS-EMSE)};
+
+        \node[block, fill=orange!15, anchor=north, below=1cm of ds.south] (tsd) {Deformierung der Kanten\\ (TSD)};
+
+        \node[or, anchor=center, left=0.5cm of tsd.west] (or_node) {\textbf{/}};
+
+        \node[block, fill=red!15, anchor=north, below=1cm of texture.south] (gen) {Generative\\ Bildtransformation};
+
+        \node[block, fill=purple!15, anchor=north, below=1cm of gen.south] (xfeat) {Keypointdetektor\\ \acs{xFeat}};
+
+        % Connections
+        \draw[arrow] (input.south west) -- (texture.north);
+        \draw[arrow] (texture.south) -- (gen.north);
+
+        \draw[arrow] (input.south east) -- (ds.north);
+        \draw[arrow] (ds.south) -- (tsd.north);
+        \draw[arrow] (tsd.west) -- (or_node.east);
+        \draw[arrow] (or_node.west) -- (gen.east);
+
+        \draw[arrow] (ds.south) ++(0,-0.5) -| (or_node.north);
+
+        \draw[arrow] (gen.south) -- (xfeat.north);
+
+    \end{tikzpicture}
