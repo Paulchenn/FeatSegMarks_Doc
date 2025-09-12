@@ -12,8 +12,8 @@ Im Vordergrund steht die Verbesserung der Robustheit und Dynamik visueller Steue
 In der industriellen Robotik kommt der visuellen Regelung eine immer größere Bedeutung zu. 
 Verfahren des Visual Servoing nutzen Kamerabilder zur direkten Steuerung von Roboterbewegungen und ermöglichen damit eine flexible und adaptive Automatisierung.
 Die Qualität und Verlässlichkeit solcher Systeme hängt jedoch stark von der Güte der verwendeten Bildmerkmale ab. 
-Klassische Feature-Detektoren wie \ac{SIFT} oder \ac{ORB} sind zwar effizient, jedoch anfällig für Skalierungs-, Rotations- oder Beleuchtungsänderungen – insbesondere in komplexen oder schwach texturierten Szenen~\cite{lowe2004sift, rublee2011orb}.
-Aktuelle Forschungsarbeiten, die in \ref{ch:StandTechnik} weiter erläutert werden, zeigen vielversprechende Ansätze, um diese Probleme zu überwinden.
+Klassische Feature-Detektoren wie \ac{SIFT} oder \ac{ORB} sind zwar effizient, jedoch anfällig für Skalierungs-, Rotations- oder Beleuchtungsänderungen – insbesondere in komplexen oder schwach texturierten Szenen~\cite{lowe2004distinctive, rublee2011orb}.
+Aktuelle Forschungsarbeiten, die in~\ref{ch:StandTechnik} weiter erläutert werden, zeigen vielversprechende Ansätze, um diese Probleme zu überwinden.
 \textcite{potje2024xfeat} stellten 2024 \ac{xFeat} vor. Durch eine eine besonders effiziente und hardware-unabhängige Featureextraktion, die sowohl schnell als auch genau ist, ist \ac{xFeat} ideal für ressourcenbeschränkte  Systeme, bspw. mobile Roboter, geeignet.
 Gleichzeitig wird in~\cite{potje2024xfeat} gezeigt, dass viele neuronale Netze eine starke Texturabhängigkeit (engl. Texture-Bias) aufweisen.
 Dies kann zu fehlerhafter Objektinterpretationen führen.
@@ -21,7 +21,7 @@ Durch gezielte Formveränderungen in der Datenaugmentation kann dieses Problem r
 UNTERSCHIED Textur und Struktur!!
 
 In diesem Kontext gewinnt die Nutzung von Segmentierungsmasken als strukturelle Grundlage für die Featureberechnung zunehmend an Bedeutung. 
-Mithilfe moderner neuronaler Netze, bspw.~\ac{Mask R-CNN} lassen sich Objekte nicht nur erkennen, sondern auch präzise von ihrer Umgebung abgrenzen. 
+Mithilfe moderner neuronaler Netze, bspw. Mask~\ac{R-CNN} lassen sich Objekte nicht nur erkennen, sondern auch präzise von ihrer Umgebung abgrenzen. 
 Diese Masken liefern zusätzliche semantische Information, die für eine robuste und gezielte Merkmalsextraktion genutzt werden kann~\cite{he2017maskrcnn}. 
 Die Verbindung solcher Segmentierungsansätze mit effizienten Feature-Architekturen wie \ac{xFeat} sowie der Einsatz von robustheitssteigernden 
 Trainingsmethoden bietet ein vielversprechendes Potenzial für zuverlässigere und schnellere visuelle Regelungsverfahren.
