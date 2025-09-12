@@ -1,0 +1,30 @@
+\begin{tikzpicture}[node distance=0cm,>=stealth,thick]
+
+    % Styles
+    \tikzstyle{block} = [rectangle, draw, minimum width=3cm, align=center]
+
+    % Nodes
+    \node[block, fill=orange!15, minimum height=3.6cm] (L_L1) {};
+
+    \node[block, fill=red!15, minimum height=0.9cm, anchor=north, below=0cm of L_L1.south] (L_edge) {};
+
+    \node[block, fill=green!15, minimum height=0.6cm, anchor=north, below=0cm of L_edge.south] (L_GAN) {};
+
+    \node[block, fill=blue!15, minimum height=0.6cm, anchor=north, below=0cm of L_GAN.south] (L_CE) {};
+
+
+    \node[block, fill=blue!15, minimum height=0.3cm, anchor=south west, above right=0cm and 2cm of L_CE.south east] (L_CE) {};
+
+    \node[block, fill=green!15, minimum height=0.3cm, anchor=south, above=0cm of L_CE.north] (L_GAN) {};
+
+    \node[block, fill=red!15, minimum height=1.8cm, anchor=south, above=0cm of L_GAN.north] (L_edge) {};
+
+    \node[block, fill=orange!15, minimum height=1.2cm, anchor=south, above=0cm of L_edge.north] (L_L1) {};
+
+\end{tikzpicture}
+        
+
+% $\lambda_{L1}$
+% $\lambda_{edge}$
+% $\lambda_{GAN}$
+% $\lambda_{CE}$
