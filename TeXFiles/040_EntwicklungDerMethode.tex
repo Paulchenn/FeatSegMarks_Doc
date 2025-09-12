@@ -65,7 +65,7 @@ Um den Shape-Bias zu fördern, entwickeln wir eine erweiterte Methode zur Textur
 \subsection{Herausforderung 2: Inkompatibilität des Kantenextraktionsverfahrens}
 Die ursprüngliche Methode zur Kantenextraktion, der sogenannten \ac{EMSE}, die auf dem nicht-differenzierbaren Canny-Algorithmus basiert, ist für eine End-to-End-Trainingspipeline in PyTorch ungeeignet. Die Notwendigkeit, einen \ac{CPU}-Transfer für die Kantenberechnung durchzuführen, unterbricht den Backpropagation-Prozess und führt zu einem erheblichen Leistungsverlust. Um eine nahtlose und effiziente Integration zu ermöglichen, ist ein vollständig differenzierbares und \ac{GPU}-basiertes Verfahren zur Kantenextraktion erforderlich, das direkt in die Verlustfunktion integriert werden kann.
 
-Zudem erweist sich die \ac{EMSE}-Methode erweist als unzureichend für die Extraktion von qualitativ hochwertigen Kantenkarten aus Bildern mit einer Auflösung von $256 \times 256$ Pixeln. Während sie bei den kleineren $32 \times 32$ Pixel-Bildern des CIFAR-10-Datensatzes noch akzeptable Ergebnisse liefert, verliert sie bei größeren und komplexeren Bildern an Effektivität. Die unzureichende Qualität der Eingangs-Kantenkarten beeinträchtigt die Fähigkeit des Generators, robuste, formbasierte Merkmale zu lernen, da die primäre Quelle für die Forminformationen nicht ausreichend ist.
+Zudem erweist sich die \ac{EMSE}-Methode erweist als unzureichend für die Extraktion von qualitativ hochwertigen Kantenkarten aus Bildern mit einer Auflösung von $256 \times 256$ Pixeln. Während sie bei den kleineren $32 \times 32$ Pixel-Bildern des CIFAR-10-Datensatzes~\cite{krizhevsky2009learning} noch akzeptable Ergebnisse liefert, verliert sie bei größeren und komplexeren Bildern an Effektivität. Die unzureichende Qualität der Eingangs-Kantenkarten beeinträchtigt die Fähigkeit des Generators, robuste, formbasierte Merkmale zu lernen, da die primäre Quelle für die Forminformationen nicht ausreichend ist.
 
 
 
@@ -79,13 +79,16 @@ Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen w
 
 
 \subsection{Herausforderung 3: Unzureichende Qualität der generierten Bilder}
-\todo[author=Paul, inline]{Herausforderung 3 schreiben}
+Die ursprüngliche Netzarchitektur, die auf CIFAR-10~\cite{krizhevsky2009learning} mit $32 \times 32$ Pixeln ausgelegt ist, ist nicht in der Lage, bei einer Bildauflösung von $256 \times 256$ Pixeln qualitativ hochwertige Ergebnisse zu liefern. Durch die geringe Netztiefe und die auf kleine Eingabedaten optimierte Struktur entstehen Artefakte, unscharfe Bildbereiche und ein unzureichendes Detailniveau. Insbesondere bei hochauflösenden Kantenkarten führt dies dazu, dass wichtige Forminformationen nicht präzise abgebildet werden. Somit ist die vorhandene Architektur für die Anforderungen von ImageNet256~\cite{Uriot2023imageNet} ungeeignet. 
 
 
 
 
 \subsection{Lösungsansatz: Entwurf einer passenden Netzarchitektur}
-\todo[author=Paul, inline]{Lösungansatz zu Herausforderung 3 schreiben}
+Um die erhöhte Bildauflösung adäquat zu verarbeiten, wird eine angepasste Netzarchitektur entworfen, die speziell für $256 \times 256$ Pixel optimiert ist. Der neue Aufbau orientiert sich am Encoder-Decoder-Prinzip von SegNet~\cite{badrinarayanan2017segnet}, das durch seine Fähigkeit überzeugt, sowohl globale Kontextinformationen als auch feine Strukturen in den rekonstruierten Ausgaben zu bewahren. 
+
+Die Architektur integriert eine erhöhte Netztiefe mit zusätzlichen Convolutional- und Upsampling-Schichten, wodurch das Repräsentationsvermögen des Generators erweitert wird. Die Encoder-Stufen komprimieren das Eingabebild in eine latente Repräsentation, während die Decoder-Stufen die Bilddetails schrittweise wiederherstellen. Auf diese Weise lassen sich Kanten- und Forminformationen effizient mit hochauflösenden Bilddetails kombinieren. 
+
 
 
 
