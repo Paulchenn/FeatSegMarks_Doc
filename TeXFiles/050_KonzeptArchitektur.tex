@@ -16,6 +16,8 @@ Das Gesamtkonzept umfasst vier zentrale Komponenten:
     \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
     \item \textbf{Generative Bildtransformation:} Ein Generator-Netzwerk erstellt aus den texturreduzierten Eingaben und den Kantenkarten synthetische Bilder, die reduzierte Textur und verstärkte Formmerkmale aufweisen. Diese Bilder dienen anschließend als Eingabe für den Keypoint-Detektor \ac{xFeat}.
 \end{enumerate}
+Für das Training des Generators und des Diskriminators werden unterschiedliche Deformations- und Blur-Faktoren eingesetzt, um die Robustheit der xFeat-Repräsentationen zu untersuchen.
+Diese Faktoren werden in der späteren Kopplungsexperiment-Sektion systematisch variiert.
 
 Das Zusammenspiel dieser Komponenten führt zu einem adaptiven System, das nicht nur texturbasierte Verzerrungen eliminiert, sondern gezielt robuste Formmerkmale hervorhebt. Der besondere Vorteil liegt darin, dass die Generierung der Trainingsdaten im selben Schritt wie das Modelltraining erfolgt, wodurch eine konsistente Integration in die Gesamtarchitektur erreicht wird.
 
@@ -107,29 +109,69 @@ Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} lie
 
 
 
+
 \section{Entwurf einer passenden Netzarchitektur}
-\todo[inline, author=Paul]{Abschnitt schreiben.}
+\label{sec:Netzarchitektur}
+Die Wahl der Netzarchitektur spielt eine zentrale Rolle für die Effektivität der Online-Datenaugmentierung. 
+Während klassische \ac{GAN}-Ansätze häufig U-Net- oder ResNet-basierte Generatoren einsetzen~\cite{ronneberger2015unet, isola2018Pix2Pix}, wird hier eine Architektur gewählt, die sich an der \textbf{SegNet}-Struktur~\cite{badrinarayanan2017segnet} orientiert. Allerdings finden hier auch U-Net-Ansätze, wie Skip-Connections hier Einsatz.
+SegNet wurde ursprünglich für semantische Segmentierungsaufgaben entwickelt und zeichnet sich durch ein Encoder-Decoder-Schema aus, das eine präzise Rekonstruktion von Bilddetails ermöglicht. 
+Für die Generierung formbetonter und texturreduzierter Bilder bietet SegNet entscheidende Vorteile, da die Encoder-Pfade tiefe Merkmalsrepräsentationen extrahieren und die Decoder-Pfade über Pooling-Indizes eine verlustarme Rückprojektion auf die Bilddomäne erlauben.
 
 
 
 
-\section{Architektur der Bildgenerierung}
-\label{sec:ArchitekturBildgenerierung}
-Das Herzstück des entwickelten Ansatzes bildet ein \ac{GAN}, das auf die Generierung formbetonter und texturreduzierter Bilder spezialisiert ist. Ziel dieser Architektur ist es, die im vorherigen Abschnitt beschriebenen Datenvorverarbeitungen (dynamische Texturreduktion, differenzierbare Kantenextraktion und Kanten-Deformation) in ein kohärentes Trainingssystem einzubetten, das robuste Shape-Merkmale hervorbringt. Abbildung~\ref{fig:GANArchitektur} zeigt die Gesamtstruktur des verwendeten Systems.
-
-Der \textbf{Generator} nimmt als Eingabe ein texturreduziertes Bild sowie die dazugehörige Kantenkarte (gegebenenfalls deformiert durch \ac{TSD}) auf. Er erzeugt daraus ein synthetisches Bild, in dem die ursprüngliche Form des Objekts beibehalten, die Textur jedoch abgeschwächt wird. Die Architektur des Generators folgt dabei einem Encoder-Decoder-Schema mit Skip-Connections, das in der Literatur für Bild-zu-Bild-Übersetzungen etabliert ist \cite{ronneberger2015unet, isola2018Pix2Pix}.
-
-Der \textbf{Diskriminator} ist als PatchGAN-Netzwerk implementiert~\cite{isola2018Pix2Pix}. Er bewertet sowohl reale als auch synthetisch erzeugte Bilder und zwingt den Generator durch das adversarielle Training dazu, realistischere und konsistenter strukturierte Ausgaben zu produzieren.
-
-Um die Lernziele des Systems gezielt zu steuern, kommen mehrere \textbf{Verlustfunktionen} zum Einsatz:
+\subsection{Encoder-Struktur (VGG16-basiert)}
+Der Encoder ist direkt an die Architektur von VGG16 angelehnt und besteht aus fünf hierarchischen Blöcken, die jeweils mehrere Faltungsoperationen (\texttt{Conv2D}), Instanznormalisierung und \ac{ReLU}-Aktivierungen enthalten. 
+Jeder Block wird durch eine Max-Pooling-Operation abgeschlossen, wobei zusätzlich die Pooling-Indizes gespeichert werden. 
+Diese Indizes sind essenziell für den Decoder, da sie eine positionsgenaue Rückprojektion der Merkmale erlauben~\cite{friedrich2025kiProduktion}. 
+Damit unterscheidet sich der Ansatz von alternativen Upsampling-Strategien (z. B. bilinearer Interpolation), die häufig zu Unschärfen führen. 
+Eine Besonderheit der hier verwendeten Architektur ist, dass die Eingabe aus zwei getrennten Pfaden verarbeitet wird:
 \begin{itemize}
-    \item \textbf{L1-Loss:} misst die Abweichung zwischen generierten und Originalbildern auf Pixelebene und sorgt für eine globale Strukturtreue.
-    \item \textbf{Kanten-Loss:} basiert auf der differenzierbaren DS-EMSE-Methode und stellt sicher, dass die Formmerkmale des Objekts durch den Generator bewahrt und verstärkt werden.
-    \item \textbf{Adversarial-Loss:} wird durch den Diskriminator berechnet und sorgt für die Unterscheidung zwischen realen und generierten Bildern.
-    \item \textbf{Klassifikator-Loss (optional):} nutzt ein zusätzliches, vortrainiertes Klassifikationsnetzwerk (z. B. ResNet18 oder Inception), um die semantische Konsistenz der generierten Bilder zu überprüfen.
+    \item Ein Encoder für das texturreduzierte Bild $I_{txt}$ sowie
+    \item ein zweiter Encoder für die Kantenkarte $E$.
 \end{itemize}
+Beide Pfade besitzen eine identische VGG16-ähnliche Struktur und liefern komplementäre Repräsentationen.
 
-Die Kombination dieser Verlustfunktionen ermöglicht es, ein Gleichgewicht zwischen globaler Struktur, lokaler Kantenschärfe und visueller Realistik herzustellen. Damit wird eine Bildrepräsentation erzeugt, die die nachgelagerten Keypoint-Detektoren gezielt auf Formmerkmale sensibilisiert.
+
+
+
+\subsection{Decoder-Struktur mit Skip-Connections und Pooling-Indizes}
+Der Decoder rekonstruiert die Bildrepräsentation schrittweise durch \texttt{MaxUnpooling}-Operationen, bei denen die im Encoder gespeicherten Indizes genutzt werden. 
+Dies stellt sicher, dass relevante Strukturen~\textendash~insbesondere Kanteninformationen aus der \ac{DS-EMSE}-Stufe~\textendash~konsistent und positionsgetreu in das Ausgabebild übertragen werden. 
+Nach jeder Unpooling-Stufe folgen mehrere Faltungen und Aktivierungen, die die rekonstruierten Merkmale verfeinern. 
+Zusätzlich werden \textbf{Skip-Connections} aus beiden Encodern in den Decoder eingebunden. 
+Dies ermöglicht es, neben den abstrakten Repräsentationen auch niedrig- und mittelstufige Merkmalskarten in die Rekonstruktion einzuspeisen und somit feine Details zu bewahren.
+
+
+
+
+\subsection{Latenter Raum und Noise-Integration}
+Im Zentrum der Architektur werden die beiden Encoder-Repräsentationen zunächst konkateniert und anschließend über eine $1 \times 1$-Faltung reduziert, um die Dimensionen zu harmonisieren. 
+Daraufhin wird ein Rauschvektor $z$ additiv eingebracht, der für die stochastische Variation in der Bildsynthese sorgt. 
+Dies erweitert die Architektur um eine GAN-typische Komponente, die den Generator dazu befähigt, eine höhere Vielfalt plausibler Bildvarianten zu erzeugen.
+
+
+
+
+\subsection{Integration in die GAN-Pipeline}
+Die SegNet-basierte Architektur ist in den Generator des \ac{GAN} eingebettet und nimmt als Eingabe zwei Datenströme entgegen: 
+\begin{enumerate}
+    \item das texturreduzierte Eingangsbild $I_{txt}$ und 
+    \item die Kantenkarte $E$, die aus der \ac{DS-EMSE}-Stufe stammt und ggf.~durch \ac{TSD} deformiert wurde (abhängig ob in Phase eins oder zwei des Trainings). 
+\end{enumerate}
+Beide Eingaben werden parallel durch separate Encoder verarbeitet, im latenten Raum fusioniert und durch den Decoder zu einem synthetischen Bild $I_{syn}$ rekonstruiert. 
+Eine detaillierte Blockstruktur mit Encodern, Skip-Connections, Rauschintegration und Decoder ist in Abbildung~\ref{fig:Aufbau_netG} wiedergegeben.
+
+\begin{figure}[htpb]
+    \centering
+    % Die PDF-Datei (erste Seite) wird eingebunden
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/pdf/Generator_V2_2.pdf} % trim = L B R O
+    \caption{Architektur des Generator-Netzes. Die Input-Bilder werden durch Encoder-Blocks verarbeitet, wobei Skip-Connections die Features auf den Decoder übertragen. Zusätzlich wird ein Rausch-Vektor an den Decoder gekoppelt, um die Stochastik der Generierung zu ermöglichen. Die Dimensionen der Feature-Maps sind für jeden Block angegeben.}
+    \label{fig:Aufbau_netG}
+\end{figure}
+
+Eine schematische Architekur des verwendeten \ac{GAN}-Ansatzes mit Position des Generators sowie Diskriminators ist in Abbildung~\ref{fig:GANArchitektur} dargestellt. Hier soll der Fokus auf der Entwicklung eines passenden Generators liegen, nicht auf der des Diskriminators. Dieser wird aus einem öffentlichen GitHub-Repository von~\textcite{conotsilly_iccv23_edge_2025} übernommen.
 
 \begin{figure}[htpb]
     \centering
@@ -137,6 +179,92 @@ Die Kombination dieser Verlustfunktionen ermöglicht es, ein Gleichgewicht zwisc
     \caption{Architektur des verwendeten GAN-Ansatzes mit Generator, Diskriminator und zugehörigen Verlustfunktionen.}
     \label{fig:GANArchitektur}
 \end{figure}
+
+
+
+
+\subsection{Vorteile der gewählten Architektur}
+Die Entscheidung für eine SegNet-ähnliche Architektur mit Erweiterungen bietet mehrere Vorteile:
+\begin{itemize}
+    \item \textbf{Formtreue:} Durch die Nutzung der Pooling-Indizes und der Skip-Connections bleibt die Lage der Kanten präzise erhalten. Dies ist entscheidend für die Förderung des Shape-Bias.
+    \item \textbf{Dual-Input-Fähigkeit:} Sowohl das texturreduzierte Bild als auch die Kantenkarte können unabhängig verarbeitet und im latenten Raum kombiniert werden.
+    \item \textbf{Stochastische Vielfalt:} Die Integration eines Rauschvektors erlaubt die Erzeugung variantenreicher Ausgaben und steigert die Robustheit des Generators.
+    \item \textbf{End-to-End-Trainierbarkeit:} Die Architektur integriert sich nahtlos in die GAN-Verlustfunktionen (L1, adversarial, edge-preserving), wodurch die Optimierung direkt auf die Zielsetzung \enquote{Form statt Textur} ausgerichtet wird.
+\end{itemize}
+
+Damit stellt die SegNet-basierte Architektur mit ihren Erweiterungen die Grundlage für die gesamte Online-Datenaugmentierung dar und verbindet die vorgelagerten Verarbeitungsschritte (Texturreduktion, \ac{DS-EMSE}, \ac{TSD}) mit der generativen Bildsynthese im \ac{GAN}.
+
+
+
+
+
+\section{Anpassungen an der Verlustfunktion}
+Ein wesentlicher Beitrag dieser Arbeit liegt in der Erweiterung und gezielten Feinabstimmung der Verlustfunktion des Generators.
+In Stage 1 (Rohbild-Generierung) erweitern wir die ursprüngliche Verlustfunktion um einen zusätzlichen Kanten-Loss.
+Dadurch soll die Relevanz der Kantenkarte für die Bildsynthese verstärkt werden.
+Die Gesamtverlustfunktion des Generators setzt sich in dieser Phase aus vier Anteilen
+\begin{itemize}
+    \item Adversarial-Loss ($L_{GAN}$),
+    \item $L_1$-Bildverlust ($L_{L1img}$),
+    \item Cross-Entropy-Loss ($L_{CE}$) sowie
+    \item $L_1$-Kantenverlust ($L_{L1edge}$)
+\end{itemize}
+zusammen. Die kombinierte Verlustfunktion für Stage 1 kann formal wie folgt dargestellt werden:
+\begin{equation}
+    L_{\mathrm{Stage1}} = \lambda_{GAN} L_{GAN} + \lambda_{L1} L_{L1img} + \lambda_{CE} L_{CE} + \lambda_{edge} L_{L1edge}.
+    \label{eq:Verlustfkt}
+\end{equation}
+Für Stage 2 (Feinbild-Generierung) schlagen \textcite{He_2023_ICCV} die Integration eines Klassifikator-Losses vor, um die semantische Konsistenz der erzeugten Bilder zu verbessern. Da der Fokus dieser Arbeit jedoch auf der Verbesserung eines Keypoint-Detektors beziehungsweise -Deskriptors (\ac{xFeat}) liegt, betrachten wir den Klassifikator-Loss in unserer Implementierung als optional. Stattdessen wird erneut ein Kanten-Loss berücksichtigt, um die Strukturtreue zu sichern und die Deformierung der Kanten zu fördern. Somit entspricht die Verlustfunktion von Stage 2 in der vorliegenden Arbeit formal der Gleichung~\ref{eq:Verlustfkt}, wobei $L_{L1img}$ nun den Fokus auf die Feinbild-Generierung legt und der Kanten-Loss die Deformierung verstärkt.
+
+Alle Verlustkomponenten werden durch gewichtende Faktoren ($\lambda$) skaliert. Die Wahl der Faktoren erfolgt hier manuell, bis die Ergebnisse qualitativ zufriedenstellend sind. Eine systematische oder automatisierte Optimierung der Gewichte kann aus Zeitgründen nicht durchgeführt werden. Die finalen Werte sind in Tabelle~\ref{tab:lambda_verlustfkt} aufgeführt.
+\begin{table}[h]
+    \centering
+    \begin{tabular}[h]{l|cc}
+        & Stage 1 & Stage 2 \\
+        \hline
+        $\lambda_{L1}$ & $6.0$ & $2.0$ \\
+        $\lambda_{edge}$ & $1.5$ & $3.0$\\
+        $\lambda_{GAN}$ & $1.0$ & $0.5$\\
+        $\lambda_{CE}$ & $1.0$ & $0.5$\\
+    \end{tabular}
+    \caption{Gewichtungsfaktoren der Verlustfunktion}
+    \label{tab:lambda_verlustfkt}
+\end{table}
+Die Auswahl der Gewichtungsfaktoren folgt einem zielgerichteten Ansatz basierend auf der Phase des Trainings:
+\begin{itemize}
+    \item In Stage 1 steht die generative Bildqualität im Vordergrund. Entsprechend wird $\lambda_{L1}$ hoch gewählt, um die Rohbilder möglichst realistisch zu rekonstruieren. Gleichzeitig wird der Kanten-Loss moderat skaliert, um die Formtreue zu unterstützen, sowie den Einfluss der Kantenkarte beizubehalten.
+    \item In Stage 2 hingegen liegt der Fokus auf der Verstärkung und Deformierung der Kanten. Da die grobe Bildstruktur bereits durch Stage 1 erzeugt wird, kann $\lambda_{L1}$ reduziert werden. Aufgrund des Ziels der Knatendeformierung wird $\lambda_{edge}$ erhöht. Dadurch wird der Einfluss der Kantenkarte maximieret und die Deformation gefördert. Cross-Entropy sowie Adversarial-Loss bleiben mit geringer Gwichtung zur Stabilisierung erhalten.
+\end{itemize}
+Dieses Vorgehen gewährleistet, dass der Generator in Stage 1 zunächst eine qualitativ hochwertige Basis erzeugt, während Stage 2 gezielt die Formmerkmale optimiert und den Einfluss der Kantenkarte verstärkt.
+
+% \begin{figure}[htpb]
+%     \centering
+%     \input{Figures/tikz/loss}
+%     \caption{Architektur des verwendeten GAN-Ansatzes mit Generator, Diskriminator und zugehörigen Verlustfunktionen.}
+%     \label{fig:GANArchitektur}
+% \end{figure}
+
+
+
+
+
+% \section{Architektur der Bildgenerierung}
+% \label{sec:ArchitekturBildgenerierung}
+% Das Herzstück des entwickelten Ansatzes bildet ein \ac{GAN}, das auf die Generierung formbetonter und texturreduzierter Bilder spezialisiert ist. Ziel dieser Architektur ist es, die im vorherigen Abschnitt beschriebenen Datenvorverarbeitungen (dynamische Texturreduktion, differenzierbare Kantenextraktion und Kanten-Deformation) in ein kohärentes Trainingssystem einzubetten, das robuste Shape-Merkmale hervorbringt. Abbildung~\ref{fig:GANArchitektur} zeigt die Gesamtstruktur des verwendeten Systems.
+
+% Der \textbf{Generator} nimmt als Eingabe ein texturreduziertes Bild sowie die dazugehörige Kantenkarte (gegebenenfalls deformiert durch \ac{TSD}) auf. Er erzeugt daraus ein synthetisches Bild, in dem die ursprüngliche Form des Objekts beibehalten, die Textur jedoch abgeschwächt wird. Die Architektur des Generators folgt dabei einem Encoder-Decoder-Schema mit Skip-Connections, das in der Literatur für Bild-zu-Bild-Übersetzungen etabliert ist \cite{ronneberger2015unet, isola2018Pix2Pix}.
+
+% Der \textbf{Diskriminator} ist als PatchGAN-Netzwerk implementiert~\cite{isola2018Pix2Pix}. Er bewertet sowohl reale als auch synthetisch erzeugte Bilder und zwingt den Generator durch das adversarielle Training dazu, realistischere und konsistenter strukturierte Ausgaben zu produzieren.
+
+% Um die Lernziele des Systems gezielt zu steuern, kommen mehrere \textbf{Verlustfunktionen} zum Einsatz:
+% \begin{itemize}
+%     \item \textbf{L1-Loss:} misst die Abweichung zwischen generierten und Originalbildern auf Pixelebene und sorgt für eine globale Strukturtreue.
+%     \item \textbf{Kanten-Loss:} basiert auf der differenzierbaren DS-EMSE-Methode und stellt sicher, dass die Formmerkmale des Objekts durch den Generator bewahrt und verstärkt werden.
+%     \item \textbf{Adversarial-Loss:} wird durch den Diskriminator berechnet und sorgt für die Unterscheidung zwischen realen und generierten Bildern.
+%     \item \textbf{Klassifikator-Loss (optional):} nutzt ein zusätzliches, vortrainiertes Klassifikationsnetzwerk (z. B. ResNet18 oder Inception), um die semantische Konsistenz der generierten Bilder zu überprüfen.
+% \end{itemize}
+
+% Die Kombination dieser Verlustfunktionen ermöglicht es, ein Gleichgewicht zwischen globaler Struktur, lokaler Kantenschärfe und visueller Realistik herzustellen. Damit wird eine Bildrepräsentation erzeugt, die die nachgelagerten Keypoint-Detektoren gezielt auf Formmerkmale sensibilisiert.
 
 
 
