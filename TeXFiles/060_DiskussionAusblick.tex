@@ -10,5 +10,97 @@
 \label{sec:LimitationenHerausforderungen}
 
 
-\section{Ausblick auf weiterführende Arbeiten}
-\label{sec:Ausblick}
+\section{Mögliche Weiterentwicklungen / Potenzielle Erweiterungen / Weiterführende Konzepte}
+\label{sec:Konzepte}
+Im Zuge des Projekts wurden drei verschiedene Konzepte erarbeitet, die darauf abzielen, den Generator durch 
+zusätzliche Trainingsstrategien zu verbessern und dadurch die Qualität der erzeugten Daten für nachgelagerte 
+Verfahren zu erhöhen. Die folgenden Abschnitte stellen diese Konzepte mit ihren jeweiligen Grundideen sowie den 
+identifizierten Vor- und Nachteilen vor. Nach eingehender Diskussion würde die Projektgruppe, sollte das Thema in 
+zukünftigen Arbeiten weiterverfolgt werden, insbesondere Konzept~3 als vielversprechendste Option betrachten.
+
+\subsection{Konzept 1: Feature-Anzahl}
+\label{sec:Konzept1}
+
+\subsection{Konzept 2: Loss}
+\label{sec:Konzept2}
+Die Grundidee besteht darin, Informationen aus der Keypoint-Detektion und -Beschreibung zu nutzen, um den Generator 
+gezielt zu steuern. Dabei wird ein geringer XFeat-bezogener Loss als Belohnung verstanden, während ein hoher Loss 
+eine Bestrafung darstellt. Auf diese Weise soll der Generator lernen, deformierte Bilder so zu erzeugen, dass darin 
+robuste und konsistente Features erkennbar sind, die sowohl für Matching-Aufgaben als auch für visuelle 
+Servoing-Strategien nutzbar bleiben~\cite{potje2024xfeat}.
+
+Für die praktische Umsetzung lässt sich dieses Konzept nur dann realisieren, wenn der Generator eng mit XFeat 
+gekoppelt wird. Dies bedeutet, dass die Generatorausgabe als Eingabe in XFeat genutzt wird und die daraus berechneten
+Keypoints oder Feature-Karten als Grundlage für den Loss dienen. XFeat selbst bleibt dabei eingefroren und wird nicht 
+trainiert, sondern liefert ausschließlich das Feedbacksignal. Der Gradientenfluss erfolgt ausschließlich durch den 
+Generator, während XFeat als „Sensor“ fungiert, der die Qualität der generierten Strukturen misst. Diese Kopplung 
+kann in zwei Varianten umgesetzt werden.
+
+In einer ersten Variante wird XFeat als Black-Box betrachtet. Die Berechnung der Keypoints und Matches erfolgt ohne 
+Gradientenfluss und liefert lediglich die Positionen im Bild, an denen differenzierbare Ersatzgrößen wie Kantenstärke, 
+Gradientenrichtung oder Patch-Ähnlichkeiten bewertet werden. Diese Größen werden zu einem Score zwischen 0 und 1 
+kombiniert, der angibt, wie konsistent die Merkmale zwischen Original- und deformiertem Bild sind. Der resultierende 
+Loss kann anschließend direkt in die Gesamtverlustfunktion des Generators integriert werden. Der Vorteil dieser Variante 
+liegt in ihrer Robustheit und einfachen Umsetzbarkeit, während der Nachteil darin besteht, dass lediglich indirekte 
+Stellvertretergrößen für die Qualität der Keypoints optimiert werden~\cite{szeliski2022}.
+
+In einer zweiten, direkteren Variante wird der Forward-Pass von XFeat so genutzt, dass dichte Karten wie 
+Keypoint-Heatmaps oder Deskriptormaps in den Loss einbezogen werden können. Dadurch lässt sich die Konsistenz der 
+Merkmalsdarstellung zwischen Original- und deformiertem Bild direkt bewerten. Der Generator kann so noch gezielter 
+an den von XFeat genutzten Merkmalen ausgerichtet werden. Allerdings ist dieser White-Box-Ansatz deutlich 
+rechenintensiver und erfordert Eingriffe in den Modellcode, da bestimmte Operationen wie die Top-K-Selektion nicht 
+differenzierbar sind~\cite{detone2018superpoint,sarlin2020superglue}.
+
+Zusammenfassend bietet Konzept~2 den Vorteil, dass der Generator durch zusätzliche strukturelle Informationen aus 
+einem etablierten Feature-Detektor gesteuert wird. Dadurch kann die Robustheit der erzeugten Bilder im Hinblick auf 
+nachgelagerte Matching- oder Servoing-Aufgaben verbessert werden. Nachteile sind ein erhöhter Implementierungsaufwand 
+sowie das Risiko, dass bei zu starker Gewichtung des Zusatzlosses Artefakte entstehen oder der Generator Strategien 
+entwickelt, die zwar die Loss-Kriterien erfüllen, aber nicht zwingend zu qualitativ hochwertigen oder realistischen 
+Bildern führen. Aus diesem Grund empfiehlt sich eine moderate Gewichtung des XFeat-Losses sowie eine Kombination mit 
+weiteren Verlustkomponenten wie adversarialen, rekonstruktiven oder perzeptuellen 
+Losses~\cite{goodfellow2014gan,isola2018Pix2Pix}.
+
+Nach längerer Überlegung kam die Projektgruppe zu dem Schluss, dass Konzept~2 zwar interessante Ansätze bietet, 
+jedoch mit erheblichen Herausforderungen verbunden ist. Dazu zählen die Abhängigkeit von einem kombinierten Training, 
+das möglicherweise nicht praktikabel umsetzbar ist, sowie die fehlende klare Definition, was im Sinne des Losses 
+als „gut“ oder „schlecht“ zu bewerten ist. Hinzu kommt die Gefahr, dass die Loss-Definition im Verlauf des Trainings 
+verschoben wird und der Generator sogenannte „Shortcuts“ findet, sodass der Loss reduziert werden kann, ohne dass 
+tatsächlich das gewünschte Verhalten erlernt wird. Aufgrund dieser Unsicherheiten und potenziellen Fehlanreize würde 
+die Projektgruppe, sollte das Thema weiterverfolgt werden, nicht primär auf Konzept~2 setzen.
+
+\subsection{Konzept 3: Keypoint-Position}
+\label{sec:Konzept3}
+Das dritte Konzept verfolgt den Ansatz, den Generator anhand der Position der erkannten Features zusätzlich zu 
+trainieren. Ziel ist es, dass Keypoints auf stabilen und strukturell relevanten Bildbereichen liegen, also 
+vorzugsweise auf Kanten, während Keypoints in reinen Textur- oder homogenen Bereichen vermieden werden. 
+Entsprechend wird der Generator belohnt, wenn ein Keypoint im Original- und im deformierten Bild auf derselben Kante 
+liegt, und bestraft, wenn dies nicht der Fall ist~\cite{lowe2004distinctive,bay2006surf}. 
+
+Die Bestimmung, ob ein Keypoint auf einer Kante oder in einem texturierten Bereich liegt, ist mit XFeat grundsätzlich 
+möglich, da die Methode die Pixelkoordinaten der Keypoints liefert~\cite{potje2024xfeat}. Auf dieser Grundlage können 
+zusätzliche Bildoperationen eingesetzt werden, um die Kanteninformation an den jeweiligen Positionen zu bestimmen. 
+Hierfür bietet sich eine Kantenberechnung mittels Sobel-Filter oder alternativer Verfahren wie Canny oder Harris-Corner 
+an, wodurch Gradienten in x- und y-Richtung berechnet werden~\cite{szeliski2022}. Aus diesen lassen sich sowohl die 
+Kantenstärke als Magnitude als auch die Kantenrichtung als Winkel ableiten. Durch Abfrage der Kantenwerte an den 
+Koordinaten der Keypoints kann anschließend bestimmt werden, ob ein Punkt tatsächlich auf einer Kante liegt. 
+
+Für die Bewertung wird ein Score berechnet, der mehrere Kriterien berücksichtigt: eine ausreichend hohe Kantenstärke 
+im Original- und im deformierten Bild, eine ähnliche Gradientenrichtung an beiden Positionen sowie optional die 
+Überprüfung, ob der Punkt ein lokales Maximum entlang der Kanten-Normalen darstellt. Dieser Score wird auf einen 
+Wert zwischen 0 und 1 normiert und dient als Maß für die Qualität des Keypoints. Ein hoher Score bedeutet, dass der 
+Keypoint konsistent auf einer Kante liegt, während ein niedriger Score darauf hinweist, dass er eher in einem 
+ungeeigneten Bereich platziert ist. 
+
+Auf Basis dieses Scores wird ein Loss formuliert, der den Mittelwert der inversen Werte berücksichtigt. Der Loss ist 
+damit klein, wenn die Keypoints überwiegend auf konsistenten Kanten liegen, und groß, wenn sie auf Texturen oder 
+unstrukturierten Bereichen erscheinen. Über die Einbindung dieses Edge-basierten Loss in die Gesamtverlustfunktion 
+des Generators wird das Modell gezielt dazu angeleitet, Bildstrukturen zu erzeugen, die stabile und wiedererkennbare 
+Features für nachgelagerte Matching- und Servoing-Aufgaben bereitstellen~\cite{chaumette2006visual,chaumette2007visual}. 
+
+Das Konzept bietet den Vorteil, dass es direkt auf die für visuelle Verfahren relevanten Strukturen abzielt und durch 
+die Nutzung der Keypoint-Koordinaten aus XFeat eine präzise Bewertung ermöglicht. Gleichzeitig bestehen 
+Herausforderungen, da die Definition, wann ein Punkt auf einer Kante liegt, von Schwellenwerten und Kantenbreite 
+abhängt, die datensatz- und modellabhängig variieren können. Zudem müssen falsch erkannte Keypoints durch Verfahren 
+wie RANSAC oder Ratio-Tests gefiltert werden, um den Loss nicht zu verfälschen~\cite{detone2018superpoint,barroso2019keynet}. 
+Trotz dieser Einschränkungen stellt der Ansatz eine vielversprechende Möglichkeit dar, die Qualität der vom 
+Generator erzeugten Bilder im Hinblick auf robuste Feature-Erkennung gezielt zu verbessern.

@@ -2,7 +2,7 @@
 \label{ch:StandTechnik}
 Die Extraktion robuster und invarianter Merkmale bildet eine zentrale Grundlage für bildbasierte Regelverfahren im Visual Servoing. 
 Klassische Methoden wie \ac{SIFT} oder \ac{ORB} liefern stabilisierte Featurepunkte, stoßen bei komplexen Szenen und hohen Echtzeitanforderungen an ihre Grenzen.
-Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen verbessern kann. ?? QUELLE ??
+Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen verbessern kann~\cite{detone2018superpoint,potje2024xfeat}.
 
 In diesem Kapitel werden Grundlagen sowie der aktuelle Stand der Technik beleuchtet. Zunächst erfolgt ein Vergleich klassischer und moderner Verfahren zur Feature-Extraktion.
 Anschließend ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und Mask~\ac{R-CNN}, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in Feature-Extraktion auszeichnen~\cite{potje2024xfeat}.
@@ -79,7 +79,7 @@ Im Bezug auf die Genauigkeit und Wiedererkennung von Merkmalen in kompexen Szene
 \label{sec:ModerneVerfahren}
 Moderne Verfahren der Feature-Extraktion nutzen tiefenlernbasierte Modelle, um Merkmale direkt aus Bilddaten zu lernen. 
 Einige Ansätze bieten eine hohe Robustheit gegenüber komplexen Szenen, Beleuchtungsänderungen und Verdeckungen.
-Sie ermöglichen eine präzisere und anpassungsfähigere Merkmalserkennung als klassische Methoden. ?? QUELLE ??
+Sie ermöglichen eine präzisere und anpassungsfähigere Merkmalserkennung als klassische Methoden~\cite{potje2024xfeat}.
 
 
 
@@ -126,7 +126,7 @@ Durch die gleichzeitige Optimierung von Detektor- und Deskriptoreigenschaften he
 
 \subsection{\acl{LoFTR}}
 \textcite{sun2021loftr} stellten 2021 das \ac{LoFTR}-Verfahren vor, ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung.
-Im Gegensatz zu klassischen Methoden, wie bspw.~\ac{SIFT}, oder hybriden Deep-Learning-Ansätzen wie SuperPoint + SuperGlue ?? WAS IST DAS ??, verzichtet \ac{LoFTR} vollständig auf die explizite Detektion einzelner Keypoints. 
+Im Gegensatz zu klassischen Methoden, wie bspw.~\ac{SIFT}, verzichtet \ac{LoFTR} vollständig auf die explizite Detektion einzelner Keypoints. 
 Stattdessen wird ein „detector-free“ Ansatz verfolgt, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- oder Patch-Ebene berechnet werden.
 Dies ermöglicht eine deutlich robustere Zuordnung, insbesondere in texturarmen oder stark verzerrten Szenen, in denen klassische Verfahren oft versagen.
 
