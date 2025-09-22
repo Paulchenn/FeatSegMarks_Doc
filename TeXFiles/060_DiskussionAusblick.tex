@@ -20,101 +20,66 @@ zukünftigen Arbeiten weiterverfolgt werden, insbesondere Konzept~3 als vielvers
 
 \subsection{Konzept 1: Feature-Anzahl}
 \label{sec:Konzept1}
-Das erste Konzept zur Kopplung des Generators mit XFeat basiert auf der Annahme, dass eine höhere Anzahl an erkannten Merkmalspunkten ein Indikator für
-eine bessere Bildrepräsentation ist. Der Generator aus dem ICCV-Repository erzeugt hierzu synthetisch augmentierte Bilddaten, welche anschließend durch
-XFeat verarbeitet werden. Die dabei entstehenden Keypoint-Heatmaps dienen als Signalquelle für ein zusätzliches Lernziel. Anstatt lediglich die nach
-Non-Maximum Suppression ausgewählten Keypoints zu zählen, wird auf die vollständige, kontinuierliche Heatmap zurückgegriffen. Durch eine soft-differenzierbare
-Approximation der Feature-Anzahl, beispielsweise über eine Sigmoid-Gewichtung oberhalb eines adaptiven Schwellwerts, kann ein „soft count“ berechnet werden.
-Dieser Wert wird in Relation zu einer gewünschten Zielanzahl an Merkmalen gesetzt und als zusätzlicher Loss-Term in das Training des Generators integriert.
-Der Generator erhält somit eine Belohnung, wenn die Anzahl der detektierten Features oberhalb eines definierten Schwellwerts liegt, und eine Bestrafung, wenn
-diese darunterliegt.
+Das erste Kopplungskonzept zwischen Generator und \ac{xFeat} basiert auf der Annahme, dass eine höhere Anzahl erkannter Merkmalspunkte eine bessere Bildrepräsentation anzeigt. 
+Der Generator erzeugt dazu augmentierte Bilddaten, die von \ac{xFeat} verarbeitet werden. 
+Aus den entstehenden Keypoint-Heatmaps wird über eine soft-differenzierbare Approximation (z.~B. Sigmoid-Gewichtung oberhalb eines adaptiven Schwellwerts) ein „soft count“ berechnet. 
+Dieser Wert wird mit einer Zielanzahl von Merkmalen verglichen und als zusätzlicher Loss-Term in das Training integriert. 
+Der Generator wird belohnt, wenn genügend Features detektiert werden, und bestraft, wenn die Anzahl zu gering ist.  
 
-Die Idee, Informationen aus Keypoint-Heatmaps zur Steuerung des Trainings zu nutzen, ist als Ansatz etabliert. Arbeiten wie UKPGAN~\cite{you2022ukpgan}
-verfolgen einen ähnlichen Ansatz, indem sie generative Modelle zur Kontrolle der Spärlichkeit und Verteilung von Keypoints einsetzen. Zudem existieren
-Reinforcement-Learning-gestützte Ansätze wie RIPE~\cite{kunzel2025ripe}, bei denen Reward-Signale ohne explizite Ground-Truth-Daten genutzt werden, um die
-Anzahl und Qualität der detektierten Punkte zu steuern.
+Ähnliche Ansätze existieren bereits: Arbeiten wie UKPGAN~\cite{you2022ukpgan} steuern die Verteilung von Keypoints über generative Modelle, während RIPE~\cite{kunzel2025ripe} Reward-Signale ohne Ground Truth nutzt, um Anzahl und Qualität zu regulieren.  
 
-In Bezug auf die Zielsetzung dieses Projekts – die zuverlässige Bestimmung von Greifpositionen und Ausrichtungen für Roboter an überwiegend texturarmen
-Bauteilen – weist das Konzept allerdings sowohl Vorteile als auch Einschränkungen auf. Der zentrale Vorteil liegt in der einfachen Implementierbarkeit:
-Mit nur geringen Anpassungen im Trainingsloop des Generators lässt sich das zusätzliche Lernsignal integrieren. Zudem bleibt XFeat vollständig eingefroren,
-sodass keine tiefgreifenden Änderungen an der Feature-Extraktion erforderlich sind. Kritisch ist jedoch, dass die reine Anzahl an Keypoints kein
-Qualitätskriterium darstellt. Ein Generator könnte versuchen, die Feature-Anzahl durch die Erzeugung künstlicher Texturartefakte zu erhöhen („Reward Hacking“),
-was für das geplante Einsatzszenario kontraproduktiv wäre. Um dieses Risiko zu minimieren, ist es notwendig, regulierende Zusatzverluste einzusetzen.
+Für dieses Projekt – die zuverlässige Bestimmung von Greifpositionen bei texturarmen Bauteilen – zeigt das Konzept Vor- und Nachteile. 
+Ein Vorteil ist die einfache Integration in den Trainingsloop und die Nutzung von \ac{xFeat} ohne Änderungen. 
+Kritisch ist jedoch, dass die Keypoint-Anzahl allein kein Qualitätskriterium ist: 
+Der Generator könnte künstliche Texturen erzeugen („Reward Hacking“), was dem Ziel widerspricht. 
+Daher sind regulierende Zusatzverluste notwendig.  
 
-Insgesamt bietet Konzept 1 eine solide Ausgangsbasis, um die Machbarkeit einer differentiellen Kopplung zwischen Generator und Detektor zu demonstrieren.
-Für das konkrete Ziel – die Fokussierung auf kantenbasierte Merkmale – ist es jedoch nicht hinreichend und wird deshalb nicht weiter verfolgt.
+Insgesamt eignet sich Konzept~1 als Machbarkeitsnachweis einer differentiellen Kopplung zwischen Generator und Detektor. 
+Für die gewünschte Fokussierung auf kantenbasierte Merkmale ist es jedoch unzureichend und wird nicht weiterverfolgt.
+
 
 \subsection{Konzept 2: Loss}
 \label{sec:Konzept2}
-Die Grundidee besteht darin, Informationen aus der Keypoint-Detektion und -Beschreibung zu nutzen, um den Generator 
-gezielt zu steuern. Dabei wird ein geringer XFeat-bezogener Loss als Belohnung verstanden, während ein hoher Loss 
-eine Bestrafung darstellt. Auf diese Weise soll der Generator lernen, deformierte Bilder so zu erzeugen, dass darin 
-robuste und konsistente Features erkennbar sind, die sowohl für Matching-Aufgaben als auch für visuelle 
-Servoing-Strategien nutzbar bleiben~\cite{potje2024xfeat}.
+Die Grundidee von Konzept~2 besteht darin, Informationen aus der Keypoint-Detektion und -Beschreibung zu nutzen, um den Generator zu steuern. 
+Ein niedriger \ac{xFeat}-bezogener Loss gilt als Belohnung, ein hoher Loss als Bestrafung. 
+Ziel ist, dass der Generator deformierte Bilder so erzeugt, dass darin robuste und konsistente Features für Matching und Visual Servoing erhalten bleiben~\cite{potje2024xfeat}.  
 
-Für die praktische Umsetzung lässt sich dieses Konzept nur dann realisieren, wenn der Generator eng mit XFeat 
-gekoppelt wird. Dies bedeutet, dass die Generatorausgabe als Eingabe in XFeat genutzt wird und die daraus berechneten
-Keypoints oder Feature-Karten als Grundlage für den Loss dienen. XFeat selbst bleibt dabei eingefroren und wird nicht 
-trainiert, sondern liefert ausschließlich das Feedbacksignal. Der Gradientenfluss erfolgt ausschließlich durch den 
-Generator, während XFeat als „Sensor“ fungiert, der die Qualität der generierten Strukturen misst. Diese Kopplung 
-kann in zwei Varianten umgesetzt werden.
+Für die Umsetzung wird der Generator eng mit \ac{xFeat} gekoppelt: 
+Die Generatorausgabe dient als Eingabe für \ac{xFeat}, dessen Keypoints oder Feature-Karten wiederum den Loss bestimmen. 
+\ac{xFeat} bleibt eingefroren und liefert ausschließlich Feedback. 
+Zwei Varianten sind denkbar:  
 
-In einer ersten Variante wird XFeat als Black-Box betrachtet. Die Berechnung der Keypoints und Matches erfolgt ohne 
-Gradientenfluss und liefert lediglich die Positionen im Bild, an denen differenzierbare Ersatzgrößen wie Kantenstärke, 
-Gradientenrichtung oder Patch-Ähnlichkeiten bewertet werden. Diese Größen werden zu einem Score zwischen 0 und 1 
-kombiniert, der angibt, wie konsistent die Merkmale zwischen Original- und deformiertem Bild sind. Der resultierende 
-Loss kann anschließend direkt in die Gesamtverlustfunktion des Generators integriert werden. Der Vorteil dieser Variante 
-liegt in ihrer Robustheit und einfachen Umsetzbarkeit, während der Nachteil darin besteht, dass lediglich indirekte 
-Stellvertretergrößen für die Qualität der Keypoints optimiert werden~\cite{szeliski2022}.
+\textbf{Black-Box-Variante:} Keypoints und Matches werden ohne Gradientenfluss berechnet. 
+Indirekte Größen wie Kantenstärke, Gradientenrichtung oder Patch-Ähnlichkeiten erzeugen einen Score (0–1), der die Konsistenz bewertet. 
+Vorteil: robust und einfach; Nachteil: nur indirekte Qualitätsmaße~\cite{szeliski2022}.  
 
-In einer zweiten, direkteren Variante wird der Forward-Pass von XFeat so genutzt, dass dichte Karten wie 
-Keypoint-Heatmaps oder Deskriptormaps in den Loss einbezogen werden können. Dadurch lässt sich die Konsistenz der 
-Merkmalsdarstellung zwischen Original- und deformiertem Bild direkt bewerten. Der Generator kann so noch gezielter 
-an den von XFeat genutzten Merkmalen ausgerichtet werden. Allerdings ist dieser White-Box-Ansatz deutlich 
-rechenintensiver und erfordert Eingriffe in den Modellcode, da bestimmte Operationen wie die Top-K-Selektion nicht 
-differenzierbar sind~\cite{detone2018superpoint,sarlin2020superglue}.
+\textbf{White-Box-Variante:} Dichte Karten (z.~B. Heatmaps, Deskriptormaps) fließen in den Loss ein. 
+Dadurch wird die Konsistenz direkter bewertet. 
+Vorteil: gezieltere Steuerung; Nachteil: rechenintensiv und erfordert Änderungen im Modellcode, da einige Operationen (z.~B. Top-K-Selektion) nicht differenzierbar sind~\cite{detone2018superpoint,sarlin2020superglue}.  
 
-Zusammenfassend bietet Konzept~2 den Vorteil, dass der Generator durch zusätzliche strukturelle Informationen aus 
-einem etablierten Feature-Detektor gesteuert wird. Dadurch kann die Robustheit der erzeugten Bilder im Hinblick auf 
-nachgelagerte Matching- oder Servoing-Aufgaben verbessert werden. Nachteile sind ein erhöhter Implementierungsaufwand 
-sowie das Risiko, dass bei zu starker Gewichtung des Zusatzlosses Artefakte entstehen oder der Generator Strategien 
-entwickelt, die zwar die Loss-Kriterien erfüllen, aber nicht zwingend zu qualitativ hochwertigen oder realistischen 
-Bildern führen. Aus diesem Grund empfiehlt sich eine moderate Gewichtung des XFeat-Losses sowie eine Kombination mit 
-weiteren Verlustkomponenten wie adversarialen, rekonstruktiven oder perzeptuellen 
-Losses~\cite{goodfellow2014gan,isola2018Pix2Pix}.
+Konzept~2 bietet den Vorteil, dass der Generator durch zusätzliche strukturelle Informationen aus einem etablierten Feature-Detektor gesteuert wird, was die Robustheit für nachgelagerte Aufgaben steigern kann. 
+Nachteile sind jedoch der hohe Implementierungsaufwand, mögliche Artefakte bei zu starker Gewichtung des Zusatzlosses und die Gefahr von „Shortcuts“, bei denen der Generator den Loss minimiert, ohne qualitativ bessere Bilder zu erzeugen. 
+Deshalb empfiehlt sich eine moderate Gewichtung des \ac{xFeat}-Losses sowie eine Kombination mit weiteren Verlustkomponenten wie adversarialen, rekonstruktiven oder perzeptuellen Losses~\cite{goodfellow2014gan,isola2018Pix2Pix}.  
 
-Nach längerer Überlegung kam die Projektgruppe zu dem Schluss, dass Konzept~2 zwar interessante Ansätze bietet, 
-jedoch mit erheblichen Herausforderungen verbunden ist. Dazu zählen die Abhängigkeit von einem kombinierten Training, 
-das möglicherweise nicht praktikabel umsetzbar ist, sowie die fehlende klare Definition, was im Sinne des Losses 
-als „gut“ oder „schlecht“ zu bewerten ist. Hinzu kommt die Gefahr, dass die Loss-Definition im Verlauf des Trainings 
-verschoben wird und der Generator sogenannte „Shortcuts“ findet, sodass der Loss reduziert werden kann, ohne dass 
-tatsächlich das gewünschte Verhalten erlernt wird. Aufgrund dieser Unsicherheiten und potenziellen Fehlanreize würde 
-die Projektgruppe, sollte das Thema weiterverfolgt werden, nicht primär auf Konzept~2 setzen.
+Die Projektgruppe kam daher zum Schluss, dass Konzept~2 zwar interessante Ansätze bietet, aufgrund der praktischen Herausforderungen und potenziellen Fehlanreize aber nicht priorisiert weiterverfolgt werden sollte.
 
 \subsection{Konzept 3: Keypoint-Position}
 \label{sec:Konzept3}
-Das dritte Konzept verfolgt den Ansatz, den Generator anhand der Position der erkannten Features zusätzlich zu trainieren. Ziel ist es, Keypoints auf 
-stabilen und strukturell relevanten Bildbereichen – vorzugsweise auf Kanten – zu belohnen, während Keypoints in reinen Textur- oder homogenen Flächen 
-bestraft werden. Dazu werden die von XFeat gelieferten Keypoint-Koordinaten genutzt~\cite{potje2024xfeat}, die eine präzise Bestimmung der Lage der Features 
-ermöglichen. Auf Basis dieser Koordinaten wird für jedes generierte Bild eine Kantenkarte $E(x,y)$ berechnet, beispielsweise mit differentiellen Operatoren wie Sobel, Canny oder Harris-Corner~\cite{szeliski2022}. Die Kantenstärke und -richtung an den 
-Keypoint-Positionen wird anschließend ausgewertet, sodass sich ein Score ergibt, der misst, wie konsistent die Keypoints mit strukturell relevanten Kanten 
-übereinstimmen.
+Konzept~3 zielt darauf ab, den Generator anhand der Position erkannter Features zu steuern. 
+Keypoints auf stabilen, strukturell relevanten Bereichen (v.~a. Kanten) werden belohnt, während Punkte auf homogenen Flächen bestraft werden. 
+Grundlage sind die von \ac{xFeat} gelieferten Koordinaten~\cite{potje2024xfeat}, anhand derer für jedes generierte Bild eine Kantenkarte $E(x,y)$ (z.~B. Sobel, Canny, Harris-Corner) berechnet wird~\cite{szeliski2022}. 
+Aus der Kantenstärke und -richtung an den Keypoint-Positionen entsteht ein Score, der misst, wie konsistent die Punkte mit Kanten übereinstimmen. 
+Ein hoher Score bedeutet robuste Keypoints, ein niedriger Score ungeeignete Lagen. 
+Der normierte Score wird als zusätzlicher Loss-Term in das Training integriert~\cite{chaumette2006visual,chaumette2007visual}.  
 
-Für die Berechnung dieses Scores können mehrere Kriterien herangezogen werden: eine ausreichend hohe Kantenstärke im Original- und im deformierten Bild, 
-eine ähnliche Gradientenrichtung sowie optional die Überprüfung, ob der Punkt ein lokales Maximum entlang der Kanten-Normalen darstellt. Ein hoher Score 
-bedeutet, dass der Keypoint konsistent auf einer Kante liegt, während ein niedriger Score auf eine Position in einem ungeeigneten Bereich hindeutet. Dieser 
-Score wird normiert und als zusätzlicher Loss-Term in die Gesamtverlustfunktion integriert, sodass der Generator gezielt dazu angeleitet wird, Bildstrukturen 
-zu erzeugen, die stabile und wiedererkennbare Features für nachgelagerte Matching- und Servoing-Aufgaben 
-bereitstellen~\cite{chaumette2006visual,chaumette2007visual}.
+Die Idee, Kanten als stabile Ankerpunkte zu nutzen, ist etabliert: 
+Schon klassische Verfahren wie \ac{SIFT} oder \ac{SURF} verwenden Gradienteninformationen zur robusten Feature-Detektion~\cite{lowe2004distinctive,bay2006surf}. 
+Neuere Arbeiten wie Feature Matching Based on Consistent Edge Structures~\cite{mdpi2020edge} oder SiLK~\cite{gleize2023silk} bestätigen ebenfalls die Robustheit kantenbasierter Strukturen.  
 
-Die Idee, Kanten als robuste Ankerpunkte für Keypoints zu nutzen, ist in der Literatur gut belegt. Klassische Verfahren wie SIFT oder SURF nutzen bereits 
-Gradienteninformationen zur stabilen Feature-Detektion~\cite{lowe2004distinctive,bay2006surf}. Neuere Arbeiten wie Feature Matching Based on Consistent Edge 
-Structures~\cite{mdpi2020edge} oder SiLK~\cite{gleize2023silk} zeigen ebenfalls, dass kantenbasierte Strukturen eine hohe Robustheit und Wiederholbarkeit 
-für Feature-Matching bieten.
+Für das Projektziel – Greifpositionen und Ausrichtungen an texturarmen Bauteilen – ist dieser Ansatz besonders attraktiv, da Kanten weniger anfällig für Beleuchtungsänderungen und Oberflächenrauschen sind.  
 
-Für das geplante Einsatzszenario – die Bestimmung von Greifpositionen und Ausrichtungen an texturarmen Bauteilen – ist dieser Ansatz besonders attraktiv: 
-Kanten liefern stabile geometrische Ankerpunkte, die weniger anfällig für Beleuchtungsänderungen und Oberflächenrauschen sind. Gleichzeitig bestehen 
-Herausforderungen: Die Definition, wann ein Punkt „auf einer Kante“ liegt, hängt von Schwellenwerten und Kantenbreite ab, die datensatzabhängig variieren 
-können. Zudem besteht das Risiko, dass der Generator künstliche Kantenartefakte erzeugt, um den Reward zu maximieren. Hier helfen Regularisierungen wie Total 
-Variation oder Frequenzbestrafungen, um unnatürliche Strukturen zu verhindern. Trotz dieser Einschränkungen stellt Konzept~3 eine vielversprechende 
-Möglichkeit dar, die Qualität der vom Generator erzeugten Bilder im Hinblick auf robuste und anwendungsrelevante Feature-Erkennung gezielt zu verbessern.
+Herausforderungen ergeben sich durch die Definition, wann ein Punkt „auf einer Kante“ liegt, da Schwellenwerte und Kantenbreiten variieren können. 
+Zudem besteht die Gefahr künstlicher Kantenartefakte zur Maximierung des Rewards. 
+Gegenmaßnahmen sind Regularisierungen wie Total Variation oder Frequenzbestrafungen, um unnatürliche Strukturen zu verhindern.  
+
+Trotz dieser Einschränkungen bietet Konzept~3 eine vielversprechende Möglichkeit, die Bildqualität im Hinblick auf robuste und praxisrelevante Feature-Erkennung zu verbessern.

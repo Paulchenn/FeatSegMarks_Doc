@@ -18,60 +18,55 @@ Diese Techniken ermöglichen eine robuste Detektion und Beschreibung von Feature
 Des Weiteren bilden diese Grundlage vieler etablierter Anwendungen im Bereich der Robotik und Bildverarbeitung.
 
 
-
-
 \subsection{\acl{SIFT}}
-Das \ac{SIFT}-Verfahren, eingeführt von~\textcite{lowe2004distinctive} im Jahr 2004, ist eines der bekanntesten klassischen Verfahren zur Merkmalsextraktion in der Computer Vision.
-Es wurde entwickelt, um robuste lokale Merkmale in Bildern zu identifizieren, die invariant gegenüber Skalierung, Rotation und teilweise auch Beleuchtungsänderungen sowie perspektivischen Transformationen sind.
-Der Algorithmus besteht aus mehreren aufeinanderfolgenden Schritten:
+Das \ac{SIFT}-Verfahren, eingeführt von~\textcite{lowe2004distinctive} im Jahr 2004, ist eines der bekanntesten klassischen Verfahren zur Merkmalsextraktion in der Computer Vision. 
+Es identifiziert robuste lokale Merkmale, die weitgehend invariant gegenüber Skalierung, Rotation, Beleuchtung und perspektivischen Transformationen sind. 
+Der Algorithmus umfasst vier Hauptschritte:
 \begin{enumerate}
-    \item \textbf{Skalenraumextrema-Erkennung:} Hierbei wird ein Skalenraum erstellt, indem das Bild mehrfach mit Gauß-Filtern unterschiedlicher Standardabweichung gefiltert wird. Durch Subtraktion benachbarter gefilterter Bilder entstehen Differenzen von Gaußbildern, in denen potenzielle Keypoints als lokale Extrema (Minima oder Maxima) detektiert werden.
-    \item \textbf{Keypoint-Lokalisierung:} Die detektierten Kandidatenpunkte werden auf ihre Stabilität geprüft, indem beispielsweise Kantenpunkte verworfen werden, die zu sensitiv gegenüber Rauschen sind.
-    \item \textbf{Orientierungszuweisung:} Jedem Keypoint wird eine Orientierung zugewiesen, die auf lokalen Gradienten basiert, wodurch das Verfahren rotationsinvariant wird.
-    \item \textbf{Deskriptorgenerierung:} Um jeden Keypoint wird ein Deskriptor generiert: Dabei handelt es sich um einen Vektor, der die lokalen Gradienteninformationen in der Umgebung zusammenfasst und somit den Charakter des lokalen Bildausschnitts beschreibt. Der \ac{SIFT}-Deskriptor ist 128-dimensional und ermöglicht eine robuste Wiedererkennung von Merkmalen auch unter veränderten Bedingungen.
+    \item \textbf{Skalenraumextrema-Erkennung:} Aufbau eines Skalenraums durch Gauß-Filterung und Differenzenbildung, um Keypoints als lokale Extrema zu detektieren.
+    \item \textbf{Keypoint-Lokalisierung:} Prüfung der Stabilität und Verwerfen rauschsensitiver Punkte.
+    \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung auf Basis lokaler Gradienten zur Rotationsinvarianz.
+    \item \textbf{Deskriptorgenerierung:} Erstellung eines 128-dimensionalen Vektors, der lokale Gradienten beschreibt und eine robuste Wiedererkennung ermöglicht.
 \end{enumerate}
-Aufgrund der Robustheit des \ac{SIFT}-Verfahrens, wird dieses in vielen Anwendungen wie Objekterkennung, Bildregistrierung oder Robotik eingesetzt.
-Problematisch ist, dass \ac{SIFT} im Vergleich zu modernen, lernbasierten Methoden relativ rechenintensiv und daher aufwändiger zu implementieren ist.~\cite{lowe2004distinctive}.
+
+Dank seiner Robustheit wird \ac{SIFT} in vielen Bereichen wie Objekterkennung, Bildregistrierung und Robotik eingesetzt. 
+Allerdings ist es im Vergleich zu modernen, lernbasierten Verfahren relativ rechenintensiv und dadurch aufwändiger in der Implementierung~\cite{lowe2004distinctive}.
 
 
 
 
 \subsection{\acl{SURF}}
-\textcite{bay2006surf} stelte im Jahr 2006 das \ac{SURF}-Verfahren vor.
-Dieses ist ein beschleunigter und optimierter Nachfolger des \ac{SIFT}-Verfahrens und wie dieses zur robusten Merkmalsextraktion in Bildern geeignet. 
-Ziel des \ac{SURF}-Verfahrens ist, bei vergleichbarer Robustheit eine höhere Rechengeschwindigkeit zu erreichen, sodass das Verfahren für Echtzeitanwendungen genutzt werden kann.
-Erreicht wird dies u.~a.~durch den Einsatz von Integralbildern und approximativen Filteroperationen, anstelle von rechenintensiven Gauss-Filtern.
-Integralbilder ermöglichen eine schnelle Berechnung von Summen über rechteckige Bildbereiche, unabhängig von deren Größe.
-Im Ablauf ähnelt der \ac{SURF}-Algorithmus dem des \ac{SIFT}-Verfahrens und besteht ebenfalls aus den Schritten Keypoint-Detektion, Orientierungsschätzung und Deskriptorgenerierung:
+\textcite{bay2006surf} stellten im Jahr 2006 das \ac{SURF}-Verfahren (Speeded-Up Robust Features) als optimierten Nachfolger von \ac{SIFT} vor. 
+Ziel war eine vergleichbare Robustheit bei deutlich höherer Rechengeschwindigkeit, um den Einsatz in Echtzeitanwendungen zu ermöglichen. 
+Dies gelingt durch den Einsatz von Integralbildern und schnellen approximativen Filtern anstelle aufwändiger Gauß-Operationen.  
+
+Im Ablauf ähnelt \ac{SURF} dem \ac{SIFT}-Verfahren und umfasst drei Hauptschritte:
 \begin{enumerate}
-    \item \textbf{Keypoint-Detektion:} \ac{SURF} verwendet eine Hessian-Matrix-basierte Methode zur Detektion von Keypoints. Dabei werden schnelle approximative Filter (Box-Filter) eingesetzt, die auf Integralbildern basieren, um die Determinante der Hessian-Matrix effizient zu berechnen.
-    \item \textbf{Orientierungszuweisung:} Basierend auf Helligkeitsgradienten wird jedem Keypoint eine Orientierung zugewiesen.
-    \item \textbf{Deskriptorgenerierung:} Der Deskriptor wird durch die Analyse der Verteilung von Helligkeitsgradienten in der Umgebung des Keypoints erstellt. Resultat ist ein 64-dimensionaler Vektor (in der erweiterten Version 128-dimensional) mit Information über die lokale Struktur eines Bildbereichs. 
+    \item \textbf{Keypoint-Detektion:} Hessian-Matrix-basierte Methode mit schnellen Box-Filtern auf Integralbildern. 
+    \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung über Helligkeitsgradienten. 
+    \item \textbf{Deskriptorgenerierung:} Erstellung eines 64-dimensionalen (optional 128-dimensionalen) Vektors aus der Verteilung lokaler Gradienten, gewonnen über Haar-Wavelet-Filter. 
 \end{enumerate}
-Ein weiterer Unterschied zu \ac{SIFT} liegt in der Verwendung von Haar-Wavelet-Filtern zur Extraktion der Gradienteninformationen.
-Durch die Nutzung von Integralbildern können diese ebenfalls schnell berechnet werden können.
-Durch die Invarianz gegenüber Rotation, Skalierung und partieller Beleuchtungsveränderung eignet sich \ac{SURF} für Aufgaben wie Objektwiedererkennung, Bildregistrierung und Robotik.
-Allerdings ist \ac{SURF} – im Gegensatz zu \ac{SIFT} – durch Patente eingeschränkt und nicht vollständig frei verfügbar.
-Dies erschwert den Einsatz in Open-Source-Projekten~\cite{bay2006surf}. 
+
+\ac{SURF} ist invariant gegenüber Rotation, Skalierung und teilweiser Beleuchtungsänderung und wird u.~a.~in der Objektwiedererkennung, Bildregistrierung und Robotik eingesetzt. 
+Ein Nachteil ist die Patentbeschränkung, die eine freie Nutzung, etwa in Open-Source-Projekten, erschwert~\cite{bay2006surf}.
 
 
 
 
 \subsection{\acl{ORB}}
-Im Jahr 2011 präsentierten~\textcite{rublee2011orb} die \ac{ORB}-Methode.
-Diese zeichnet sich durch ein effizientes und patentfreies Verfahren zur Merkmalsextraktion aus, das speziell für Echtzeitanwendungen und eingebettete Systeme entwickelt wurde.
-\ac{ORB} kombiniert zwei bekannte Verfahren – \ac{FAST} zur Detektion von Keypoints sowie \ac{BRIEF} zur Beschreibung – und erweitert diese um wichtige Eigenschaften 
-wie Rotationsinvarianz und Robustheit gegenüber Skalierung.
-Ziel ist eine leistungsfähige Alternative zu \ac{SIFT} und \ac{SURF}, die schneller arbeitet und frei verwendbar ist.
+\textcite{rublee2011orb} stellten im Jahr 2011 die \ac{ORB}-Methode (Oriented FAST and Rotated BRIEF) vor – ein effizientes, patentfreies Verfahren zur Merkmalsextraktion, das speziell für Echtzeitanwendungen und eingebettete Systeme entwickelt wurde. 
+\ac{ORB} kombiniert \ac{FAST} zur Keypoint-Detektion und \ac{BRIEF} zur Beschreibung, erweitert um Rotationsinvarianz und Robustheit gegenüber Skalierung. 
+Ziel war eine schnelle, frei nutzbare Alternative zu \ac{SIFT} und \ac{SURF}.  
+
+Der Algorithmus umfasst drei Hauptschritte:
 \begin{enumerate}
-    \item \textbf{Keypoint-Detektion:} \ac{ORB} nutzt den \ac{FAST}-Algorithmus, der durch die Analyse von Intensitätsunterschieden in einem Kreis um einen Pixel schnelle Eckpunkte detektiert. Diese Punkte sind weder automatisch skalen- noch rotationsinvariant. Um dies zu kompensieren, wird im \ac{ORB}-Verfahren der \ac{FAST}-Algorithmus um eine Harris-Korner-Messung erweitert, um stabilere Keypoints auszuwählen.
-    \item \textbf{Orientierungszuweisung:} Anschließend wird jedem Keypoint eine Hauptorientierung zugewiesen. Hierzu wird die Intensitätsverteilungen im lokalen Bildumfeld betrachtet. Diese Orientierung wird genutzt, um die Detektion und Beschreibung der Keypoints zu rotieren und somit rotationsinvariant zu machen.
-    \item \textbf{Deskriptorgenerierung:} Im dritten Schritt wird der \ac{BRIEF}-Deskriptor verwendet, der auf binären Vergleichen von Pixelintensitäten basiert. Hier wird \ac{BRIEF} zu rotated \ac{BRIEF} erweitert, indem die Pixelvergleiche entsprechend der berechneten Orientierung des Keypoints angepasst werden. Dies gewährleistet, dass die Deskriptoren ebenfalls rotationsinvariant sind. Ergebnis ist ein speicher- sowie rechenfreundlicher binärer Vektor.
+    \item \textbf{Keypoint-Detektion:} \ac{FAST} identifiziert Eckpunkte über Intensitätsunterschiede im Pixelumfeld. Zur Stabilisierung werden diese mit einer Harris-Korner-Messung bewertet. 
+    \item \textbf{Orientierungszuweisung:} Eine Hauptorientierung wird aus der lokalen Intensitätsverteilung abgeleitet, was Rotationsinvarianz ermöglicht. 
+    \item \textbf{Deskriptorgenerierung:} \ac{BRIEF} wird zu rotated \ac{BRIEF} erweitert, indem Pixelvergleiche an die Keypoint-Orientierung angepasst werden. Ergebnis ist ein kompakter binärer Vektor, der Speicher- und Rechenaufwand minimiert. 
 \end{enumerate}
-Das das \ac{ORB}-Verfahren skalierbar, echtzeitfähig und frei von Lizenzbeschränkungen ist, wird es häufig in mobilen und eingebetteten Systemen eingesetzt.
-Im Bezug auf die Genauigkeit und Wiedererkennung von Merkmalen in kompexen Szenen kann \ac{ORB} nicht mit modernen, lernbasierten Verfahren mithalten~\cite{rublee2011orb}. 
 
-
+Dank Skalierbarkeit, Echtzeitfähigkeit und Lizenzfreiheit ist \ac{ORB} besonders für mobile und eingebettete Systeme geeignet. 
+Allerdings bleibt die Genauigkeit in komplexen Szenen hinter modernen, lernbasierten Methoden zurück~\cite{rublee2011orb}.
 
 
 
@@ -85,42 +80,41 @@ Sie ermöglichen eine präzisere und anpassungsfähigere Merkmalserkennung als k
 
 
 \subsection{SuperPoint}
-SuperPoint ist ein lernbasiertes Verfahren zur Detektion und Beschreibung von lokalen Bildmerkmalen, das 2018 von~\textcite{detone2018superpoint} vorgestellt wurde. Es unterscheidet sich grundlegend von klassischen Ansätzen wie bspw.~\ac{SIFT}, \ac{SURF} oder \ac{ORB}.
-Anstelle eines Algorithmuses wird die Nutzung ein neuronales Netzwerks vorgeschlagen, das sowohl Keypoints erkennt als auch die zugehörigen Deskriptoren berechnet. – Dies geschieht in einer gemeinsamen, vollkonvolutionalen Pipeline.
-SuperPoint wurde insbesondere für Echtzeitanwendungen in der Robotik und Augmented Reality entwickelt und zeichnet sich durch hohe Wiederholbarkeit, Robustheit und Geschwindigkeit aus.
-Das Verfahren basiert auf einem zweistufigen Trainingsansatz:
+SuperPoint ist ein lernbasiertes Verfahren zur Detektion und Beschreibung lokaler Bildmerkmale, vorgestellt von~\textcite{detone2018superpoint} im Jahr 2018. 
+Im Gegensatz zu klassischen Methoden wie \ac{SIFT}, \ac{SURF} oder \ac{ORB} nutzt es ein neuronales Netz, das Keypoints und Deskriptoren in einer vollkonvolutionalen Pipeline gleichzeitig berechnet. 
+Entwickelt für Robotik und Augmented Reality, zeichnet sich SuperPoint durch hohe Wiederholbarkeit, Robustheit und Echtzeitfähigkeit aus.  
+
+Das Training erfolgt in zwei Schritten:
 \begin{enumerate}
-    \item \textbf{Pre-Training auf synthetischen Daten:} Zunächst wird ein kleines Netzwerk, genannt „MagicPoint“, auf einem synthetisch generierten Datensatz trainiert. Dieser Datensatz besteht aus einfachen geometrischen Formen (z.B. Dreiecken, Quadraten) mit künstlich hinzugefügtem Rauschen. Ziel ist es, dass das Netzwerk lernt, robuste Keypoints in diesen stark vereinfachten Szenen zu erkennen.
-    \item \textbf{Self-Supervised Fine-Tuning auf realen Bildern:} Im zweiten Schritt wird das vortrainierte Netzwerk mit realen Bildern weitertrainiert. Hierzu werden Bildpaare verwendet, die durch bekannte geometrische Transformationen (Homographien) miteinander verbunden sind. Das Netzwerk lernt, konsistente Keypoints und Deskriptoren zu erzeugen, ohne dass manuelle Annotationen erforderlich sind.
+    \item \textbf{Pre-Training auf synthetischen Daten:} Ein kleines Netz („MagicPoint“) wird mit geometrischen Formen und Rauschen trainiert, um robuste Keypoints zu erkennen. 
+    \item \textbf{Self-Supervised Fine-Tuning:} Mit realen Bildern und bekannten geometrischen Transformationen (Homographien) lernt das Netz, konsistente Keypoints und Deskriptoren zu erzeugen – ohne manuelle Annotationen. 
 \end{enumerate}
-Erzeugt werden zwei Ausgaben: eine Keypoint-Heatmap und eine dichte Deskriptormatrix.
-Die Heatmap zeigt, wo im Bild relevante Punkte sind, während die Deskriptoren die Bildumgebung dieser Punkte als Vektoren beschreiben.
-Dadurch eignet sich SuperPoint besonders gut für Aufgaben wie \ac{SLAM}, Visual Odometry oder Structure from Motion.
-Ein weiterer Vorteil von SuperPoint ist die Kombination aus hoher Genauigkeit und Echtzeitfähigkeit in Verbindung einer \ac{GPU}.
-SuperPoint ist robust gegenüber Skalierung, Rotation sowie moderaten Beleuchtungsänderungen.
-Des Weiteren ermöglicht das gemeinsame Lernen von Detektion und Beschreibung eine bessere Abstimmung zwischen diesen beiden Komponenten im Vergleich zu modularen Verfahren~\cite{detone2018superpoint}.
+
+SuperPoint erzeugt eine Keypoint-Heatmap und eine dichte Deskriptormatrix. 
+Damit eignet es sich besonders für \ac{SLAM}, Visual Odometry und Structure from Motion. 
+Dank \ac{GPU}-Beschleunigung kombiniert es Genauigkeit und Geschwindigkeit und ist robust gegenüber Skalierung, Rotation und moderaten Beleuchtungsänderungen. 
+Durch das gemeinsame Lernen von Detektion und Beschreibung sind beide Komponenten besser aufeinander abgestimmt als bei modularen Verfahren~\cite{detone2018superpoint}.
 
 
 
 
 \subsection{\acl{R2D2}}
-Ein weiteres lernbasiertes Verfahren zur lokalen Merkmalsextraktion ist das 2019 von~\textcite{revaud2019r2d2} vorgestellte \ac{R2D2}-Verfahren.
-Ziel des Ansatzes ist, Bildpunkte zu identifizieren, die sowohl wiederholbar\footnote{unter verschiedenen Ansichten des gleichen Objekts stabil}, als auch diskriminativ\footnote{gut unterscheidbar von anderen Punkten} sind. 
-Im Gegensatz zu klassischen Methoden, die fest programmierte Schritte für Keypoint-Detektion und Deskriptor-Bildung verwenden, setzt \ac{R2D2} auf ein neuronales Netz, das diese Eigenschaften direkt lernt.
-Das Kernprinzip von \ac{R2D2} besteht darin, ein vollkonvolutionales Netzwerk zu trainieren, das drei Karten ausgibt:
-\begin{enumerate}
-    \item Eine Deskriptorkarte mit Vektoren, die lokale Bildregionen beschreiben,
-    \item eine Wiederholbarkeitskarte, die zeigt, wie stabil ein Punkt bei Transformationen (z.B. Rotation, Skalierung) ist und
-    \item eine Zuverlässigkeitskarte, die angibt wie gut sich ein Punkt zum Matching eignet.
-\end{enumerate}
-Die Kombination dieser drei Informationen erlaubt besonders robuste und eindeutig zuzuordnende Punkte auszuwählen.
-Im Training nutzt \ac{R2D2} Bildpaare mit bekannten geometrischen Transformationen (z.B. Homographien), um die gewünschten Eigenschaften der Keypoints zu erzwingen.
-Die Verlustfunktion belohnt Punkte, die unter diesen Transformationen wieder auftauchen (hohe Wiederholbarkeit), und bestraft Punkte, deren Deskriptoren zu 
-ähnlich oder zu unspezifisch sind (niedrige Zuverlässigkeit).
-Dies macht das \ac{R2D2}-Verfahren sowohl präzise als auch effizient.
-Insbesondere für schwierige Bildbedingungen, wie bspw.~starke Perspektivwechsel oder Wiederholungsmuster (z.B. Zäune, Fensterreihen), ist das Verfahren geeignet. 
-Durch die gleichzeitige Optimierung von Detektor- und Deskriptoreigenschaften hebt sich das Verfahren von Ansätzen wie SuperPoint ab, die diese Komponenten getrennt behandeln~\cite{revaud2019r2d2}. 
+\ac{R2D2} (Reliable and Repeatable Detector and Descriptor) wurde 2019 von~\textcite{revaud2019r2d2} vorgestellt und ist ein lernbasiertes Verfahren zur lokalen Merkmalsextraktion. 
+Ziel ist die Identifikation von Bildpunkten, die sowohl wiederholbar\footnote{stabil unter verschiedenen Transformationen} als auch diskriminativ\footnote{gut unterscheidbar von anderen Punkten} sind. 
+Im Gegensatz zu klassischen Methoden berechnet ein vollkonvolutionales Netzwerk diese Eigenschaften direkt.  
 
+Das Netz erzeugt drei Karten:
+\begin{enumerate}
+    \item \textbf{Deskriptorkarte:} beschreibt lokale Bildregionen durch Vektoren, 
+    \item \textbf{Wiederholbarkeitskarte:} zeigt die Stabilität von Punkten unter Transformationen (z.~B. Rotation, Skalierung), 
+    \item \textbf{Zuverlässigkeitskarte:} bewertet die Eignung von Punkten für Matching. 
+\end{enumerate}
+
+Durch die Kombination dieser Karten werden besonders robuste und eindeutige Keypoints ausgewählt. 
+Trainiert wird mit Bildpaaren und bekannten geometrischen Transformationen: Die Verlustfunktion belohnt Punkte mit hoher Wiederholbarkeit und bestraft unspezifische oder schwer unterscheidbare Deskriptoren.  
+
+\ac{R2D2} ist damit präzise und effizient, besonders bei schwierigen Bedingungen wie starken Perspektivwechseln oder Wiederholungsmustern (z.~B. Zäune, Fensterreihen). 
+Es unterscheidet sich von SuperPoint, da Detektor- und Deskriptoreigenschaften gemeinsam optimiert werden~\cite{revaud2019r2d2}.
 
 
 

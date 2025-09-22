@@ -4,35 +4,28 @@
 
 \section{Problemstellung und Motivation}
 \label{sec:Problemstellung_Motivation}
-Im Rahmen des Masterstudiengangs \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe, ist die Durchführung eines Forschungs- und Entwicklungsprojekts vorgesehen.
-Thema des in dieser Arbeit dokumentierten Projekts ist die Berechnung von Merkmalspunkten aus Segmentierungsmasken für Visual Servoing.
-Ziel des Projekts ist die Entwicklumg eines Konzepts zur robusten Featureextraktion aus Segmentierungsmasken, das für bildbasierte Regelungsverfahren in Robotersystemen eingesetzt werden kann. 
-Im Vordergrund steht die Verbesserung der Robustheit und Dynamik visueller Steuerungsverfahren, die bisher häufig durch begrenzte Merkmalsqualität eingeschränkt sind.
+Im Masterstudiengang \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe ist ein 
+Forschungs- und Entwicklungsprojekt vorgesehen. Diese Arbeit behandelt die Berechnung von Merkmalspunkten aus 
+Segmentierungsmasken für Visual Servoing. Ziel ist ein Konzept zur robusten Featureextraktion, das bildbasierte 
+Regelungsverfahren in Robotersystemen verbessert. Im Fokus stehen Robustheit und Dynamik, da herkömmliche visuelle Steuerungen 
+oft durch schwache Merkmalsqualität limitiert sind.
 
-In der industriellen Robotik kommt der visuellen Regelung eine immer größere Bedeutung zu. 
-Verfahren des Visual Servoing nutzen Kamerabilder zur direkten Steuerung von Roboterbewegungen und ermöglichen damit eine flexible und adaptive Automatisierung.
-Die Qualität und Verlässlichkeit solcher Systeme hängt jedoch stark von der Güte der verwendeten Bildmerkmale ab. 
-Klassische Feature-Detektoren wie \ac{SIFT} oder \ac{ORB} sind zwar effizient, jedoch anfällig für Skalierungs-, Rotations- oder Beleuchtungsänderungen – insbesondere in komplexen oder schwach texturierten Szenen~\cite{lowe2004distinctive, rublee2011orb}.
-Aktuelle Forschungsarbeiten, die in~\ref{ch:StandTechnik} weiter erläutert werden, zeigen vielversprechende Ansätze, um diese Probleme zu überwinden.
-\textcite{potje2024xfeat} stellten 2024 \ac{xFeat} vor. Durch eine eine besonders effiziente und hardware-unabhängige Featureextraktion, die sowohl schnell als auch genau ist, ist \ac{xFeat} ideal für ressourcenbeschränkte  Systeme, bspw. mobile Roboter, geeignet.
-Gleichzeitig wird in~\cite{potje2024xfeat} gezeigt, dass viele neuronale Netze eine starke Abhängigkeit von Texturen 
-(engl. Texture Bias) aufweisen. Darunter versteht man die Tendenz, Objekte primär anhand lokaler Oberflächenmuster, 
-Farben oder Pixelstatistiken zu klassifizieren, anstatt ihre übergeordnete Form zu berücksichtigen. So kann ein 
-Hund beispielsweise anhand seines Fellmusters erkannt werden, während Menschen bei der Objekterkennung stärker auf 
-Gestalt, Kontur und räumliche Struktur zurückgreifen (engl. Shape Bias). Dieser Unterschied führt dazu, dass Objekte 
-für Menschen auch bei veränderter Textur – etwa durch Cartoonisierung oder Bildrauschen – weiterhin erkennbar bleiben, 
-während neuronale Netze anfälliger für Fehlklassifikationen sind. Überträgt man dies auf ein Bauteil, würde ein Modell 
-eine Schraube vor allem über die raue Metalloberfläche identifizieren, während der Mensch die charakteristische Form 
-mit Gewinde und Kopf als entscheidend wahrnimmt. Um den Texture Bias zu verringern und die Robustheit der Modelle zu 
-erhöhen, können gezielte Formveränderungen in der Datenaugmentation eingesetzt werden, sodass Netzwerke stärker auf 
-strukturelle Objektformen trainiert werden~\cite{potje2024xfeat}.
+Die visuelle Regelung gewinnt in der industriellen Robotik zunehmend an Bedeutung. Verfahren des Visual Servoing nutzen 
+Kamerabilder zur direkten Bewegungssteuerung und ermöglichen flexible Automatisierung. Die Qualität hängt jedoch stark von 
+den verwendeten Bildmerkmalen ab. Klassische Detektoren wie \ac{SIFT} oder \ac{ORB} sind effizient, reagieren aber empfindlich 
+auf Skalierungs-, Rotations- und Beleuchtungsänderungen, besonders in komplexen Szenen~\cite{lowe2004distinctive, rublee2011orb}. 
+Neuere Arbeiten – etwa \textcite{potje2024xfeat} – stellen mit Accelerated Features (\ac{xFeat}) eine hardwareunabhängige, 
+schnelle und präzise Methode vor, die sich auch für mobile Systeme eignet. Gleichzeitig zeigen Studien, dass viele neuronale 
+Netze einem \emph{Texture Bias} unterliegen: Objekte werden anhand von Oberflächenmustern statt Formen erkannt, was sie 
+anfällig für Veränderungen wie Rauschen oder Cartoonisierung macht~\cite{potje2024xfeat}. Menschen hingegen orientieren sich 
+stärker an Gestalt und Kontur (\emph{Shape Bias}). Um den Texture Bias zu reduzieren, können Datenaugmentationsmethoden 
+eingesetzt werden, die Netzwerke gezielt auf Formmerkmale trainieren~\cite{potje2024xfeat}.
 
-In diesem Kontext gewinnt die Nutzung von Segmentierungsmasken als strukturelle Grundlage für die Featureberechnung zunehmend an Bedeutung. 
-Mithilfe moderner neuronaler Netze, bspw. Mask~\ac{R-CNN} lassen sich Objekte nicht nur erkennen, sondern auch präzise von ihrer Umgebung abgrenzen. 
-Diese Masken liefern zusätzliche semantische Information, die für eine robuste und gezielte Merkmalsextraktion genutzt werden kann~\cite{he2017maskrcnn}. 
-Die Verbindung solcher Segmentierungsansätze mit effizienten Feature-Architekturen wie \ac{xFeat} sowie der Einsatz von robustheitssteigernden 
-Trainingsmethoden bietet ein vielversprechendes Potenzial für zuverlässigere und schnellere visuelle Regelungsverfahren.
-
+Vor diesem Hintergrund bieten Segmentierungsmasken neue Möglichkeiten. Moderne Netze wie Mask~\ac{R-CNN} erkennen Objekte 
+nicht nur, sondern grenzen sie auch präzise von ihrer Umgebung ab~\cite{he2017maskrcnn}. Diese zusätzlichen semantischen 
+Informationen bilden eine solide Grundlage für die Merkmalsextraktion. In Kombination mit effizienten Architekturen 
+wie \ac{xFeat} und robustheitssteigernden Trainingsmethoden ergibt sich ein vielversprechender Ansatz für zuverlässigere 
+und schnellere visuelle Regelungsverfahren.
 
 \section{Ziel der Arbeit}
 \label{sec:Zielstellung}
