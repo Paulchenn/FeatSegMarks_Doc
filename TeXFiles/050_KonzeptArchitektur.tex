@@ -18,7 +18,6 @@ Das Gesamtkonzept umfasst vier zentrale Komponenten (siehe Abbildung~\ref{fig:Pi
 \end{enumerate}
 \newpage
 Für das Training des Generators sowie des Diskriminators werden unterschiedliche Deformations- und Blur-Faktoren eingesetzt, um die Robustheit der xFeat-Repräsentationen zu untersuchen.
-Diese Faktoren werden in der späteren Kopplungsexperiment-Sektion systematisch variiert.\todo{Check ob wir das wirklich tun ??!!}
 
 Das Zusammenspiel dieser Komponenten führt zu einem adaptiven System, das nicht nur texturbasierte Verzerrungen eliminiert, sondern gezielt robuste Formmerkmale hervorhebt. Der besondere Vorteil liegt darin, dass die Generierung der Trainingsdaten im selben Schritt wie das Modelltraining erfolgt, wodurch eine konsistente Integration in die Gesamtarchitektur erreicht wird.
 
@@ -80,8 +79,6 @@ Zusätzlich besteht eine Wahrscheinlichkeit $p_{zero}$, dass das Eingangsbild vo
 Unabhängig von der gewählten Methode wird das Bild anschließend wieder auf die Originalgröße interpoliert.
 Optional kann dem resultierenden Bild leichtes Rauschen mit der Standardabweichung $noise_{std}$ hinzugefügt werden.
 
-\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Visualisierung des variablen Gaussian Blur bei Eingabe in den Generator.}
-
 
 
 
@@ -103,9 +100,10 @@ Zur Behebung dieser Einschränkungen schlagen wir die \textit{\ac{DS-EMSE}}-Meth
     \item Das einkanalige Kantenbild wird auf drei Kanäle repliziert, um der erwarteten Eingabe des Generator-Netzes zu entsprechen.
 \end{enumerate}
 
-Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karten, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch CPU-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
+Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karten, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Visualisierung: Vergleich EMSE vs. DS-EMSE}
-\todo[inline]{Tool für generierung der Parameter beschreiben.}
+\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Bild von Tool}
+\todo[inline, author=Tim]{Tool für generierung der Parameter beschreiben (Warum, Wieso, Weshalb + entschiedene Werte (config)).}
 
 
 
@@ -219,15 +217,34 @@ zusammen. Die kombinierte Verlustfunktion für Phase eins kann formal wie folgt 
 Für Phase zwei (Feinbild-Generierung) schlagen \textcite{He_2023_ICCV} die Integration eines Klassifikator-Losses vor, um die semantische Konsistenz der erzeugten Bilder zu verbessern. Da der Fokus dieser Arbeit jedoch auf der Verbesserung eines Keypoint-Detektors beziehungsweise -Deskriptors (\ac{xFeat}) liegt, betrachten wir den Klassifikator-Loss in unserer Implementierung als optional. Stattdessen wird erneut ein Kanten-Loss berücksichtigt, um die Strukturtreue zu sichern und die Deformierung der Kanten zu fördern. Somit entspricht die Verlustfunktion von Phase zwei in der vorliegenden Arbeit formal der Gleichung~\ref{eq:Verlustfkt}, wobei $L_{L1img}$ nun den Fokus auf die Feinbild-Generierung legt und der Kanten-Loss die Deformierung verstärkt.
 
 Alle Verlustkomponenten werden durch gewichtende Faktoren ($\lambda$) skaliert. Die Wahl der Faktoren erfolgt hier manuell über visuelle Beurteilung, bis die Ergebnisse qualitativ zufriedenstellend sind. Eine systematische oder automatisierte Optimierung der Gewichte kann aus Zeitgründen nicht durchgeführt werden. Die finalen Werte sind in Tabelle~\ref{tab:lambda_verlustfkt} aufgeführt.
+
+% \begin{table}[h]
+%     \centering
+%     \caption{Gewichtungsfaktoren der Verlustfunktion}
+%     \label{tab:lambda_verlustfkt}
+%     \begin{tabular}{YYY}
+%         \toprule
+%         & \textbf{Phase 1} & \textbf{Phase 2} \\
+%         \midrule
+%         $\lambda_{L1}$ & $6.0$ & $2.0$ \\
+%         $\lambda_{edge}$ & $1.5$ & $3.0$\\
+%         $\lambda_{GAN}$ & $1.0$ & $0.5$\\
+%         $\lambda_{CE}$ & $1.0$ & $0.5$\\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}
+
 \begin{table}[h]
     \centering
-    \begin{tabular}[h]{l|cc}
-        & Phase 1 & Phase 2 \\
-        \hline
+    \begin{tabular}[h]{lcc}
+        \toprule
+        & \textbf{Phase 1} & \textbf{Phase 2} \\
+        \midrule
         $\lambda_{L1}$ & $6.0$ & $2.0$ \\
         $\lambda_{edge}$ & $1.5$ & $3.0$\\
         $\lambda_{GAN}$ & $1.0$ & $0.5$\\
         $\lambda_{CE}$ & $1.0$ & $0.5$\\
+        \bottomrule
     \end{tabular}
     \caption{Gewichtungsfaktoren der Verlustfunktion}
     \label{tab:lambda_verlustfkt}
@@ -248,63 +265,89 @@ Dieses Vorgehen gewährleistet, dass der Generator in Phase 1 zunächst eine qua
 Die bisher in diesem Kapitel vorgestellte Tranings- sowie Netzarchtektur ist in Verbindung mit dem Datensatz ImageNet256~\cite{Uriot2023imageNet} und dementsprechend auf einer Bildgröße von $256 \times 256$ Pixel entwickelt.
 Die Evaluation sowie die zugehörigen Ergebnisse sind in Abschnitt~\ref{sec:??} dargestellt und zeigen, dass die vorgestellte Trainings- sowie Netzarchitektur in sich funktionabel ist und, wie erwartet, Bilder mit verstärkten und defomierten Kanten sowie reduzierter Texturinformation generiert.\todo{Wie bewertet??}
 In Verbindung mit dem nachfolgenden Keypointdetektor, respektive -deskriptor, \ac{xFeat}, der mit Bildern der Größe $608 \times 800$ arbeitet, lässt die Qualität der Gesamtpipeline jedoch zu wünschen übrig (siehe Evaluation und Ergebnisse in Abschnitt~\ref{sec:??}\todo[author=Paul]{Ergebnissabschnitt schreiben.}).
-Da \ac{xFeat} mit den Datensätzen COCO~\cite{lin2015microsoft} sowie MegaDepth~\cite{li2018megadepth} trainiert wird, werden in diesem Kapitel die fortführenden Arbeiten, auf den in den bisherigen Kapiteln erlangten Erkenntnissen, vorgestellt, die nötig waren, den Genarator auf COCO oder MegaDepth zu trainieren~\cite{potje2024xfeat}.
+Da \ac{xFeat} mit den Datensätzen COCO~\cite{lin2015microsoft} sowie MegaDepth~\cite{li2018megadepth} trainiert wird, werden in diesem Abschnitt die fortführenden Arbeiten, auf den in den bisherigen Kapiteln erlangten Erkenntnissen, vorgestellt, die nötig waren, den Genarator auf COCO oder MegaDepth zu trainieren~\cite{potje2024xfeat}.
 
-Dies kann zum Einen visuell auf die unzureichende Qualität der generierten Bilder zurückgeführt werden (siehe hierzu Abbidlung~\ref{fig:xFeat_Ergebniss_GenImageNet}).
-\begin{figure}[t]
+
+
+
+\subsection{Unzureichend generierte Bildgröße des Generator-Netzes}
+Die schlechten Ergebnisse des xFeat-Trainings könneneinerseits (visuell) auf die unzureichende Qualität der generierten Bilder zurückgeführt werden (siehe hierzu Abbidlung~\ref{fig:xFeat_Ergebniss_GenImageNet}).
+Da der Generator und das zugehörige Netz auf $256 \times 256$ Pixel großen Bildern basiert (ImageNet256) muss beim xFeat Training das eigentlich $608 \times 800$ Pixel große Bild auf $256 \times 256$ herunterskaliert und nach dem Generator wieder auf $608 \times 800$ hoch interpoliert werden.
+Dies resultiert in einem Informationsverlust des Originalbildes, wodurch die Qualität der Keypointdetektion leidet.
+Zusätzlich ist das Seitenverhältnis der in \ac{xFeat} genutzen Bilder nicht, wie im bisherigen Generator, $1:1$, sondern liegt bei ungefähr $1:1,3$. Auch dies muss für eine qualitativ hohes \ac{xFeat}-Training berücksichtigt werden.
+\begin{figure}[htpb]
     \centering
     \begin{subfigure}[t]{\VarPicWidthF}
         \centering
-        \missingfigure[]{xFeat Bild mit Generator davor 1.}
-        %\includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/pdf/Ledge_vs_dsRate.pdf}
-        \caption{??}
+        % \missingfigure[]{xFeat Bild mit Generator davor 1.}
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatResult_DS32_TSD0_035_1.jpg}
+        \caption{Von \ac{xFeat} gefundene Keypoints (grüne Punkte) in Bild mit vorangeschaltenem Generator, der auf ImageNet256 trainiert ist (Bild 1).}
         \label{fig:xFeat_Ergebniss_GenImageNet_1}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{\VarPicWidthF}
         \centering
-        \missingfigure[]{xFeat Bild mit Generator davor 2.}
-        %\includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/pdf/ratioEI_vs_dsRate.pdf}
-        \caption{??}
+        % \missingfigure[]{xFeat Bild mit Generator davor 2.}
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatResult_DS32_TSD0_035_2.jpg}
+        \caption{Von \ac{xFeat} gefundene Keypoints (grüne Punkte) in Bild mit vorangeschaltenem Generator, der auf ImageNet256 trainiert ist (Bild 2).}
         \label{fig:xFeat_Ergebniss_GenImageNet_2}
     \end{subfigure}
     \vfill
     \begin{subfigure}[t]{\VarPicWidthA}
         \centering
-        \missingfigure[]{Keypointmatching mit Gnerator von Bilder.}
-        %\includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/pdf/ratioEI_vs_dsRate.pdf}
-        \caption{??}
+        % \missingfigure[]{Keypointmatching mit Gnerator von Bilder.}
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatResult_DS32_TSD0_035_match.jpg}
+        \caption{Von \ac{xFeat} gematchte Keypoints zwischen Bild eins und zwei.}
         \label{fig:xFeat_Ergebniss_GenImageNet_3}
     \end{subfigure}
-    \caption{??}
+    \caption{Informationsverlustbehaftete Bilder nach Anwendung unseres auf ImageNet256 basierenden und trainierten Generators als Prepipeline vor \ac{xFeat} sowie die \ac{xFeat} Ergebniss nach einem Training mit vorangeschaltenem Generator.}
     \label{fig:xFeat_Ergebniss_GenImageNet}
 \end{figure}
-Da der Generator und das zugehörige Netz auf $256 \times 256$ Pixel großen Bildern basiert (ImageNet256) muss beim xFeat Training das eigentlich $608 \times 800$ Pixel große Bild auf $256 \times 256$ herunterskaliert und nach dem Generator wieder auf $608 \times 800$ hoch interpoliert werden.
-Dies resultiert in einem Informationsverlust des Originalbildes, wodurch die Qualität der Keypointdetektion leidet.
-Zusätzlich ist das Seitenverhältnis der in \ac{xFeat} genutzen Bilder nicht, wie im bisherigen Generator, $1:1$, sondern liegt bei ungefähr $1:1,3$. Auch dies muss für eine qualitativ hohes \ac{xFeat}-Training berücksichtigt werden.
 
+Um qualitativ hochwertigere Bilder mit dem Generator zu generieren, soll dieser direkt auf Bilder der Datensätze COCO oder MegaDepth sowie auf der selben Bildgröße wie \ac{xFeat} trainiert werden.
+Das Netz generiert, wenn es auf $256 \times 256$ Pixel großen Bildern trainiert, regelmäßig schwarze Artefakte im Bild (siehe hierzu Abbildung~\ref{fig:bsp_Artefakt_imageNet256}).
+Deshalb wird davon ausgegangen, dass die Netztiefe für $608 \times 800$ Pixel große Bilder ausreichend ist.\todo[author=Paul]{Quelle}
+In der Netzstruktur bedarf dies deshalb vorerst keine Änderungen.
+
+\begin{figure}[htpb]
+    \centering
+    \missingfigure[]{Beispiel für Artefakte.}
+    % \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/pdf/Generator_V2_2.pdf} % trim = L B R O
+    \caption{Beispiel für Artefakte, das bei dem Netz, das mit ImageNet256 trainiert ist, entstehen.}
+    \label{fig:bsp_Artefakt_imageNet256}
+\end{figure}
+
+Um Speicher zu sparen, wird vor jeder Decoderschicht ein fuse-skip eingefügt.
+Bisher werden die geskippten Feature-maps des edge- sowie des blur-encoder konkateniert und auf die Feature map der aktuellen Decoderschicht addiert.
+Da dies aufgrund der größeren Bilder zu viel Speicher braucht und die genutzte Grafikkarte dabei an ihr Limit kommt, wird eine $1 \times 1$-Convolution Schicht eingefügt, um die Kanalanzahl wieder auf die Urpsrüngliche Größe zu reduzieren.
+Ob dies und wenn ja, ob dies einen positiven oder negativen Einfluss auf das Training hat, aknn zum derzeitigen Zeitpunkt nicht ausreichend beurteilt werden.
+
+
+
+
+\subsection{Unterschiedlicher Aufbau der genutzen Datensätze}
 Eine zweite Problematik entsteht durch den unterschiedlichen Aufbau der Datensätze ImageNet256 sowie COCO oder MegaDepth. Während ImageNet256 klar nach Objektklassen organisiert ist und für jede Klasse eine große Zahl an Bildern in einheitlicher Auflösung bietet, ist der \textit{MegaDepth}-Datensatz szenenbasiert aufgebaut. Anstelle von Klassen enthält er Sammlungen von Bildern pro Szene (z.~B. Landmarken), oft in hoher Auflösung, ergänzt durch Metadaten wie Kameraposen und Tiefenkarten. 
 Diese Unterschiede im Aufbau sind in Tabelle~\ref{tab:imagenet_megadepth_structure} zusammengefasst und erklären, weshalb ein direkter Wechsel von ImageNet256 auf MegaDepth Anpassungen in der Trainingspipeline erfordert.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}[h]{l|cc}
-        Kriterium & ImageNet256 & MegaDepth \\
-        \hline
-        Organisation & Klassenbasiert (z.\,B. Hund, Auto, Stuhl) & Szenenbasiert (z.\,B. Notre Dame, St.~Peter, Yosemite) \\
-        Anzahl Strukturen & $\sim$1000 Klassen & $\sim$150 Szenen \\
-        Bilder pro Struktur & Je Klasse tausende Bilder & Je Szene mehrere hundert bis tausend Bilder \\
-        Auflösung & Normalisiert auf 256 $\times$ 256 Pixel & Unterschiedliche, oft höhere Auflösung \\
-        Zusatzinformationen & Keine & Tiefenkarten, Kameraposen, Feature-Indizes \\
-    \end{tabular}
     \caption{Struktureller Vergleich zwischen ImageNet256 und MegaDepth}
     \label{tab:imagenet_megadepth_structure}
+    \begin{tabularx}{\textwidth}{p{3.2cm}YY}
+        \toprule
+        \textbf{Kriterium} & \textbf{ImageNet256} & \textbf{MegaDepth} \\
+        \midrule
+        Organisation & Klassenbasiert & Szenenbasiert \\
+        Anzahl Strukturen & $\sim$1000 Klassen & $\sim$150 Szenen \\
+        Bilder pro Struktur & Je Klasse tausende Bilder & Je Szene mehrere hundert bis tausend Bilder \\
+        Auflösung & Normalisiert auf $256 \times 256$ Pixel & Unterschiedliche, oft höhere Auflösung \\
+        Zusatzinformationen & Keine & Tiefenkarten, Kameraposen, Feature-Indizes \\
+        \bottomrule
+    \end{tabularx}
 \end{table}
 
-
-
-
-\subsection{Netzanpassung auf $608 \times 800$}
+Da im MegaDepth-Datensatz nicht in Klassen sortiert ist, ist die Berechnung eines Cross-Entropy-Loss ($L_{CE}$) (siehe Gleichung~\ref{eq:Verlustfkt}) nicht mehr wie bisher möglich.
+Zwar könnte der Cross-Entropy-Loss zwischen vorhergesagter Szene und aktueller Szene berechnet werden. Da wir den Generator allerdings nicht als Prepipeline für einen Klasifizierer trainieren und damit nicht an Informationen der Klasse, respektive Szene gebunden sind und der Cross-Entropy-Loss mit $\lambda_{CE} = 0,5$ niedrig gewichtet ist (siehe Tabelle~\ref{tab:lambda_verlustfkt}), sehen wir davon ab und gewichten den Cross-Entropy-Loss bei Trainings des Generators auf COCO oder MegaDepth mit $\lambda_{CE} = 0,0$.
 
 
 
