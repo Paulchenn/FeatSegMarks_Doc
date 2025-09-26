@@ -52,7 +52,8 @@
 
 % --- Bild links mit Rahmen ---
 \node[imgframe, anchor=west] (img) at (0,0)
-  {\includegraphics[height=\imgH cm]{Figures/622.jpg}};
+  {\includegraphics[height=\imgH cm]{Figures/flugzeug.jpg}};
+\node[above=2pt of img, anchor=south, font=\scriptsize] {Image (Input)};
 
 % --- Pfeil 2 cm nach rechts ---
 \coordinate (arrowEnd) at ($(img.east)+(2cm,0)$);
@@ -68,7 +69,9 @@
 % --- Bild rechts mit Rahmen (gleiche Höhe/Größe/Abstand wie links) ---
 \node[imgframe, anchor=west] (imgR)
   at ($(dsEmseBox.east)+(2cm,0)$)
-  {\includegraphics[height=\imgH cm]{Figures/622.jpg}};
+  {\includegraphics[height=\imgH cm]{Figures/flugzeug_ds_emse.png}};
+\node[above=2pt of imgR, anchor=south, font=\scriptsize] {Edge Map (Output)};
+
 
 % ====== Linke Spalte (5 Funktionen, top-down) ======
 \node[fun, anchor=north west] (f1)
@@ -101,8 +104,7 @@
 
 % ====== Flows + Labels (Input → Output) ======
 % Linke Spalte Pfeile
-\draw[flow] (img.east) -- (f1.west)
-  node[flowlabel, above] {Image};
+\draw[flow] (img.east) -- (f1.west);
 
 \draw[flow] (f1.south) -- (f2.north)
   node[flowlabel, above] {Gray image};
@@ -138,8 +140,7 @@
   node[flowlabel, above] {Connected mask};
 
 % Output vom Inverter zum rechten Bild
-\draw[flow] (g4.east) -- (imgR.west)
-  node[flowlabel, above] {Inverted edges};
+\draw[flow] (g4.east) -- (imgR.west);
 
 \end{tikzpicture}
 \end{document}

@@ -61,12 +61,12 @@
 
 % --- Zwei Bilder links (gleiche Größe), vertikal versetzt ---
 \node[imgframe, anchor=west] (imgA) at (0,  +0.5*\inGap)
-  {\includegraphics[height=\imgH cm]{Figures/622.jpg}};
-\node[above=2pt of imgA, anchor=south, font=\scriptsize] {Edge Map};
+  {\includegraphics[height=\imgH cm]{Figures/flugzeug_ds_emse.png}};
+\node[above=2pt of imgA, anchor=south, font=\scriptsize] {Edge Map (Input)};
 
 \node[imgframe, anchor=west] (imgB) at (0,  -0.5*\inGap)
-  {\includegraphics[height=\imgH cm]{Figures/622.jpg}};
-\node[below=2pt of imgB, anchor=north, font=\scriptsize] {Image};
+  {\includegraphics[height=\imgH cm]{Figures/flugzeug.jpg}};
+\node[below=2pt of imgB, anchor=north, font=\scriptsize] {Image (Input)};
 
 % --- Hauptbox-Position: Mittelpunkt zwischen beiden 2cm-Pfeilenden ---
 \coordinate (arrowEndA) at ($(imgA.east)+(2cm,0)$);
@@ -88,27 +88,33 @@
 
 % Pfeil von Input B (Image) direkt in die Funktionsbox
 \draw[flow]
-  (imgB.east) -- (dynBlur.west)
-  node[flowlabel, above] {Image};
+  (imgB.east) -- (dynBlur.west);
 
 % ------------------ Random Fan-out: genau EINE der drei Varianten ----------------
 % Fächerpunkt rechts der Funktionsbox
 \coordinate (split) at ($(dynBlur.east)+(\fanout cm,0)$);
 
 % Drei Thumbnails ÜBEREINANDER
-\node[imgframe, anchor=west] (thumbGray)
-  at ($(split)+(\toThumb cm,  2*\thumbVsep cm)$)
-  {\includegraphics[height=\thumbH cm]{Figures/622.jpg}};
+% Länge für die Referenzbreite bestimmen:
+\newlength{\thumbWdim}
+\settowidth{\thumbWdim}{\includegraphics[height=\thumbH cm]{Figures/flugzeug.jpg}}
+
+% Graues Feld mit exakt gleicher Größe wie das Referenzbild:
+\node[imgframe, anchor=west, fill=gray!60,
+      line width=.5pt, % <— nur hier dicker
+      minimum height=\thumbH cm, minimum width=\thumbWdim, inner sep=0pt] (thumbGray)
+  at ($(split)+(\toThumb cm,  2*\thumbVsep cm)$) {};
 \node[anchor=south] at ([yshift=-2.5pt]thumbGray.north) {All-gray (dropout)};
+
 
 \node[imgframe, anchor=west] (thumbHeavy)
   at ($(split)+(\toThumb cm,  \thumbVsep cm)$)
-  {\includegraphics[height=\thumbH cm]{Figures/622.jpg}};
+  {\includegraphics[height=\thumbH cm]{Figures/flugzeug_blur_gaussian_lam1.00.png}};
 \node[anchor=south] at ([yshift=-2.5pt]thumbHeavy.north) {Heavy blur};
 
 \node[imgframe, anchor=west] (thumbDown)
   at ($(split)+(\toThumb cm, 0cm)$)
-  {\includegraphics[height=\thumbH cm]{Figures/622.jpg}};
+  {\includegraphics[height=\thumbH cm]{Figures/flugzeug_blur_gaussian_lam0.20.png}};
 \node[anchor=south] at ([yshift=-2.5pt]thumbDown.north) {Downscale blur};
 
 % Gestrichelte Alternativ-Pfeile direkt vom Filter zu den drei Outputs
@@ -146,8 +152,7 @@
   (k3) -- (genFig.west |- k3);
 
 \draw[flow]
-  (imgA.east) -- ([yshift=1.9cm]genFig.west)
-  node[flowlabel, above] {Edge Map};
+  (imgA.east) -- ([yshift=1.9cm]genFig.west);
 
 % --- Rechtes Output-Bild (gleiche Höhe/Größe, Abstand 2 cm) ---
 % 1) y-Referenz am Generator (Startpunkt des Pfeils)
@@ -156,8 +161,8 @@
 % 2) Rechtes Bild so platzieren, dass seine Westkante das gleiche y hat
 \node[imgframe, anchor=west] (imgR)
   at ($(tsgBox.east |- genEastShift)+(2cm,0)$)
-  {\includegraphics[height=\imgH cm]{Figures/622.jpg}};
-\node[above=2pt of imgR, anchor=south, font=\scriptsize] {Generated Image};
+  {\includegraphics[height=\imgH cm]{Figures/flugzeug.jpg}};
+\node[above=2pt of imgR, anchor=south, font=\scriptsize] {Generated Image (Output)};
 
 % 3) Horizontaler Pfeil (wagrecht), automatisch mittig auf dieser y-Höhe
 \draw[flow]
