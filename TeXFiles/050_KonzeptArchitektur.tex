@@ -11,7 +11,7 @@ Die zentrale Idee des entwickelten Ansatzes besteht darin, die Datenaugmentierun
 
 Das Gesamtkonzept umfasst vier zentrale Komponenten (siehe Abbildung~\ref{fig:PipelineGesamtkonzept}): 
 \begin{enumerate}
-    \item \textbf{Dynamische Texturreduktion:} Eingangsabbilder werden durch variablen Gaussian Blur und probabilistisches Texture-Dropout in ihrer textuellen Information reduziert. Ziel ist es, den Shape-Bias zu verstärken und den nachfolgenden Generator stärker auf Forminformationen auszurichten.
+    \item \textbf{Dynamische Texturreduktion:} Eingangsabbilder werden durch variablen Gaussian Blur und probabilistisches Texture-Dropout in ihrer texturellen Information reduziert. Ziel ist es, den Shape-Bias zu verstärken und den nachfolgenden Generator stärker auf Forminformationen auszurichten.
     \item \textbf{Differenzierbare Kantenextraktion (\acs{DS-EMSE}):} Eine \ac{GPU}-basierte, end-to-end-differenzierbare Methode erzeugt Kantenkarten, die als Form-Guidance in die Bildgenerierung eingehen. Damit werden die Grenzen von klassischen Verfahren wie Canny überwunden und die Trainingspipeline deutlich effizienter gestaltet.
     \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
     \item \textbf{Generative Bildtransformation:} Ein Generator-Netzwerk erstellt aus den texturreduzierten Eingaben und den Kantenkarten synthetische Bilder, die reduzierte Textur und verstärkte Formmerkmale aufweisen. Diese Bilder dienen anschließend als Eingabe für den Keypoint-Detektor \ac{xFeat}.
@@ -27,7 +27,7 @@ Das Zusammenspiel dieser Komponenten führt zu einem adaptiven System, das nicht
     \caption{Schematische Darstellung der vier zentralen Komponenten der Online-Daten-Augmentierung~\cite{He_2023_ICCV}.}
     \label{fig:PipelineGesamtkonzept}
 \end{figure}
-Abbildung~\ref{fig:PipelineGesamtkonzept} verdeutlicht die Rolle der Online-Daten-Augmentierung innerhalb der Gesamtpipeline. Ausgangsbilder werden zunächst durch die Texturreduktion und die Kantenextraktion verarbeitet. Die Deformierung der Kanten findet nur im Training des Generators sowie des Keypointdetektors, respektive -deskriptors statt. In der Nutzung, nach erfolgreichem Training beider Netze wird die Kantendeformierung nicht mehr genutz. Dies wird durch das \enquote{\textbf{/}} gekennzeichnet. Anschließend erzeugt der Generator synthetische Bilder, die in das nachgelagerte Feature-Extraktionssystem einfließen. Die so gewonnenen Merkmale werden schließlich im Kontext des Visual Servoing weiterverarbeitet.
+Abbildung~\ref{fig:PipelineGesamtkonzept} verdeutlicht die Rolle der Online-Daten-Augmentierung innerhalb der Gesamtpipeline. Ausgangsbilder werden zunächst durch die Texturreduktion und die Kantenextraktion verarbeitet. Die Deformierung der Kanten findet nur im Training des Generators sowie des Keypointdetektors, respektive -deskriptors statt. Nach erfolgreichem Training beider Netze wird die Kantendeformierung nicht mehr genutz. Dies wird durch das \enquote{\textbf{/}} gekennzeichnet. Anschließend erzeugt der Generator synthetische Bilder, die in das nachgelagerte Feature-Extraktionssystem einfließen. Die so gewonnenen Merkmale werden schließlich im Kontext des Visual Servoing weiterverarbeitet.
 
 
 
@@ -71,6 +71,13 @@ Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})
 \end{figure}
 
 Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen und den Shape-Bias zu fördern, wird ein variabler Gaussian Blur auf die Eingangsbilder angewendet.
+\todo[author=Analena]{Hier das TSG Bild einfügen und beschreiben}
+\begin{figure}[htbp]
+        \centering
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsg/tsg.pdf}
+        \caption{Verschiedene Blur-Stärken, die durch den variablen Gaussian Blur erzeugt werden können.}
+        \label{fig:TSG}
+\end{figure}
 Dieser Ansatz ermöglicht es, die Intensität der Texturreduktion dynamisch zu steuern. 
 Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert.
 
@@ -100,13 +107,14 @@ Zur Behebung dieser Einschränkungen schlagen wir die \textit{\ac{DS-EMSE}}-Meth
     \item Das einkanalige Kantenbild wird auf drei Kanäle repliziert, um der erwarteten Eingabe des Generator-Netzes zu entsprechen.
 \end{enumerate}
 
-Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karten, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
+Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Visualisierung: Vergleich EMSE vs. DS-EMSE}
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Bild von Tool}
 \todo[inline, author=Tim]{Tool für generierung der Parameter beschreiben (Warum, Wieso, Weshalb + entschiedene Werte (config)).}
 
 
-
+\todo[author=Analena]{Wo wird mal genau die zweite Phase/TSD beschrieben?}
+%Irgendwie fehlt mir das und damit auch die Stelle für das TSD Bild
 
 
 \section{Entwurf einer passenden Netzarchitektur für ImageNet256}

@@ -1,220 +1,252 @@
 \chapter{Grundlagen und Stand der Technik}
 \label{ch:StandTechnik}
-Die Extraktion robuster und invarianter Merkmale bildet eine zentrale Grundlage für bildbasierte Regelverfahren im Visual Servoing. 
-Klassische Methoden wie \ac{SIFT} oder \ac{ORB} liefern stabilisierte Featurepunkte, stoßen bei komplexen Szenen und hohen Echtzeitanforderungen an ihre Grenzen.
-Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen verbessern kann~\cite{detone2018superpoint,potje2024xfeat}.
+Die robuste Objekterkennung in Bildern ist ein zentrales Forschungsfeld der Computer Vision. In den letzten Jahren wurden zahlreiche Ansätze entwickelt, um die Feature-Extraktion zu verbessern und Modelle gegenüber Bildveränderungen, Texturvariationen und adversarialen Angriffen zu stärken. Die folgenden Abschnitte geben einen Überblick über die grundlegenden Verfahren, die als Basis für aktuelle Entwicklungen wie die Edge-Deformation-basierte Augmentation dienen.
 
-In diesem Kapitel werden Grundlagen sowie der aktuelle Stand der Technik beleuchtet. Zunächst erfolgt ein Vergleich klassischer und moderner Verfahren zur Feature-Extraktion.
-Anschließend ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und Mask~\ac{R-CNN}, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in Feature-Extraktion auszeichnen~\cite{potje2024xfeat}.
+\section{Architekturgrundlagen für Bildverarbeitung und Generierung}
+\label{sec:Architekturgrundlagen}
 
+\subsection{Encoder-Decoder-Architekturen für Bildübersetzung}
+Encoder-Decoder-Architekturen bilden das Rückgrat vieler bildgenerativer Verfahren in der Computer Vision. Sie bestehen typischerweise aus zwei symmetrischen Komponenten: einem Encoder, der die Eingabedaten in eine latente Repräsentation überführt, und einem Decoder, der diese Repräsentation wieder in ein Bild zurücktransformiert. Besonders relevant ist die U-Net-Architektur, die ursprünglich von Ronneberger et al. (2015) für die medizinische Bildsegmentierung entwickelt wurde. Das 2015 von Ronneberger et al. vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, das speziell für die semantische Segmentierung konzipiert wurde. Obwohl U-Net ursprünglich für medizinische Bilddaten entwickelt wurde, eignet sich die Architektur auch für technische Anwendungen, sobald eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist - beispielsweise in der industriellen Objekterkennung, Robotik oder im Visual Servoing.
+Der Name „U-Net“ stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht. Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird. Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über sogenannte Skip-Verbindungen. Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen - ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen. Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird. U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z. B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können.
+Diese Architektur hat sich nicht nur in der Segmentierung bewährt, sondern auch in der Bild-zu-Bild-Übersetzung, insbesondere in Kombination mit Generative Adversarial Networks (GANs). Ein prominentes Beispiel ist das Pix2Pix-Modell von Isola et al. (2017), bei dem ein U-Net als Generator eingesetzt wird. Die zugrunde liegende GAN-Struktur wird im folgenden Abschnitt detailliert beschrieben.
 
+\subsection{Generative Adversarial Networks (GANs)} %Generative Adversarial Networks und Klassifikationsunterstützung
+Generative Adversarial Networks (GANs), eingeführt von Goodfellow et al. (2014), bestehen aus zwei konkurrierenden neuronalen Netzwerken: einem Generator und einem Diskriminator. Der Generator hat die Aufgabe, möglichst realistische Bilder zu erzeugen, während der Diskriminator versucht, echte von synthetischen Bildern zu unterscheiden. Dieses adversariale Trainingsprinzip führt zu einer kontinuierlichen Verbesserung beider Komponenten. Für die Bildgenerierung besonders relevant ist die PatchGAN-Architektur, bei der der Diskriminator nicht das gesamte Bild, sondern lokale Bildausschnitte bewertet. Dadurch werden hochfrequente Details gefördert, was zu einer gesteigerten Bildqualität führt. Die Kombination aus adversarial loss und rekonstruktiven Verlusten wie dem L1-Loss ermöglicht es, sowohl strukturelle Genauigkeit als auch photorealistische Ergebnisse zu erzielen.
+Eine Erweiterung dieses Konzepts stellen die Auxiliary Classifier GANs (ACGANs) dar, die von Odena et al. (2017) vorgestellt wurden. ACGANs integrieren eine zusätzliche Klassifikationskomponente in den Diskriminator, wodurch nicht nur die Realitätsnähe der generierten Bilder bewertet wird, sondern auch deren korrekte Klassenzugehörigkeit. Dies erlaubt eine kontrollierbare Bildgenerierung und führt zu einem stabileren Trainingsverhalten. Besonders bei augmentierten Datensätzen, bei denen die semantische Konsistenz der erzeugten Bilder entscheidend ist, zeigen ACGANs deutliche Vorteile gegenüber klassischen GAN-Varianten.
 
+\section{Geometrische und semantische Transformationstechniken}
+\label{sec:GeometrischeTransformationstechniken}
+\subsection{Geometrische Deformation mit Thin Plate Spline}
+Thin Plate Spline (TPS) ist ein parametrisches Modell zur nichtlinearen geometrischen Transformation, das sich durch seine Fähigkeit zur glatten Interpolation zwischen definierten Kontrollpunkten auszeichnet. Die Methode wurde ursprünglich von Bookstein (1989) in der morphometrischen Analyse biologischer Formen eingeführt und basiert auf der Minimierung einer Biegeenergie, die die Verzerrung zwischen Punkten möglichst gleichmäßig verteilt. Mathematisch handelt es sich um eine Lösung eines Variationsproblems, bei dem die Funktion zwischen den Kontrollpunkten durch eine Kombination aus radialen Basisfunktionen und affine Transformationen modelliert wird.
+TPS findet heute breite Anwendung in der Bildverarbeitung, insbesondere in Bereichen wie Gesichtsregistrierung, medizinischer Bildanpassung, Pose-Transfer und Datenaugmentation. In der Deep-Learning-basierten Objekterkennung wird TPS genutzt, um semantisch sinnvolle Verformungen von Bildinhalten zu erzeugen, ohne die strukturelle Integrität zu zerstören. Diese Eigenschaft macht TPS besonders geeignet für Augmentationsstrategien, die auf Formrobustheit abzielen – wie etwa im hier betrachteten Paper, wo TPS als Grundlage für das Modul „Thin Plate Spline-based Deformation (TSD)“ dient.
 
+\subsection{ Semantikgetriebene Feature-Modifikation und Augmentation}
+Neben geometrischen Transformationen wie TPS existieren eine Reihe semantikgetriebener Verfahren, die die Feature-Wahrnehmung von Modellen gezielt beeinflussen – sei es durch Kantenextraktion, selbstüberwachtes Lernen oder stilbasierte Augmentation.
+Ein alternativer Ansatz zur texturbasierten Feature-Extraktion ist die Nutzung von Kanteninformationen. Modelle wie EdgeNetRob verwenden robuste Kantenkarten, die mit einem verbesserten Canny-Detektor erzeugt werden, um die Formstruktur eines Objekts hervorzuheben und gleichzeitig die Anfälligkeit gegenüber adversarialen Störungen zu reduzieren. Ergänzend dazu werden Self-Information Maps eingesetzt, die die lokale Informationsdichte eines Bildes messen und semantisch relevante Regionen verstärken (vgl. Zhang et al., 2023).
+Auch selbstüberwachte Lernverfahren tragen zur semantischen Strukturwahrnehmung bei. Noroozi und Favaro (2016) führten das Jigsaw Puzzle als Pretext-Task ein, bei dem ein Bild in Patches unterteilt und permutiert wird. Das Modell muss die ursprüngliche Anordnung rekonstruieren, wodurch es lernt, globale Objektstrukturen und Kontextinformationen zu erfassen – ganz ohne gelabelte Daten. Diese Methode eignet sich besonders für das Vortraining von Klassifikationsnetzwerken.
+Ein weiteres Problem klassischer CNNs ist ihre starke Orientierung an Texturmerkmalen. Style Augmentation adressiert dieses Problem durch gezielte Veränderung der Bildtextur mittels Stiltransferverfahren wie Adaptive Instance Normalization (AdaIN). Ziel ist es, die Formwahrnehmung des Modells zu fördern und die Robustheit gegenüber Bildkorruptionen und Out-of-Distribution-Daten zu erhöhen. Lee et al. (2022) zeigen, dass solche stilbasierten Augmentationsstrategien die Generalisierungsfähigkeit von Modellen deutlich verbessern können.
 
-\section{Klassische Verfahren der Feature-Extraktion}
-\label{sec:KlassischeVerfahren}
-Klassische Verfahren der Feature-Extraktion basieren auf fest definierten Algorithmen, die charakteristische Bildpunkte anhand geometrischer und struktureller Merkmale erkennen.
-Diese Techniken ermöglichen eine robuste Detektion und Beschreibung von Features, insbesondere hinsichtlich Skalierung, Rotation und Beleuchtung.
-Des Weiteren bilden diese Grundlage vieler etablierter Anwendungen im Bereich der Robotik und Bildverarbeitung.
 
 
-\subsection{\acl{SIFT}}
-Das \ac{SIFT}-Verfahren, eingeführt von~\textcite{lowe2004distinctive} im Jahr 2004, ist eines der bekanntesten klassischen Verfahren zur Merkmalsextraktion in der Computer Vision. 
-Es identifiziert robuste lokale Merkmale, die weitgehend invariant gegenüber Skalierung, Rotation, Beleuchtung und perspektivischen Transformationen sind. 
-Der Algorithmus umfasst vier Hauptschritte:
-\begin{enumerate}
-    \item \textbf{Skalenraumextrema-Erkennung:} Aufbau eines Skalenraums durch Gauß-Filterung und Differenzenbildung, um Keypoints als lokale Extrema zu detektieren.
-    \item \textbf{Keypoint-Lokalisierung:} Prüfung der Stabilität und Verwerfen rauschsensitiver Punkte.
-    \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung auf Basis lokaler Gradienten zur Rotationsinvarianz.
-    \item \textbf{Deskriptorgenerierung:} Erstellung eines 128-dimensionalen Vektors, der lokale Gradienten beschreibt und eine robuste Wiedererkennung ermöglicht.
-\end{enumerate}
+% Altes Stand der Technik Kapitel
+% \chapter{Grundlagen und Stand der Technik}
+% \label{ch:StandTechnik}
+% Die Extraktion robuster und invarianter Merkmale bildet eine zentrale Grundlage für bildbasierte Regelverfahren im Visual Servoing. 
+% Klassische Methoden wie \ac{SIFT} oder \ac{ORB} liefern stabilisierte Featurepunkte, stoßen bei komplexen Szenen und hohen Echtzeitanforderungen an ihre Grenzen.
+% Moderne Ansätze aus dem Deep Learning ermöglichen hingegen eine datengetriebene und segmentierungsbasierte Merkmalsextraktion, die sowohl die Lokalisierung als auch die semantische Bedeutung von Bildbereichen verbessern kann~\cite{detone2018superpoint,potje2024xfeat}.
 
-Dank seiner Robustheit wird \ac{SIFT} in vielen Bereichen wie Objekterkennung, Bildregistrierung und Robotik eingesetzt. 
-Allerdings ist es im Vergleich zu modernen, lernbasierten Verfahren relativ rechenintensiv und dadurch aufwändiger in der Implementierung~\cite{lowe2004distinctive}.
+% In diesem Kapitel werden Grundlagen sowie der aktuelle Stand der Technik beleuchtet. Zunächst erfolgt ein Vergleich klassischer und moderner Verfahren zur Feature-Extraktion.
+% Anschließend ein Überblick segmentierungsbasierter Methoden wie U-Net, DeepLabV3+ und Mask~\ac{R-CNN}, die sich durch ihre Leistungsfähigkeit bei der semantischen Segmentierung und potenziellen Integration in Feature-Extraktion auszeichnen~\cite{potje2024xfeat}.
 
 
 
 
-\subsection{\acl{SURF}}
-\textcite{bay2006surf} stellten im Jahr 2006 das \ac{SURF}-Verfahren (Speeded-Up Robust Features) als optimierten Nachfolger von \ac{SIFT} vor. 
-Ziel war eine vergleichbare Robustheit bei deutlich höherer Rechengeschwindigkeit, um den Einsatz in Echtzeitanwendungen zu ermöglichen. 
-Dies gelingt durch den Einsatz von Integralbildern und schnellen approximativen Filtern anstelle aufwändiger Gauß-Operationen.  
 
-Im Ablauf ähnelt \ac{SURF} dem \ac{SIFT}-Verfahren und umfasst drei Hauptschritte:
-\begin{enumerate}
-    \item \textbf{Keypoint-Detektion:} Hessian-Matrix-basierte Methode mit schnellen Box-Filtern auf Integralbildern. 
-    \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung über Helligkeitsgradienten. 
-    \item \textbf{Deskriptorgenerierung:} Erstellung eines 64-dimensionalen (optional 128-dimensionalen) Vektors aus der Verteilung lokaler Gradienten, gewonnen über Haar-Wavelet-Filter. 
-\end{enumerate}
+% \section{Klassische Verfahren der Feature-Extraktion}
+% \label{sec:KlassischeVerfahren}
+% Klassische Verfahren der Feature-Extraktion basieren auf fest definierten Algorithmen, die charakteristische Bildpunkte anhand geometrischer und struktureller Merkmale erkennen.
+% Diese Techniken ermöglichen eine robuste Detektion und Beschreibung von Features, insbesondere hinsichtlich Skalierung, Rotation und Beleuchtung.
+% Des Weiteren bilden diese Grundlage vieler etablierter Anwendungen im Bereich der Robotik und Bildverarbeitung.
 
-\ac{SURF} ist invariant gegenüber Rotation, Skalierung und teilweiser Beleuchtungsänderung und wird u.~a.~in der Objektwiedererkennung, Bildregistrierung und Robotik eingesetzt. 
-Ein Nachteil ist die Patentbeschränkung, die eine freie Nutzung, etwa in Open-Source-Projekten, erschwert~\cite{bay2006surf}.
 
+% \subsection{\acl{SIFT}}
+% Das \ac{SIFT}-Verfahren, eingeführt von~\textcite{lowe2004distinctive} im Jahr 2004, ist eines der bekanntesten klassischen Verfahren zur Merkmalsextraktion in der Computer Vision. 
+% Es identifiziert robuste lokale Merkmale, die weitgehend invariant gegenüber Skalierung, Rotation, Beleuchtung und perspektivischen Transformationen sind. 
+% Der Algorithmus umfasst vier Hauptschritte:
+% \begin{enumerate}
+%     \item \textbf{Skalenraumextrema-Erkennung:} Aufbau eines Skalenraums durch Gauß-Filterung und Differenzenbildung, um Keypoints als lokale Extrema zu detektieren.
+%     \item \textbf{Keypoint-Lokalisierung:} Prüfung der Stabilität und Verwerfen rauschsensitiver Punkte.
+%     \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung auf Basis lokaler Gradienten zur Rotationsinvarianz.
+%     \item \textbf{Deskriptorgenerierung:} Erstellung eines 128-dimensionalen Vektors, der lokale Gradienten beschreibt und eine robuste Wiedererkennung ermöglicht.
+% \end{enumerate}
 
+% Dank seiner Robustheit wird \ac{SIFT} in vielen Bereichen wie Objekterkennung, Bildregistrierung und Robotik eingesetzt. 
+% Allerdings ist es im Vergleich zu modernen, lernbasierten Verfahren relativ rechenintensiv und dadurch aufwändiger in der Implementierung~\cite{lowe2004distinctive}.
 
 
-\subsection{\acl{ORB}}
-\textcite{rublee2011orb} stellten im Jahr 2011 die \ac{ORB}-Methode (Oriented FAST and Rotated BRIEF) vor – ein effizientes, patentfreies Verfahren zur Merkmalsextraktion, das speziell für Echtzeitanwendungen und eingebettete Systeme entwickelt wurde. 
-\ac{ORB} kombiniert \ac{FAST} zur Keypoint-Detektion und \ac{BRIEF} zur Beschreibung, erweitert um Rotationsinvarianz und Robustheit gegenüber Skalierung. 
-Ziel war eine schnelle, frei nutzbare Alternative zu \ac{SIFT} und \ac{SURF}.  
 
-Der Algorithmus umfasst drei Hauptschritte:
-\begin{enumerate}
-    \item \textbf{Keypoint-Detektion:} \ac{FAST} identifiziert Eckpunkte über Intensitätsunterschiede im Pixelumfeld. Zur Stabilisierung werden diese mit einer Harris-Korner-Messung bewertet. 
-    \item \textbf{Orientierungszuweisung:} Eine Hauptorientierung wird aus der lokalen Intensitätsverteilung abgeleitet, was Rotationsinvarianz ermöglicht. 
-    \item \textbf{Deskriptorgenerierung:} \ac{BRIEF} wird zu rotated \ac{BRIEF} erweitert, indem Pixelvergleiche an die Keypoint-Orientierung angepasst werden. Ergebnis ist ein kompakter binärer Vektor, der Speicher- und Rechenaufwand minimiert. 
-\end{enumerate}
 
-Dank Skalierbarkeit, Echtzeitfähigkeit und Lizenzfreiheit ist \ac{ORB} besonders für mobile und eingebettete Systeme geeignet. 
-Allerdings bleibt die Genauigkeit in komplexen Szenen hinter modernen, lernbasierten Methoden zurück~\cite{rublee2011orb}.
+% \subsection{\acl{SURF}}
+% \textcite{bay2006surf} stellten im Jahr 2006 das \ac{SURF}-Verfahren (Speeded-Up Robust Features) als optimierten Nachfolger von \ac{SIFT} vor. 
+% Ziel war eine vergleichbare Robustheit bei deutlich höherer Rechengeschwindigkeit, um den Einsatz in Echtzeitanwendungen zu ermöglichen. 
+% Dies gelingt durch den Einsatz von Integralbildern und schnellen approximativen Filtern anstelle aufwändiger Gauß-Operationen.  
 
+% Im Ablauf ähnelt \ac{SURF} dem \ac{SIFT}-Verfahren und umfasst drei Hauptschritte:
+% \begin{enumerate}
+%     \item \textbf{Keypoint-Detektion:} Hessian-Matrix-basierte Methode mit schnellen Box-Filtern auf Integralbildern. 
+%     \item \textbf{Orientierungszuweisung:} Bestimmung einer Orientierung über Helligkeitsgradienten. 
+%     \item \textbf{Deskriptorgenerierung:} Erstellung eines 64-dimensionalen (optional 128-dimensionalen) Vektors aus der Verteilung lokaler Gradienten, gewonnen über Haar-Wavelet-Filter. 
+% \end{enumerate}
 
+% \ac{SURF} ist invariant gegenüber Rotation, Skalierung und teilweiser Beleuchtungsänderung und wird u.~a.~in der Objektwiedererkennung, Bildregistrierung und Robotik eingesetzt. 
+% Ein Nachteil ist die Patentbeschränkung, die eine freie Nutzung, etwa in Open-Source-Projekten, erschwert~\cite{bay2006surf}.
 
-\section{Moderne Verfahren der Feature-Extraktion}
-\label{sec:ModerneVerfahren}
-Moderne Verfahren der Feature-Extraktion nutzen tiefenlernbasierte Modelle, um Merkmale direkt aus Bilddaten zu lernen. 
-Einige Ansätze bieten eine hohe Robustheit gegenüber komplexen Szenen, Beleuchtungsänderungen und Verdeckungen.
-Sie ermöglichen eine präzisere und anpassungsfähigere Merkmalserkennung als klassische Methoden~\cite{potje2024xfeat}.
 
 
 
+% \subsection{\acl{ORB}}
+% \textcite{rublee2011orb} stellten im Jahr 2011 die \ac{ORB}-Methode (Oriented FAST and Rotated BRIEF) vor – ein effizientes, patentfreies Verfahren zur Merkmalsextraktion, das speziell für Echtzeitanwendungen und eingebettete Systeme entwickelt wurde. 
+% \ac{ORB} kombiniert \ac{FAST} zur Keypoint-Detektion und \ac{BRIEF} zur Beschreibung, erweitert um Rotationsinvarianz und Robustheit gegenüber Skalierung. 
+% Ziel war eine schnelle, frei nutzbare Alternative zu \ac{SIFT} und \ac{SURF}.  
 
-\subsection{SuperPoint}
-SuperPoint ist ein lernbasiertes Verfahren zur Detektion und Beschreibung lokaler Bildmerkmale, vorgestellt von~\textcite{detone2018superpoint} im Jahr 2018. 
-Im Gegensatz zu klassischen Methoden wie \ac{SIFT}, \ac{SURF} oder \ac{ORB} nutzt es ein neuronales Netz, das Keypoints und Deskriptoren in einer vollkonvolutionalen Pipeline gleichzeitig berechnet. 
-Entwickelt für Robotik und Augmented Reality, zeichnet sich SuperPoint durch hohe Wiederholbarkeit, Robustheit und Echtzeitfähigkeit aus.  
+% Der Algorithmus umfasst drei Hauptschritte:
+% \begin{enumerate}
+%     \item \textbf{Keypoint-Detektion:} \ac{FAST} identifiziert Eckpunkte über Intensitätsunterschiede im Pixelumfeld. Zur Stabilisierung werden diese mit einer Harris-Korner-Messung bewertet. 
+%     \item \textbf{Orientierungszuweisung:} Eine Hauptorientierung wird aus der lokalen Intensitätsverteilung abgeleitet, was Rotationsinvarianz ermöglicht. 
+%     \item \textbf{Deskriptorgenerierung:} \ac{BRIEF} wird zu rotated \ac{BRIEF} erweitert, indem Pixelvergleiche an die Keypoint-Orientierung angepasst werden. Ergebnis ist ein kompakter binärer Vektor, der Speicher- und Rechenaufwand minimiert. 
+% \end{enumerate}
 
-Das Training erfolgt in zwei Schritten:
-\begin{enumerate}
-    \item \textbf{Pre-Training auf synthetischen Daten:} Ein kleines Netz („MagicPoint“) wird mit geometrischen Formen und Rauschen trainiert, um robuste Keypoints zu erkennen. 
-    \item \textbf{Self-Supervised Fine-Tuning:} Mit realen Bildern und bekannten geometrischen Transformationen (Homographien) lernt das Netz, konsistente Keypoints und Deskriptoren zu erzeugen – ohne manuelle Annotationen. 
-\end{enumerate}
+% Dank Skalierbarkeit, Echtzeitfähigkeit und Lizenzfreiheit ist \ac{ORB} besonders für mobile und eingebettete Systeme geeignet. 
+% Allerdings bleibt die Genauigkeit in komplexen Szenen hinter modernen, lernbasierten Methoden zurück~\cite{rublee2011orb}.
 
-SuperPoint erzeugt eine Keypoint-Heatmap und eine dichte Deskriptormatrix. 
-Damit eignet es sich besonders für \ac{SLAM}, Visual Odometry und Structure from Motion. 
-Dank \ac{GPU}-Beschleunigung kombiniert es Genauigkeit und Geschwindigkeit und ist robust gegenüber Skalierung, Rotation und moderaten Beleuchtungsänderungen. 
-Durch das gemeinsame Lernen von Detektion und Beschreibung sind beide Komponenten besser aufeinander abgestimmt als bei modularen Verfahren~\cite{detone2018superpoint}.
 
 
+% \section{Moderne Verfahren der Feature-Extraktion}
+% \label{sec:ModerneVerfahren}
+% Moderne Verfahren der Feature-Extraktion nutzen tiefenlernbasierte Modelle, um Merkmale direkt aus Bilddaten zu lernen. 
+% Einige Ansätze bieten eine hohe Robustheit gegenüber komplexen Szenen, Beleuchtungsänderungen und Verdeckungen.
+% Sie ermöglichen eine präzisere und anpassungsfähigere Merkmalserkennung als klassische Methoden~\cite{potje2024xfeat}.
 
 
-\subsection{\acl{R2D2}}
-\ac{R2D2} (Reliable and Repeatable Detector and Descriptor) wurde 2019 von~\textcite{revaud2019r2d2} vorgestellt und ist ein lernbasiertes Verfahren zur lokalen Merkmalsextraktion. 
-Ziel ist die Identifikation von Bildpunkten, die sowohl wiederholbar\footnote{stabil unter verschiedenen Transformationen} als auch diskriminativ\footnote{gut unterscheidbar von anderen Punkten} sind. 
-Im Gegensatz zu klassischen Methoden berechnet ein vollkonvolutionales Netzwerk diese Eigenschaften direkt.  
 
-Das Netz erzeugt drei Karten:
-\begin{enumerate}
-    \item \textbf{Deskriptorkarte:} beschreibt lokale Bildregionen durch Vektoren, 
-    \item \textbf{Wiederholbarkeitskarte:} zeigt die Stabilität von Punkten unter Transformationen (z.~B. Rotation, Skalierung), 
-    \item \textbf{Zuverlässigkeitskarte:} bewertet die Eignung von Punkten für Matching. 
-\end{enumerate}
 
-Durch die Kombination dieser Karten werden besonders robuste und eindeutige Keypoints ausgewählt. 
-Trainiert wird mit Bildpaaren und bekannten geometrischen Transformationen: Die Verlustfunktion belohnt Punkte mit hoher Wiederholbarkeit und bestraft unspezifische oder schwer unterscheidbare Deskriptoren.  
+% \subsection{SuperPoint}
+% SuperPoint ist ein lernbasiertes Verfahren zur Detektion und Beschreibung lokaler Bildmerkmale, vorgestellt von~\textcite{detone2018superpoint} im Jahr 2018. 
+% Im Gegensatz zu klassischen Methoden wie \ac{SIFT}, \ac{SURF} oder \ac{ORB} nutzt es ein neuronales Netz, das Keypoints und Deskriptoren in einer vollkonvolutionalen Pipeline gleichzeitig berechnet. 
+% Entwickelt für Robotik und Augmented Reality, zeichnet sich SuperPoint durch hohe Wiederholbarkeit, Robustheit und Echtzeitfähigkeit aus.  
 
-\ac{R2D2} ist damit präzise und effizient, besonders bei schwierigen Bedingungen wie starken Perspektivwechseln oder Wiederholungsmustern (z.~B. Zäune, Fensterreihen). 
-Es unterscheidet sich von SuperPoint, da Detektor- und Deskriptoreigenschaften gemeinsam optimiert werden~\cite{revaud2019r2d2}.
+% Das Training erfolgt in zwei Schritten:
+% \begin{enumerate}
+%     \item \textbf{Pre-Training auf synthetischen Daten:} Ein kleines Netz („MagicPoint“) wird mit geometrischen Formen und Rauschen trainiert, um robuste Keypoints zu erkennen. 
+%     \item \textbf{Self-Supervised Fine-Tuning:} Mit realen Bildern und bekannten geometrischen Transformationen (Homographien) lernt das Netz, konsistente Keypoints und Deskriptoren zu erzeugen – ohne manuelle Annotationen. 
+% \end{enumerate}
 
+% SuperPoint erzeugt eine Keypoint-Heatmap und eine dichte Deskriptormatrix. 
+% Damit eignet es sich besonders für \ac{SLAM}, Visual Odometry und Structure from Motion. 
+% Dank \ac{GPU}-Beschleunigung kombiniert es Genauigkeit und Geschwindigkeit und ist robust gegenüber Skalierung, Rotation und moderaten Beleuchtungsänderungen. 
+% Durch das gemeinsame Lernen von Detektion und Beschreibung sind beide Komponenten besser aufeinander abgestimmt als bei modularen Verfahren~\cite{detone2018superpoint}.
 
 
-\subsection{\acl{LoFTR}}
-\textcite{sun2021loftr} stellten 2021 das \ac{LoFTR}-Verfahren vor, ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung.
-Im Gegensatz zu klassischen Methoden, wie bspw.~\ac{SIFT}, verzichtet \ac{LoFTR} vollständig auf die explizite Detektion einzelner Keypoints. 
-Stattdessen wird ein „detector-free“ Ansatz verfolgt, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- oder Patch-Ebene berechnet werden.
-Dies ermöglicht eine deutlich robustere Zuordnung, insbesondere in texturarmen oder stark verzerrten Szenen, in denen klassische Verfahren oft versagen.
 
-Der Kern von \ac{LoFTR} ist ein Transformer-basiertes Netzwerk, das Bildpaare gleichzeitig verarbeitet und über sogenannte coarse-to-fine Matching-Strategien hochpräzise Korrespondenzen berechnet.
-Zunächst werden die Bildmerkmale durch ein geteiltes \acl{CNN} extrahiert und anschließend mit einem „coarse-level transformer“ global abgestimmt, um grobe Korrespondenzen zu finden.
-Danach verfeinert ein „fine-level transformer“ die Matches lokal, um subpixelgenaue Punktpaarungen zu erzeugen.
-Dabei nutzt \ac{LoFTR} sowohl Selbst-Attention innerhalb eines Bildes als auch Cross-Attention zwischen den beiden Bildern.
 
-Ein bedeutender Vorteil von \ac{LoFTR} ist die Fähigkeit, auch in schwierigen Szenarien wie extremen Blickwinkeländerungen, schwacher Textur oder Wiederholungsmustern robuste Matches zu liefern.
-Dies macht es besonders wertvoll für Anwendungen wie Structure-from-Motion, visuelle Lokalisierung und \ac{SLAM}.
-Obwohl des rechnerischen Aufwands ermöglicht eine optimierte Implementierung den Einsatz in Echtzeitumgebungen mit \ac{GPU}-Beschleunigung~\cite{sun2021loftr}. 
+% \subsection{\acl{R2D2}}
+% \ac{R2D2} (Reliable and Repeatable Detector and Descriptor) wurde 2019 von~\textcite{revaud2019r2d2} vorgestellt und ist ein lernbasiertes Verfahren zur lokalen Merkmalsextraktion. 
+% Ziel ist die Identifikation von Bildpunkten, die sowohl wiederholbar\footnote{stabil unter verschiedenen Transformationen} als auch diskriminativ\footnote{gut unterscheidbar von anderen Punkten} sind. 
+% Im Gegensatz zu klassischen Methoden berechnet ein vollkonvolutionales Netzwerk diese Eigenschaften direkt.  
 
+% Das Netz erzeugt drei Karten:
+% \begin{enumerate}
+%     \item \textbf{Deskriptorkarte:} beschreibt lokale Bildregionen durch Vektoren, 
+%     \item \textbf{Wiederholbarkeitskarte:} zeigt die Stabilität von Punkten unter Transformationen (z.~B. Rotation, Skalierung), 
+%     \item \textbf{Zuverlässigkeitskarte:} bewertet die Eignung von Punkten für Matching. 
+% \end{enumerate}
 
+% Durch die Kombination dieser Karten werden besonders robuste und eindeutige Keypoints ausgewählt. 
+% Trainiert wird mit Bildpaaren und bekannten geometrischen Transformationen: Die Verlustfunktion belohnt Punkte mit hoher Wiederholbarkeit und bestraft unspezifische oder schwer unterscheidbare Deskriptoren.  
 
+% \ac{R2D2} ist damit präzise und effizient, besonders bei schwierigen Bedingungen wie starken Perspektivwechseln oder Wiederholungsmustern (z.~B. Zäune, Fensterreihen). 
+% Es unterscheidet sich von SuperPoint, da Detektor- und Deskriptoreigenschaften gemeinsam optimiert werden~\cite{revaud2019r2d2}.
 
 
-\section{Segmentierungsbasierte Merkmalsextraktion}
-\label{sec:Merkmalsextraktion}
 
-\subsection{Mask \acl{R-CNN}}
-Mask~\ac{R-CNN} ist ein leistungsstarkes neuronales Netzwerk zur Instanzsegmentierung, vorgestellt 2017 von~\textcite{he2017maskrcnn}. 
-%Es erkennt nicht nur Objekte in Bildern und lokalisiert sie mit Bounding Boxes, sondern erzeugt zusätzlich für jedes Objekt eine binäre Maske, die dessen exakten Umriss pixelgenau abbildet.
-Die Architektur besteht aus
-\begin{itemize}
-    \item einem Backbone-Netzwerk (bspw. ResNet oder FPN) zur Extraktion von Bildmerkmalen,
-    \item einem \ac{RPN} zur Generierung von Regionsvorschlägen,
-    \item einem \ac{RoI} Align-Modul zur präzisen Extraktion von Merkmalen für jede vorgeschlagene Region und
-    \item drei parallelen Vorhersagen mit Objektklasse, genauer Boudning Box sowie Segmentierungsmaske.
-\end{itemize}
-Aufgrund diesen Aufbaus ist das Modell Ende-zu-Ende trainierbar und für anspruchsvolle Anwendungen wie Medizinbildverarbeitung, Robotik oder autonomes Fahren geeignet~\cite{he2017maskrcnn}.
+% \subsection{\acl{LoFTR}}
+% \textcite{sun2021loftr} stellten 2021 das \ac{LoFTR}-Verfahren vor, ein modernes, lernbasiertes Verfahren zur Feature-Korrespondenzbestimmung.
+% Im Gegensatz zu klassischen Methoden, wie bspw.~\ac{SIFT}, verzichtet \ac{LoFTR} vollständig auf die explizite Detektion einzelner Keypoints. 
+% Stattdessen wird ein „detector-free“ Ansatz verfolgt, bei dem dichte Korrespondenzen direkt zwischen zwei Bildern auf Pixel- oder Patch-Ebene berechnet werden.
+% Dies ermöglicht eine deutlich robustere Zuordnung, insbesondere in texturarmen oder stark verzerrten Szenen, in denen klassische Verfahren oft versagen.
 
-Die Entwicklung von Mask~\ac{R-CNN} basiert auf zwei wichtigen Vorläufermodellen,
-\begin{enumerate}
-    \item Fast~\ac{R-CNN} und
-    \item Faster~\ac{R-CNN},
-\end{enumerate}
-die schrittweise die Grundlage für die heutige Architektur von Mask~\ac{R-CNN} legten.
+% Der Kern von \ac{LoFTR} ist ein Transformer-basiertes Netzwerk, das Bildpaare gleichzeitig verarbeitet und über sogenannte coarse-to-fine Matching-Strategien hochpräzise Korrespondenzen berechnet.
+% Zunächst werden die Bildmerkmale durch ein geteiltes \acl{CNN} extrahiert und anschließend mit einem „coarse-level transformer“ global abgestimmt, um grobe Korrespondenzen zu finden.
+% Danach verfeinert ein „fine-level transformer“ die Matches lokal, um subpixelgenaue Punktpaarungen zu erzeugen.
+% Dabei nutzt \ac{LoFTR} sowohl Selbst-Attention innerhalb eines Bildes als auch Cross-Attention zwischen den beiden Bildern.
 
-Ersteres wurde 2015 von~\textcite{girshick2015fastrcnn} ptäsentiert und ist eine Weiterentwicklung des ursprünglichen~\ac{R-CNN}.
-Fast~\ac{R-CNN} verarbeitet das gesamte Bild zunächst durch ein gemeinsames \ac{CNN} und wendet anschließend \ac{RoI} Pooling auf vorgeschlagene Regionen an, um Feature-Vektoren zu extrahieren.
-Diese Regionen stammen aus einem externen, nicht lernbaren Verfahren, bspw. Selective Search.
-Dies ist begrenzt die Geschwindigkeit des Verfahrens.
-Das Modell klassifiziert jede Region und optimiert gleichzeitig deren Bounding Boxen~\cite{girshick2015fastrcnn}.
+% Ein bedeutender Vorteil von \ac{LoFTR} ist die Fähigkeit, auch in schwierigen Szenarien wie extremen Blickwinkeländerungen, schwacher Textur oder Wiederholungsmustern robuste Matches zu liefern.
+% Dies macht es besonders wertvoll für Anwendungen wie Structure-from-Motion, visuelle Lokalisierung und \ac{SLAM}.
+% Obwohl des rechnerischen Aufwands ermöglicht eine optimierte Implementierung den Einsatz in Echtzeitumgebungen mit \ac{GPU}-Beschleunigung~\cite{sun2021loftr}. 
 
-Faster~\ac{R-CNN} wurde 2016 von~\textcite{ren2016fasterrcnnrealtimeobject} vorgestellt und löst das Geschwindigkeitsproblem von Fast~\ac{R-CNN} durch die Einführung eines lernbasierten \ac{RPN}. 
-Dieses \ac{RPN} generiert Regionsvorschläge direkt aus der Feature-Map, wodurch das gesamte Modell vollständig  Ende-zu-Ende trainierbar wird. 
-Die restliche Architektur bleibt ähnlich zu der von Fast~\ac{R-CNN}. Faster~\ac{R-CNN} bildet die direkte Grundlage für Mask~\ac{R-CNN}~\cite{ren2016fasterrcnnrealtimeobject}.
 
 
 
 
-\subsection{U-Net}
-Das 2015 von~\textcite{ronneberger2015unet} vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, entwickelt speziell für die semantische Segmentierung.
-Obwohl U-Net ursprünglich für medizinische Bilddaten konzipiert wurde, eignet sich dieses auch für technische Anwendungen, soabld eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist.
-beispielsweise in der industriellen Objekterkennung, Robotik oder Visual Servoing~\cite{ronneberger2015unet}.
+% \section{Segmentierungsbasierte Merkmalsextraktion}
+% \label{sec:Merkmalsextraktion}
 
-Der Name \enquote{U-Net} stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht (siehe Abbildung~\ref{fig:UNet_illustration}).
-Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird.
-Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über Skip-Verbindungen.
-Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen – ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen~\cite{ronneberger2015unet}. 
+% \subsection{Mask \acl{R-CNN}}
+% Mask~\ac{R-CNN} ist ein leistungsstarkes neuronales Netzwerk zur Instanzsegmentierung, vorgestellt 2017 von~\textcite{he2017maskrcnn}. 
+% %Es erkennt nicht nur Objekte in Bildern und lokalisiert sie mit Bounding Boxes, sondern erzeugt zusätzlich für jedes Objekt eine binäre Maske, die dessen exakten Umriss pixelgenau abbildet.
+% Die Architektur besteht aus
+% \begin{itemize}
+%     \item einem Backbone-Netzwerk (bspw. ResNet oder FPN) zur Extraktion von Bildmerkmalen,
+%     \item einem \ac{RPN} zur Generierung von Regionsvorschlägen,
+%     \item einem \ac{RoI} Align-Modul zur präzisen Extraktion von Merkmalen für jede vorgeschlagene Region und
+%     \item drei parallelen Vorhersagen mit Objektklasse, genauer Boudning Box sowie Segmentierungsmaske.
+% \end{itemize}
+% Aufgrund diesen Aufbaus ist das Modell Ende-zu-Ende trainierbar und für anspruchsvolle Anwendungen wie Medizinbildverarbeitung, Robotik oder autonomes Fahren geeignet~\cite{he2017maskrcnn}.
 
-\begin{figure}[htpb]
-    \centering
-    % Die PDF-Datei (erste Seite) wird eingebunden
-    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
-    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/pdf/UNet_illustration.pdf} % trim = L B R O
-    \caption{U-Net Architektur aus~\cite{ronneberger2015unet}}
-    \label{fig:UNet_illustration}
-\end{figure}
+% Die Entwicklung von Mask~\ac{R-CNN} basiert auf zwei wichtigen Vorläufermodellen,
+% \begin{enumerate}
+%     \item Fast~\ac{R-CNN} und
+%     \item Faster~\ac{R-CNN},
+% \end{enumerate}
+% die schrittweise die Grundlage für die heutige Architektur von Mask~\ac{R-CNN} legten.
 
-Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird.
-U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. 
-In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z.B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können~\cite{ronneberger2015unet}. 
+% Ersteres wurde 2015 von~\textcite{girshick2015fastrcnn} ptäsentiert und ist eine Weiterentwicklung des ursprünglichen~\ac{R-CNN}.
+% Fast~\ac{R-CNN} verarbeitet das gesamte Bild zunächst durch ein gemeinsames \ac{CNN} und wendet anschließend \ac{RoI} Pooling auf vorgeschlagene Regionen an, um Feature-Vektoren zu extrahieren.
+% Diese Regionen stammen aus einem externen, nicht lernbaren Verfahren, bspw. Selective Search.
+% Dies ist begrenzt die Geschwindigkeit des Verfahrens.
+% Das Modell klassifiziert jede Region und optimiert gleichzeitig deren Bounding Boxen~\cite{girshick2015fastrcnn}.
 
+% Faster~\ac{R-CNN} wurde 2016 von~\textcite{ren2016fasterrcnnrealtimeobject} vorgestellt und löst das Geschwindigkeitsproblem von Fast~\ac{R-CNN} durch die Einführung eines lernbasierten \ac{RPN}. 
+% Dieses \ac{RPN} generiert Regionsvorschläge direkt aus der Feature-Map, wodurch das gesamte Modell vollständig  Ende-zu-Ende trainierbar wird. 
+% Die restliche Architektur bleibt ähnlich zu der von Fast~\ac{R-CNN}. Faster~\ac{R-CNN} bildet die direkte Grundlage für Mask~\ac{R-CNN}~\cite{ren2016fasterrcnnrealtimeobject}.
 
 
 
-\subsection{DeepLabV3+}
-DeepLabV3+ ist ein leistungsstarkes neuronales Netzwerk zur semantischen Segmentierung, das 2018 von~\cite{chen2018deeplabv3plus} vorgestellt wurde.
-Es erweitert die vorherige DeepLab-Reihe und kombiniert präzise Lokalisierungsfähigkeiten mit der Fähigkeit, kontextuelle Informationen auf mehreren Skalen zu erfassen.
-DeepLabV3+ ist gut darin, Objekte mit komplexen Formen, variablen Größen und feinen Kanten pixelgenau zu segmentieren.
-Dies macht DeepLabV3+ ideal für Anwendungen in der autonomen Navigation, Robotik und Industrievision~\cite{chen2018deeplabv3plus}.
 
-Das Herzstück von DeepLabV3+ ist der sogenannte \ac{ASPP}-Block. 
-Dieser verwendet dilated (atrous) Convolutions, um Informationen in verschiedenen räumlichen Auflösungen zu erfassen, ohne die Auflösung der Feature-Maps zu stark zu reduzieren.
-Folglich kann das Netzwerk große Objekte vollständig erfassen und simultan feine Details erhalten~\cite{chen2018deeplabv3plus}.
+% \subsection{U-Net}
+% Das 2015 von~\textcite{ronneberger2015unet} vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, entwickelt speziell für die semantische Segmentierung.
+% Obwohl U-Net ursprünglich für medizinische Bilddaten konzipiert wurde, eignet sich dieses auch für technische Anwendungen, soabld eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist.
+% beispielsweise in der industriellen Objekterkennung, Robotik oder Visual Servoing~\cite{ronneberger2015unet}.
 
-Im Gegensatz zu DeepLabV3 verfügt DeepLabV3+ über einen zusätzlichen Decoder-Pfad, der die Segmentierungsergebnisse räumlich verfeinert.
-Dieser Teil des Netzwerks verbessert die Kantenschärfe und Detailgenauigkeit der Segmentierung.
-Als Backbone für die Feature-Extraktion wird bei DeepLabV3+ auf leistungsstarke Netzwerke wie Xception oder ResNet zurückgegriffen, wodurch die Genauigkeit weiter erhöht wird. 
-Die Architektur ist vollständig konvolutional und eignet sich daher gut für Bilder beliebiger Größe.
-Des Weiteren ist DeepLabV3+ aufgrund der modulararität und flexibelität ein beliebtes Basismodell in vielen Forschungsarbeiten.
-DeepLabV3+ ist besonders nützlich, wenn Segmentierungsmasken für nachgelagerte Aufgaben wie Merkmalsextraktion oder Objektverfolgung benötigt werden~\cite{chen2018deeplabv3plus}. 
+% Der Name \enquote{U-Net} stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht (siehe Abbildung~\ref{fig:UNet_illustration}).
+% Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird.
+% Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über Skip-Verbindungen.
+% Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen – ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen~\cite{ronneberger2015unet}. 
 
+% \begin{figure}[htpb]
+%     \centering
+%     % Die PDF-Datei (erste Seite) wird eingebunden
+%     % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+%     \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/pdf/UNet_illustration.pdf} % trim = L B R O
+%     \caption{U-Net Architektur aus~\cite{ronneberger2015unet}}
+%     \label{fig:UNet_illustration}
+% \end{figure}
 
+% Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird.
+% U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. 
+% In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z.B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können~\cite{ronneberger2015unet}. 
 
-%% End of File %%
+
+
+
+% \subsection{DeepLabV3+}
+% DeepLabV3+ ist ein leistungsstarkes neuronales Netzwerk zur semantischen Segmentierung, das 2018 von~\cite{chen2018deeplabv3plus} vorgestellt wurde.
+% Es erweitert die vorherige DeepLab-Reihe und kombiniert präzise Lokalisierungsfähigkeiten mit der Fähigkeit, kontextuelle Informationen auf mehreren Skalen zu erfassen.
+% DeepLabV3+ ist gut darin, Objekte mit komplexen Formen, variablen Größen und feinen Kanten pixelgenau zu segmentieren.
+% Dies macht DeepLabV3+ ideal für Anwendungen in der autonomen Navigation, Robotik und Industrievision~\cite{chen2018deeplabv3plus}.
+
+% Das Herzstück von DeepLabV3+ ist der sogenannte \ac{ASPP}-Block. 
+% Dieser verwendet dilated (atrous) Convolutions, um Informationen in verschiedenen räumlichen Auflösungen zu erfassen, ohne die Auflösung der Feature-Maps zu stark zu reduzieren.
+% Folglich kann das Netzwerk große Objekte vollständig erfassen und simultan feine Details erhalten~\cite{chen2018deeplabv3plus}.
+
+% Im Gegensatz zu DeepLabV3 verfügt DeepLabV3+ über einen zusätzlichen Decoder-Pfad, der die Segmentierungsergebnisse räumlich verfeinert.
+% Dieser Teil des Netzwerks verbessert die Kantenschärfe und Detailgenauigkeit der Segmentierung.
+% Als Backbone für die Feature-Extraktion wird bei DeepLabV3+ auf leistungsstarke Netzwerke wie Xception oder ResNet zurückgegriffen, wodurch die Genauigkeit weiter erhöht wird. 
+% Die Architektur ist vollständig konvolutional und eignet sich daher gut für Bilder beliebiger Größe.
+% Des Weiteren ist DeepLabV3+ aufgrund der modulararität und flexibelität ein beliebtes Basismodell in vielen Forschungsarbeiten.
+% DeepLabV3+ ist besonders nützlich, wenn Segmentierungsmasken für nachgelagerte Aufgaben wie Merkmalsextraktion oder Objektverfolgung benötigt werden~\cite{chen2018deeplabv3plus}. 
+
+
+
+% %% End of File %%
+

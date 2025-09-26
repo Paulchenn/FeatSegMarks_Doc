@@ -65,7 +65,7 @@ Um den Shape-Bias zu fördern, entwickeln wir eine erweiterte Methode zur Textur
 \subsection{Herausforderung 2: Inkompatibilität des Kantenextraktionsverfahrens}
 Die ursprüngliche Methode zur Kantenextraktion, der sogenannten \ac{EMSE}, die auf dem nicht-differenzierbaren Canny-Algorithmus basiert, ist für eine End-to-End-Trainingspipeline in PyTorch ungeeignet. Die Notwendigkeit, einen \ac{CPU}-Transfer für die Kantenberechnung durchzuführen, unterbricht den Backpropagation-Prozess und führt zu einem erheblichen Leistungsverlust. Um eine nahtlose und effiziente Integration zu ermöglichen, ist ein vollständig differenzierbares und \ac{GPU}-basiertes Verfahren zur Kantenextraktion erforderlich, das direkt in die Verlustfunktion integriert werden kann.
 
-Zudem erweist sich die \ac{EMSE}-Methode erweist als unzureichend für die Extraktion von qualitativ hochwertigen Kantenkarten aus Bildern mit einer Auflösung von $256 \times 256$ Pixeln. Während sie bei den kleineren $32 \times 32$ Pixel-Bildern des CIFAR-10-Datensatzes~\cite{krizhevsky2009learning} noch akzeptable Ergebnisse liefert, verliert sie bei größeren und komplexeren Bildern an Effektivität. Die unzureichende Qualität der Eingangs-Kantenkarten beeinträchtigt die Fähigkeit des Generators, robuste, formbasierte Merkmale zu lernen, da die primäre Quelle für die Forminformationen nicht ausreichend ist.
+Zudem erweist sich die \ac{EMSE}-Methode als unzureichend für die Extraktion von qualitativ hochwertigen Kantenkarten aus Bildern mit einer Auflösung von $256 \times 256$ Pixeln. Während sie bei den kleineren $32 \times 32$ Pixel-Bildern des CIFAR-10-Datensatzes~\cite{krizhevsky2009learning} noch akzeptable Ergebnisse liefert, verliert sie bei größeren und komplexeren Bildern an Effektivität. Die unzureichende Qualität der Eingangs-Kantenkarten beeinträchtigt die Fähigkeit des Generators, robuste, formbasierte Merkmale zu lernen, da die primäre Quelle für die Forminformationen nicht ausreichend ist.
 
 
 
@@ -73,7 +73,15 @@ Zudem erweist sich die \ac{EMSE}-Methode erweist als unzureichend für die Extra
 \subsection{Lösungsansatz: Entwicklung von DS-EMSE}
 Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens entwickeln wir die \textit{\ac{DS-EMSE}} Methode. Diese vollständig differenzierbare Kantenextraktion basiert auf dem Sobel-Filter und ist direkt in die PyTorch-Pipeline integrierbar. Im Gegensatz zum binären Canny-Algorithmus erzeugt unser Verfahren eine Graustufen-Kantenkarte, die die Stärke der Kanten repräsentiert. Dies liefert eine höhere Informationsdichte und ermöglicht eine bessere Nutzung der Kantendaten durch den Generator. Die durchgängige Differenzierbarkeit eliminiert nicht nur den ineffizienten \ac{CPU}-Transfer, sondern verbessert auch die Qualität der Verlustrückpropagierung, was das Training stabilisiert.
 
-Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen wir diese durch ein dediziertes Tool zur Identifizierung optimaler Parameter. Dieses Diagnosetool hilft beim Prozess der Parameterwahl. Dies stellt sicher, dass die Kantenkarten als primäre Forminformationen die bestmögliche Qualität aufweisen, was die Robustheit des gesamten Trainingsprozesses maßgeblich erhöht.
+\todo[author=Analena]{Hier Bild von Tim zur EMSE einfügen und beschreiben}
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/tikz2pdf/ds_emse/ds_emse.pdf}
+    \caption{Ablauf und Parameter der \ac{DS-EMSE}-Methode}
+    \label{fig:DS_Emse_Ablauf}
+\end{figure}
+
+Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen wir diese durch ein dediziertes Tool zur Identifizierung optimaler Parameter. Dieses Konfigurationstool hilft beim Prozess der Parameterwahl. Dies stellt sicher, dass die Kantenkarten als primäre Forminformationen die bestmögliche Qualität aufweisen, was die Robustheit des gesamten Trainingsprozesses maßgeblich erhöht.
 
 
 
