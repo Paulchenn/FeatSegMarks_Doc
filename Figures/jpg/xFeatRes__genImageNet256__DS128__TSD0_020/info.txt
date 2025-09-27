@@ -1,0 +1,13 @@
+(.venv) ➜  accFeatures git:(implement_SDbOA_usage) ✗ python3 -m modules.eval.megadepth1500 --dataset-dir dataset/Mega1500 --matcher xfeat --weights-path weights/xfeat_genImageNet256_76500.pth 
+Running benchmark for XFeat..
+loading weights from: weights/xfeat_genImageNet256_76500.pth
+100%|████████████████████████████████████████████████████████████████████████████████████████| 1500/1500 [11:33<00:00,  2.16it/s]
+auc / mAcc on 1500 pairs
+/Users/glaserpaul/Documents/010_HKA_RKIM/FE_Projekt_1/xFeat/code/accFeatures/modules/eval/megadepth1500.py:175: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  aucs.append(np.trapz(y, x) / thr)
+auc@5 :  13.0
+auc@10 :  23.6
+auc@20 :  38.9
+mAcc@5: 24.9 
+mAcc@10: 43.3 
+mAcc@20: 62.3 

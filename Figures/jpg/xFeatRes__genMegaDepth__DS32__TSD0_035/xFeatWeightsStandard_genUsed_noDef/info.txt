@@ -1,0 +1,18 @@
+Standard xFeat Weights
+Generator Used (trained on MegaDepth; DS=32; TSD=0.035)
+no Deformation
+
+Evaluation:
+(.venv) ➜  accFeatures git:(implement_SDbOA_usage) ✗ python3 -m modules.eval.megadepth1500 --dataset-dir dataset/Mega1500 --matcher xfeat --weights-path weights/xfeat_genImageNet256_70000.pth
+Running benchmark for XFeat..
+loading weights from: weights/xfeat_genImageNet256_70000.pth
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 1500/1500 [14:38<00:00,  1.71it/s]
+auc / mAcc on 1500 pairs
+/Users/glaserpaul/Documents/010_HKA_RKIM/FE_Projekt_1/accFeatures/modules/eval/megadepth1500.py:175: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  aucs.append(np.trapz(y, x) / thr)
+auc@5 :  12.9
+auc@10 :  22.8
+auc@20 :  37.4
+mAcc@5: 23.5 
+mAcc@10: 41.1 
+mAcc@20: 60.5
