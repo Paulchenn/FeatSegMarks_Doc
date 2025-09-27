@@ -1,31 +1,73 @@
 \chapter{Grundlagen und Stand der Technik}
 \label{ch:StandTechnik}
 Die robuste Objekterkennung in Bildern ist ein zentrales Forschungsfeld der Computer Vision. In den letzten Jahren wurden zahlreiche Ansätze entwickelt, um die Feature-Extraktion zu verbessern und Modelle gegenüber Bildveränderungen, Texturvariationen und adversarialen Angriffen zu stärken. Die folgenden Abschnitte geben einen Überblick über die grundlegenden Verfahren, die als Basis für aktuelle Entwicklungen wie die Edge-Deformation-basierte Augmentation dienen.
-
 \todo[author=Analena]{Quellverweise und Unterschied Kante/Textur noch einfügen}
+
+
+
+
+
 \section{Architekturgrundlagen für Bildverarbeitung und Generierung}
 \label{sec:Architekturgrundlagen}
 
 \subsection{Encoder-Decoder-Architekturen für Bildübersetzung}
-Encoder-Decoder-Architekturen bilden das Rückgrat vieler bildgenerativer Verfahren in der Computer Vision. Sie bestehen typischerweise aus zwei symmetrischen Komponenten: einem Encoder, der die Eingabedaten in eine latente Repräsentation überführt, und einem Decoder, der diese Repräsentation wieder in ein Bild zurücktransformiert. Besonders relevant ist die U-Net-Architektur, die ursprünglich von Ronneberger et al. (2015) für die medizinische Bildsegmentierung entwickelt wurde. Das 2015 von Ronneberger et al. vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, das speziell für die semantische Segmentierung konzipiert wurde. Obwohl U-Net ursprünglich für medizinische Bilddaten entwickelt wurde, eignet sich die Architektur auch für technische Anwendungen, sobald eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist - beispielsweise in der industriellen Objekterkennung, Robotik oder im Visual Servoing.
-Der Name „U-Net“ stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht. Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird. Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen („Upconvolutions“) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über sogenannte Skip-Verbindungen. Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen - ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen. Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird. U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z. B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können.
-Diese Architektur hat sich nicht nur in der Segmentierung bewährt, sondern auch in der Bild-zu-Bild-Übersetzung, insbesondere in Kombination mit Generative Adversarial Networks (GANs). Ein prominentes Beispiel ist das Pix2Pix-Modell von Isola et al. (2017), bei dem ein U-Net als Generator eingesetzt wird. Die zugrunde liegende GAN-Struktur wird im folgenden Abschnitt detailliert beschrieben.
+Encoder-Decoder-Architekturen bilden das Rückgrat vieler bildgenerativer Verfahren in der Computer Vision. Sie bestehen typischerweise aus zwei symmetrischen Komponenten: 
+\begin{itemize}
+    \item Einem Encoder, der die Eingabedaten in eine latente Repräsentation überführt, sowie
+    \item einem Decoder, der diese Repräsentation wieder in ein Bild zurücktransformiert.
+\end{itemize}
+Besonders relevant ist die U-Net-Architektur, die ursprünglich von \textcite{ronneberger2015unet} für die medizinische Bildsegmentierung entwickelt wurde. Das vorgestellte U-Net ist ein vollständig konvolutionelles neuronales Netzwerk, das speziell für die semantische Segmentierung konzipiert wurde. Obwohl U-Net ursprünglich für medizinische Bilddaten entwickelt wurde, eignet sich die Architektur auch für technische Anwendungen, sobald eine präzise Pixel-zu-Pixel-Zuordnung erforderlich ist - beispielsweise in der industriellen Objekterkennung, Robotik oder im Visual Servoing.
 
-\subsection{Generative Adversarial Networks (GANs)} %Generative Adversarial Networks und Klassifikationsunterstützung
-Generative Adversarial Networks (GANs), eingeführt von Goodfellow et al. (2014), bestehen aus zwei konkurrierenden neuronalen Netzwerken: einem Generator und einem Diskriminator. Der Generator hat die Aufgabe, möglichst realistische Bilder zu erzeugen, während der Diskriminator versucht, echte von synthetischen Bildern zu unterscheiden. Dieses adversariale Trainingsprinzip führt zu einer kontinuierlichen Verbesserung beider Komponenten. Für die Bildgenerierung besonders relevant ist die PatchGAN-Architektur, bei der der Diskriminator nicht das gesamte Bild, sondern lokale Bildausschnitte bewertet. Dadurch werden hochfrequente Details gefördert, was zu einer gesteigerten Bildqualität führt. Die Kombination aus adversarial loss und rekonstruktiven Verlusten wie dem L1-Loss ermöglicht es, sowohl strukturelle Genauigkeit als auch photorealistische Ergebnisse zu erzielen.
-Eine Erweiterung dieses Konzepts stellen die Auxiliary Classifier GANs (ACGANs) dar, die von Odena et al. (2017) vorgestellt wurden. ACGANs integrieren eine zusätzliche Klassifikationskomponente in den Diskriminator, wodurch nicht nur die Realitätsnähe der generierten Bilder bewertet wird, sondern auch deren korrekte Klassenzugehörigkeit. Dies erlaubt eine kontrollierbare Bildgenerierung und führt zu einem stabileren Trainingsverhalten. Besonders bei augmentierten Datensätzen, bei denen die semantische Konsistenz der erzeugten Bilder entscheidend ist, zeigen ACGANs deutliche Vorteile gegenüber klassischen GAN-Varianten.
+Der Name \enquote{U-Net} stammt von der charakteristischen U-förmigen Architektur, die aus einem symmetrischen Encoder-Decoder-Aufbau besteht (siehe Abbildung~\ref{fig:UNet_illustration}). Der Encoder-Pfad extrahiert hierarchisch Bildmerkmale durch aufeinanderfolgende Convolution- und Max-Pooling-Schritte, wobei die räumliche Auflösung reduziert und gleichzeitig die semantische Tiefe der Feature-Maps erhöht wird. Der Decoder-Pfad rekonstruiert die Bildauflösung durch transponierte Faltungen (\enquote{Upconvolutions}) und kombiniert diese mit den hochauflösenden Features aus dem Encoder über sogenannte Skip-Verbindungen. Diese Verbindungen sorgen dafür, dass feine Details aus den frühen Layern nicht verloren gehen - ein entscheidender Vorteil gegenüber anderen Segmentierungsmodellen.
+
+\begin{figure}[htpb]
+    \centering
+    % Die PDF-Datei (erste Seite) wird eingebunden
+    % trim = links unten rechts oben (in Punkten), clip = zuschneiden aktivieren
+    \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/pdf/UNet_illustration.pdf} % trim = L B R O
+    \caption{U-Net Architektur aus~\cite{ronneberger2015unet}}
+    \label{fig:UNet_illustration}
+\end{figure}
+
+Das Netzwerk liefert als Ausgabe eine Segmentierungsmaske, in der jedem Pixel eine Klasse zugewiesen wird. U-Net kann auch auf kleinen Datensätzen effektiv trainiert werden, da es durch Datenaugmentation und die symmetrische Architektur effizient lernt. In der Praxis wird U-Net häufig verwendet, um bestimmte Objektbereiche zu erkennen (z. B. Schrauben, Leitungen), die dann gezielt zur Feature-Extraktion oder Steuerung in Vision-Systemen genutzt werden können.
+
+Diese Architektur hat sich nicht nur in der Segmentierung bewährt, sondern auch in der Bild-zu-Bild-Übersetzung, insbesondere in Kombination mit \ac{GAN}. Ein prominentes Beispiel ist das Pix2Pix-Modell von \textcite{isola2018Pix2Pix}, bei dem ein U-Net als Generator eingesetzt wird. Die zugrunde liegende GAN-Struktur wird im folgenden Abschnitt detailliert beschrieben.
+
+
+
+
+\subsection{Generative Adversarial Network} %Generative Adversarial Networks und Klassifikationsunterstützung
+\acl{GAN}, eingeführt von \textcite{goodfellow2014gan}, bestehen aus zwei konkurrierenden neuronalen Netzwerken:
+\begin{itemize}
+    \item Einem Generator und
+    \item einem Diskriminator.
+\end{itemize}
+Der Generator hat die Aufgabe, möglichst realistische Bilder zu erzeugen, während der Diskriminator versucht, echte von synthetischen Bildern zu unterscheiden. Dieses adversariale Trainingsprinzip führt zu einer kontinuierlichen Verbesserung beider Komponenten. Für die Bildgenerierung besonders relevant ist die PatchGAN-Architektur, bei der der Diskriminator nicht das gesamte Bild, sondern lokale Bildausschnitte bewertet. Dadurch werden hochfrequente Details gefördert, was zu einer gesteigerten Bildqualität führt. Die Kombination aus adversarial loss und rekonstruktiven Verlusten wie dem L1-Loss ermöglicht es, sowohl strukturelle Genauigkeit als auch photorealistische Ergebnisse zu erzielen.
+
+Eine Erweiterung dieses Konzepts stellen die \ac{ACGAN} dar, die von \textcite{odena2017ACGAN} vorgestellt wurden. \ac{ACGAN}s integrieren eine zusätzliche Klassifikationskomponente in den Diskriminator, wodurch nicht nur die Realitätsnähe der generierten Bilder bewertet wird, sondern auch deren korrekte Klassenzugehörigkeit. Dies erlaubt eine kontrollierbare Bildgenerierung und führt zu einem stabileren Trainingsverhalten. Besonders bei augmentierten Datensätzen, bei denen die semantische Konsistenz der erzeugten Bilder entscheidend ist, zeigen \ac{ACGAN}s deutliche Vorteile gegenüber klassischen \ac{GAN}-Varianten.
+
+
+
+
 
 \section{Geometrische und semantische Transformationstechniken}
 \label{sec:GeometrischeTransformationstechniken}
+
+
+
+
 \subsection{Geometrische Deformation mit Thin Plate Spline}
-Thin Plate Spline (TPS) ist ein parametrisches Modell zur nichtlinearen geometrischen Transformation, das sich durch seine Fähigkeit zur glatten Interpolation zwischen definierten Kontrollpunkten auszeichnet. Die Methode wurde ursprünglich von Bookstein (1989) in der morphometrischen Analyse biologischer Formen eingeführt und basiert auf der Minimierung einer Biegeenergie, die die Verzerrung zwischen Punkten möglichst gleichmäßig verteilt. Mathematisch handelt es sich um eine Lösung eines Variationsproblems, bei dem die Funktion zwischen den Kontrollpunkten durch eine Kombination aus radialen Basisfunktionen und affine Transformationen modelliert wird.
-TPS findet heute breite Anwendung in der Bildverarbeitung, insbesondere in Bereichen wie Gesichtsregistrierung, medizinischer Bildanpassung, Pose-Transfer und Datenaugmentation. In der Deep-Learning-basierten Objekterkennung wird TPS genutzt, um semantisch sinnvolle Verformungen von Bildinhalten zu erzeugen, ohne die strukturelle Integrität zu zerstören. Diese Eigenschaft macht TPS besonders geeignet für Augmentationsstrategien, die auf Formrobustheit abzielen – wie etwa im hier betrachteten Paper, wo TPS als Grundlage für das Modul „Thin Plate Spline-based Deformation (TSD)“ dient.
+\acl{TPS} ist ein parametrisches Modell zur nichtlinearen geometrischen Transformation, das sich durch seine Fähigkeit zur glatten Interpolation zwischen definierten Kontrollpunkten auszeichnet. Die Methode wurde ursprünglich von \textcite{bookstein1993thin} in der morphometrischen Analyse biologischer Formen eingeführt und basiert auf der Minimierung einer Biegeenergie, die die Verzerrung zwischen Punkten möglichst gleichmäßig verteilt. Mathematisch handelt es sich um eine Lösung eines Variationsproblems, bei dem die Funktion zwischen den Kontrollpunkten durch eine Kombination aus radialen Basisfunktionen und affine Transformationen modelliert wird.
+\ac{TPS} findet heute breite Anwendung in der Bildverarbeitung, insbesondere in Bereichen wie Gesichtsregistrierung, medizinischer Bildanpassung, Pose-Transfer und Datenaugmentation. In der Deep-Learning-basierten Objekterkennung wird \ac{TPS} genutzt, um semantisch sinnvolle Verformungen von Bildinhalten zu erzeugen, ohne die strukturelle Integrität zu zerstören. Diese Eigenschaft macht \ac{TPS} besonders geeignet für Augmentationsstrategien, die auf Formrobustheit abzielen – wie etwa im hier betrachteten Paper von \textcite{He_2023_ICCV}, in dem \ac{TPS} als Grundlage für das Modul \enquote{\acf{TSD}} dient.
+
+
+
 
 \subsection{ Semantikgetriebene Feature-Modifikation und Augmentation}
-Neben geometrischen Transformationen wie TPS existieren eine Reihe semantikgetriebener Verfahren, die die Feature-Wahrnehmung von Modellen gezielt beeinflussen – sei es durch Kantenextraktion, selbstüberwachtes Lernen oder stilbasierte Augmentation.
-Ein alternativer Ansatz zur texturbasierten Feature-Extraktion ist die Nutzung von Kanteninformationen. Modelle wie EdgeNetRob verwenden robuste Kantenkarten, die mit einem verbesserten Canny-Detektor erzeugt werden, um die Formstruktur eines Objekts hervorzuheben und gleichzeitig die Anfälligkeit gegenüber adversarialen Störungen zu reduzieren. Ergänzend dazu werden Self-Information Maps eingesetzt, die die lokale Informationsdichte eines Bildes messen und semantisch relevante Regionen verstärken (vgl. Zhang et al., 2023).
-Auch selbstüberwachte Lernverfahren tragen zur semantischen Strukturwahrnehmung bei. Noroozi und Favaro (2016) führten das Jigsaw Puzzle als Pretext-Task ein, bei dem ein Bild in Patches unterteilt und permutiert wird. Das Modell muss die ursprüngliche Anordnung rekonstruieren, wodurch es lernt, globale Objektstrukturen und Kontextinformationen zu erfassen – ganz ohne gelabelte Daten. Diese Methode eignet sich besonders für das Vortraining von Klassifikationsnetzwerken.
-Ein weiteres Problem klassischer CNNs ist ihre starke Orientierung an Texturmerkmalen. Style Augmentation adressiert dieses Problem durch gezielte Veränderung der Bildtextur mittels Stiltransferverfahren wie Adaptive Instance Normalization (AdaIN). Ziel ist es, die Formwahrnehmung des Modells zu fördern und die Robustheit gegenüber Bildkorruptionen und Out-of-Distribution-Daten zu erhöhen. Lee et al. (2022) zeigen, dass solche stilbasierten Augmentationsstrategien die Generalisierungsfähigkeit von Modellen deutlich verbessern können.
+Neben geometrischen Transformationen wie \ac{TPS} existieren eine Reihe semantikgetriebener Verfahren, die die Feature-Wahrnehmung von Modellen gezielt beeinflussen – sei es durch Kantenextraktion, selbstüberwachtes Lernen oder stilbasierte Augmentation.
+Ein alternativer Ansatz zur texturbasierten Feature-Extraktion ist die Nutzung von Kanteninformationen. Modelle wie EdgeNetRob verwenden robuste Kantenkarten, die mit einem verbesserten Canny-Detektor erzeugt werden, um die Formstruktur eines Objekts hervorzuheben und gleichzeitig die Anfälligkeit gegenüber adversarialen Störungen zu reduzieren. Ergänzend dazu werden Self-Information Maps eingesetzt, die die lokale Informationsdichte eines Bildes messen und semantisch relevante Regionen verstärken (vgl. \textcite{Zhang_2023_arXiv}).
+Auch selbstüberwachte Lernverfahren tragen zur semantischen Strukturwahrnehmung bei. \textcite{noroozi2016unsupervised} führten das Jigsaw Puzzle als Pretext-Task ein, bei dem ein Bild in Patches unterteilt und permutiert wird. Das Modell muss die ursprüngliche Anordnung rekonstruieren, wodurch es lernt, globale Objektstrukturen und Kontextinformationen zu erfassen – ganz ohne gelabelte Daten. Diese Methode eignet sich besonders für das Vortraining von Klassifikationsnetzwerken.
+Ein weiteres Problem klassischer \ac{CNN} ist ihre starke Orientierung an Texturmerkmalen. Style Augmentation adressiert dieses Problem durch gezielte Veränderung der Bildtextur mittels Stiltransferverfahren wie \ac{AdaIN}. Ziel ist, die Formwahrnehmung des Modells zu fördern und die Robustheit gegenüber Bildkorruptionen und Out-of-Distribution-Daten zu erhöhen. \textcite{lee2022ucsc}\todo[author=Analena]{Bitte Quelle auf Korrektheit prüfen!} zeigen, dass solche stilbasierten Augmentationsstrategien die Generalisierungsfähigkeit von Modellen deutlich verbessern können.
 
 
 
