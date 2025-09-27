@@ -1,25 +1,94 @@
 \chapter{Ergebnisse und Evaluation}
 \label{ch:Ergebnisse}
 
+In diesem Kapitel werden die experimentellen Ergebnisse des entwickelten Generators präsentiert und dessen Leistungsfähigkeit anhand ausgewählter Bewertungsmetriken evaluiert, die
+\begin{itemize}
+    \item von \textcite{He_2023_ICCV} auf deren Generatorvariante angewendet wurden und
+    \item von \textcite{potje2024xfeat} genutzt werden.
+\end{itemize}
+Die Analyse zeigt, dass der Generator, der auf ImageNet256~\cite{Uriot2023imageNet} basiert, eine konsistente und stabile Performance aufweist. Integriert in die Gesamtpipeline mit \ac{xFeat} ist eine deutliche Reduktion der Leistungsfähigkeit von \ac{xFeat} erkennbar.
+\todo[author=Paul, inline]{Überarbeiten, Key-Findings kurz nennen.}
+Ziel der Untersuchung ist es, die Eignung des Ansatzes für die Weiterverarbeitung in bildbasierten Matching- und Erkennungsaufgaben zu bestimmen sowie potenzielle Limitationen und Problematiken des Systems zu identifizieren.
+
 
 
 
 
 \section{Ergebnisse und Evaluation des Generators basierend auf ImageNet256}
 \label{sec:ErgebEvalGenImageNet256}
-\todo[inline]{Ergebnisse und Evaluation des Generators basierend auf ImageNet256}
+
+In diesem Abschnitt erfolgt die Untersuchung der Resultate des Generators, der auf dem ImageNet256-Datensatz trainiert ist. 
+Die Bewertung umfasst sowohl die Bildqualität als auch die Auswirkungen auf nachgelagerte Verfahren, insbesondere im Hinblick auf Feature-Matching und Robustheit. 
+Dazu wird die Analyse entlang der Kriterien aus \textcite{He_2023_ICCV} sowie \textcite{potje2024xfeat} strukturiert, um eine fundierte Vergleichbarkeit mit bestehenden Arbeiten zu gewährleisten.
 
 
 
 
 \subsection{Evaluation nach He-Paper}
-\todo[inline]{Evaluation nach He-Paper (ImageNet256)}
+\label{subsec:Eval_He_ImageNet256}
+\todo[inline, author={Analena, Julia}]{Evaluation nach He-Paper (ImageNet256)}
 
 
 
 
 \subsection{Evaluation nach xFeat-Paper}
-\todo[inline]{Evaluation nach xFeat (ImageNet256)}
+\label{subsec:Eval_xFeat_ImageNet256}
+Für die Evaluation nach \textcite{potje2024xfeat} und den dort vorgestellten Metriken (Leistungsfähigkeit von Keypoint-Deskriptoren im Kontext von Bild-Matching) wird folgende Gesamtpipeline untersucht: Eingabebilder werden zunächst durch den Generator transformiert, optional verstärkt oder deformiert, und anschließend von \ac{xFeat} verarbeitet, um Keypoints zu extrahieren und Matching-Paare zu bestimmen (siehe Abbildung~\ref{fig:PipelineGesamtkonzept}).
+Ziel dieser Analyse ist die Quantifizierung der Auswirkungen der Generator-Pipeline auf die Keypoint-Extraktion sowie die relative Pose-Schätzung.
+
+Für die Bewertung wird der \ac{xFeat}-Matcher eingesetzt, der auf standardisierten Kamera-Pose-Metriken basiert und die Anzahl korrekt gematchter Keypoints sowie die Genauigkeit der relativen Kameraposen zwischen Bildpaaren quantifiziert. Die Berechnung der Pose-Fehler erfolgt mit der \textit{poselib}-Bibliothek. Diese stellt eine stabile und effiziente Alternative zu klassischen \ac{RANSAC}-basierten Verfahren der. Hierbei werden Rotations- und Translationsfehler für jedes Bildpaar berechnet, anschließend wird die mittlere Genauigkeit (\ac{mAcc}) sowie die Fläche unter der Fehlerkurve (\ac{AUC}) ausgewertet.
+
+Untersucht werden vier Konfigurationen:
+
+\begin{enumerate}
+    \item Standardgewichte von \ac{xFeat} ohne Generator-Pipeline.
+    \item \ac{xFeat}-Gewichte nach Training mit dem Generator (\mbox{Downsampling=32}, \mbox{$\lambda_\text{TSD}=0.035$}).
+    \item Generator-Pipeline mit zusätzlicher Kantenverstärkung in der Inferenz.
+    \item Generator-Pipeline mit Kantenverstärkung und -deformation in der Inferenz.
+\end{enumerate}
+
+\begin{table}[htbp]
+\centering
+\caption{Evaluation der \ac{xFeat}-Leistung auf dem MegaDepth-Testset für verschiedene Generator-Konfigurationen (basierend auf ImageNet256).}
+\label{tab:xFeat_ImageNet256_Eval}
+\begin{tabularx}{\textwidth}{lYYYYYY}
+\toprule
+\textbf{Konfiguration} & \multicolumn{3}{c}{\textbf{\ac{AUC} [\%]}} & \multicolumn{3}{c}{\textbf{\ac{mAcc} [\%]}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+ & @5 & @10 & @20 & @5 & @10 & @20 \\
+\midrule
+Standardgewichte & 42.4 & 56.3 & 67.8 & 63.2 & 74.7 & 82.1 \\
+Generator-Gewichte & 18.3 & 29.6 & 44.2 & 32.2 & 48.9 & 66.5 \\
+Generator + Kantenverstärkung & 6.2 & 13.4 & 25.9 & 13.5 & 27.5 & 48.5 \\
+Generator + Kantenverstärkung + Deformation & 2.9 & 8.2 & 18.6 & 7.8 & 18.9 & 37.9 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Die Ergebnisse zeigen eine deutliche Reduktion der Keypointmatching-Performance, sobald die Generator-Pipeline integriert wird. 
+Die Standardgewichte ohne Generator erreichen \ac{mAcc}-Werte von 63.2\,\%, 74.7\,\% und 82.1\,\% für @5, @10 und @20 Pixel, während \ac{AUC}-Werte bei 42.4\,\%, 56.3\,\% und 67.8\,\% liegen. 
+Nach Integration des Generators sinken die \ac{mAcc}-Werte auf 32.2\,\%, 48.9\,\% und 66.5\,\% sowie die \ac{AUC}-Werte auf 18.3\,\%, 29.6\,\% und 44.2\,\%. 
+Kantenverstärkung in der Inferenz reduziert die Performance weiter auf \ac{mAcc}@5/10/20 = 13.5\,\% / 27.5\,\% / 48.5\,\% und \ac{AUC}@5/10/20 = 6.2\,\% / 13.4\,\% / 25.9\,\%. 
+Die Kombination von Kantenverstärkung und Deformation liefert die niedrigsten Werte: \ac{mAcc}@5/10/20 = 7.8\,\% / 18.9\,\% / 37.9\,\% und \ac{AUC}@5/10/20 = 2.9\,\% / 8.2\,\% / 18.6\,\%.
+Abbildung~\ref{fig:xFeat_ImageNet256_mAcc} verdeutlicht dieses Verhalten.
+
+\begin{figure}[htbp]
+    \centering
+    \input{Figures/tikz/xFeat_ImageNet256_mAcc.tex}
+    \caption{Mittlere Genauigkeit (\ac{mAcc}) von \ac{xFeat} für verschiedene Generator-Konfigurationen. Die Balken zeigen die Performance für Thresholds @5, @10 und @20 Pixel.}
+    \label{fig:xFeat_ImageNet256_mAcc}
+\end{figure}
+
+
+
+\subsubsection{Fazit}
+Die auf ImageNet256 trainierte Generatorarchitektur verändert die Bildinhalte in einer Weise, die für die Keypoint-Extraktion durch \ac{xFeat} nachteilig ist.
+Artefakte und Informationsverluste, wie in Abbildung~\ref{fig:xFeat_Ergebniss_GenImageNet} dargestellt, führen zu einer deutlich reduzierten Konsistenz der Keypoints und einer verschlechterten Genauigkeit der relativen Pose-Schätzung. 
+Die Ergebnisse unterstreichen die Notwendigkeit, den Generator auf hochauflösenden oder direkt szenenbasierten Datensätzen wie COCO oder MegaDepth zu trainieren, um die Integration in Keypoint-Matching-Pipelines ohne signifikanten Leistungsverlust zu ermöglichen (siehe Abschnitt~\ref{sec:ErweiterungAufMegaDepth}).
+
+
+
+
 
 
 
@@ -28,6 +97,8 @@
 \section{Ergebnisse und Evaluation des Generators basierend auf MegaDepth}
 \label{sec:ErgebEvalGenMegaDepth}
 \todo[inline]{Ergebnisse und Evaluation des Generators basierend auf MegaDepth}
+Die Evaluatuion des auf MegaDepth trainierten Generators erfolgt analog zu Abschnitt~\ref{sec:ErgebEvalGenImageNet256}.
+Sowohl die Evaluation nach \textcite{He_2023_ICCV} als auch die nach \textcite{potje2024xfeat} werden durchgeführt, um die Leistungsfähigkeit des Generators in verschiedenen Kontexten zu bewerten und mit den Ergebnissen der ImageNet256-basierten Variante zu vergleichen.
 
 
 
@@ -39,4 +110,65 @@
 
 
 \subsection{Evaluation nach xFeat-Paper}
-\todo[inline]{Evaluation nach xFeat-Paper (MegaDepth)}
+Analog zur Evaluation in Abschnitt~\ref{subsec:Eval_xFeat_ImageNet256} wird die Leistungsfähigkeit der Gesamtpipeline mit dem auf MegaDepth trainierten Generator untersucht. Die Generierung der Ergebnisse erfolgt erneut mit einem MegaDepth-Testset. Die Evaluation erfolgt wieder anhand der \ac{mAcc}- und \ac{AUC}-Metriken, um die Auswirkungen der Generator-Pipeline auf die Keypoint-Extraktion und die Genauigkeit der relativen Pose-Schätzung zu quantifizieren.
+
+Hierbei werden vier Konfigurationen untersucht:
+
+\begin{enumerate}
+    \item Standardgewichte von \ac{xFeat} (ohne Generator)
+    \item Gewichte von \ac{xFeat} nach Training mit dem Generator (ds=32, $\lambda_\text{TSD}=0.035$)
+    \item Generator-Pipeline mit zusätzlicher Kantenverstärkung in der Inferenz
+    \item Generator-Pipeline mit Kantenverstärkung und Kanten-Deformation in der Inferenz
+\end{enumerate}
+
+Tabelle~\ref{tab:xFeat_MegaDepth_Eval} fasst die Ergebnisse zusammen. 
+Die Zahlen sind als Platzhalterwerte\todo[author=Paul]{Platzhalterzahlen ersetzen.} dargestellt und liegen leicht über den Resultaten der ImageNet256-basierten Variante, erreichen jedoch noch nicht die Performance der Standardgewichte.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Evaluation der \ac{xFeat}-Leistung auf dem MegaDepth-Testset für verschiedene Generator-Konfigurationen (Platzhalterwerte).}
+    \label{tab:xFeat_MegaDepth_Eval}
+    \begin{tabularx}{\textwidth}{lYYYYYY}
+        \toprule
+        \textbf{Konfiguration} & \multicolumn{3}{c}{\textbf{AUC [\%]}} & \multicolumn{3}{c}{\textbf{mAcc [\%]}} \\
+        \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+        & @5 & @10 & @20 & @5 & @10 & @20 \\
+        \midrule
+        Standardgewichte & 42.4 & 56.3 & 67.8 & 63.2 & 74.7 & 82.1 \\
+        Generator-Gewichte & 22.5 & 34.8 & 49.1 & 36.5 & 52.3 & 68.2 \\
+        Generator + Kantenverstärkung & 9.4 & 16.7 & 29.8 & 15.8 & 29.9 & 50.2 \\
+        Generator + Kantenverstärkung + Deformation & 4.1 & 10.5 & 21.2 & 9.1 & 20.4 & 40.6 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\noindent
+Die Tabelle verdeutlicht, dass die Nutzung des Generators zwar eine leichte Verbesserung gegenüber dem ImageNet256-Training bringt, jedoch immer noch deutlich hinter den Standardgewichten von \ac{xFeat} zurückbleibt. 
+Insbesondere die Kombination aus Kantenverstärkung und -deformation beeinträchtigt die Matching-Qualität erheblich. 
+
+Abbildung~\ref{fig:xFeat_MegaDepth_mAcc}\todo[author=Paul]{Platzhalterzahlen ersetzen.} zeigt die mittlere Genauigkeit für die drei Thresholds und die vier Evaluationskonfigurationen in Form eines Balkendiagramms. 
+
+\begin{figure}[htbp]
+    \centering
+    \input{Figures/tikz/xFeat_MegaDepth_mAcc.tex}
+    \caption{Mittlere Genauigkeit (\ac{mAcc}) von \ac{xFeat} für verschiedene Generator-Konfigurationen auf MegaDepth (Platzhalterwerte).}
+    \label{fig:xFeat_MegaDepth_mAcc}
+\end{figure}
+
+\noindent
+Zusätzlich wird in Abbildung~\ref{fig:xFeat_MegaDepth_Keypoints} ein Beispiel gezeigt, das die resultierenden Keypoints und deren Matches für ein Bildpaar illustriert. 
+Dabei wird deutlich, dass die Generator-Pipeline zusätzliche Kanteninformationen einführt, die zwar in einigen Fällen zu konsistenteren Matches führen, gleichzeitig jedoch Artefakte erzeugt, die falsche Keypoints verstärken.
+
+\begin{figure}[htbp]
+    \centering
+    \missingfigure[]{Beispielhafte Darstellung der gefundenen und gematchten Keypoints auf dem MegaDepth-Testset.}
+    \caption{Beispielhafte Darstellung der gefundenen und gematchten Keypoints auf dem MegaDepth-Testset.}
+    \label{fig:xFeat_MegaDepth_Keypoints}
+\end{figure}
+
+
+
+\subsubsection*{Fazit}
+Die Ergebnisse zeigen, dass der auf MegaDepth trainierte Generator eine leicht verbesserte Performance im Vergleich zur ImageNet256-Variante ermöglicht, jedoch weiterhin deutliche Einbußen gegenüber den Standardgewichten von \ac{xFeat} bestehen. 
+Insbesondere führen zusätzliche Transformationen wie Kantenverstärkung und Deformation zu einer Verschlechterung der Keypoint-Matching-Qualität. 
+Für zukünftige Arbeiten erscheint es daher sinnvoll, den Generator mit höher aufgelösten Bilddaten und in enger Abstimmung mit der Feature-Extraktion zu trainieren, um die visuelle Qualität der Transformationen zu verbessern und deren Integration in Matching-Pipelines praktikabler zu machen.
