@@ -71,9 +71,8 @@ Zudem erweist sich die \ac{EMSE}-Methode als unzureichend für die Extraktion vo
 
 
 \subsection{Lösungsansatz: Entwicklung von DS-EMSE}
-Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens entwickeln wir die \textit{\ac{DS-EMSE}} Methode. Diese vollständig differenzierbare Kantenextraktion basiert auf dem Sobel-Filter und ist direkt in die PyTorch-Pipeline integrierbar. Im Gegensatz zum binären Canny-Algorithmus erzeugt unser Verfahren eine Graustufen-Kantenkarte, die die Stärke der Kanten repräsentiert. Dies liefert eine höhere Informationsdichte und ermöglicht eine bessere Nutzung der Kantendaten durch den Generator. Die durchgängige Differenzierbarkeit eliminiert nicht nur den ineffizienten \ac{CPU}-Transfer, sondern verbessert auch die Qualität der Verlustrückpropagierung, was das Training stabilisiert.
+Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens entwickeln wir die \textit{\ac{DS-EMSE}} Methode. Diese vollständig differenzierbare Kantenextraktion basiert auf dem Sobel-Filter und ist direkt in die PyTorch-Pipeline integrierbar. Im Gegensatz zum binären Canny-Algorithmus erzeugt unser Verfahren eine Graustufen-Kantenkarte, die die Stärke der Kanten repräsentiert. Dies liefert eine höhere Informationsdichte und ermöglicht eine bessere Nutzung der Kantendaten durch den Generator. Die durchgängige Differenzierbarkeit eliminiert nicht nur den ineffizienten \ac{CPU}-Transfer, sondern verbessert auch die Qualität der Verlustrückpropagierung, was das Training stabilisiert. Der Aufbau der \textit{\ac{DS-EMSE}} ist in Abbildung \ref{fig:DS_Emse_Ablauf} dargestellt.
 
-\todo[author=Analena]{Hier Bild von Tim zur EMSE einfügen und beschreiben}
 \begin{figure}[htpb]
     \centering
     \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthD]{Figures/tikz2pdf/ds_emse/ds_emse.pdf}
@@ -81,7 +80,7 @@ Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfa
     \label{fig:DS_Emse_Ablauf}
 \end{figure}
 
-Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen wir diese durch ein dediziertes Tool zur Identifizierung optimaler Parameter. Dieses Konfigurationstool hilft beim Prozess der Parameterwahl. Dies stellt sicher, dass die Kantenkarten als primäre Forminformationen die bestmögliche Qualität aufweisen, was die Robustheit des gesamten Trainingsprozesses maßgeblich erhöht.
+Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen wir diese durch ein dediziertes Tool zur Identifizierung optimaler Parameter. Dieses Konfigurationstool hilft beim Prozess der Parameterwahl. Die in Abbildung \ref{fig:DS_Emse_Ablauf} gestrichelt umrandeten Parameter sind diese, die mit Hilfe des Tools einstellbar sind. Dies stellt sicher, dass die Kantenkarten als primäre Forminformationen die bestmögliche Qualität aufweisen, was die Robustheit des gesamten Trainingsprozesses maßgeblich erhöht.
 
 
 

@@ -1,7 +1,6 @@
 \chapter{Grundlagen und Stand der Technik}
 \label{ch:StandTechnik}
 Die robuste Objekterkennung in Bildern ist ein zentrales Forschungsfeld der Computer Vision. In den letzten Jahren wurden zahlreiche Ansätze entwickelt, um die Feature-Extraktion zu verbessern und Modelle gegenüber Bildveränderungen, Texturvariationen und adversarialen Angriffen zu stärken. Die folgenden Abschnitte geben einen Überblick über die grundlegenden Verfahren, die als Basis für aktuelle Entwicklungen wie die Edge-Deformation-basierte Augmentation dienen.
-\todo[author=Analena]{Quellverweise und Unterschied Kante/Textur noch einfügen}
 
 
 
@@ -67,7 +66,7 @@ Eine Erweiterung dieses Konzepts stellen die \ac{ACGAN} dar, die von \textcite{o
 Neben geometrischen Transformationen wie \ac{TPS} existieren eine Reihe semantikgetriebener Verfahren, die die Feature-Wahrnehmung von Modellen gezielt beeinflussen – sei es durch Kantenextraktion, selbstüberwachtes Lernen oder stilbasierte Augmentation.
 Ein alternativer Ansatz zur texturbasierten Feature-Extraktion ist die Nutzung von Kanteninformationen. Modelle wie EdgeNetRob verwenden robuste Kantenkarten, die mit einem verbesserten Canny-Detektor erzeugt werden, um die Formstruktur eines Objekts hervorzuheben und gleichzeitig die Anfälligkeit gegenüber adversarialen Störungen zu reduzieren. Ergänzend dazu werden Self-Information Maps eingesetzt, die die lokale Informationsdichte eines Bildes messen und semantisch relevante Regionen verstärken (vgl. \textcite{Zhang_2023_arXiv}).
 Auch selbstüberwachte Lernverfahren tragen zur semantischen Strukturwahrnehmung bei. \textcite{noroozi2016unsupervised} führten das Jigsaw Puzzle als Pretext-Task ein, bei dem ein Bild in Patches unterteilt und permutiert wird. Das Modell muss die ursprüngliche Anordnung rekonstruieren, wodurch es lernt, globale Objektstrukturen und Kontextinformationen zu erfassen – ganz ohne gelabelte Daten. Diese Methode eignet sich besonders für das Vortraining von Klassifikationsnetzwerken.
-Ein weiteres Problem klassischer \ac{CNN} ist ihre starke Orientierung an Texturmerkmalen. Style Augmentation adressiert dieses Problem durch gezielte Veränderung der Bildtextur mittels Stiltransferverfahren wie \ac{AdaIN}. Ziel ist, die Formwahrnehmung des Modells zu fördern und die Robustheit gegenüber Bildkorruptionen und Out-of-Distribution-Daten zu erhöhen. \textcite{lee2022ucsc}\todo[author=Analena]{Bitte Quelle auf Korrektheit prüfen!} zeigen, dass solche stilbasierten Augmentationsstrategien die Generalisierungsfähigkeit von Modellen deutlich verbessern können.
+Ein weiteres Problem klassischer \ac{CNN} ist ihre starke Orientierung an Texturmerkmalen. Style Augmentation adressiert dieses Problem durch gezielte Veränderung der Bildtextur mittels Stiltransferverfahren wie \ac{AdaIN}. Ziel ist, die Formwahrnehmung des Modells zu fördern und die Robustheit gegenüber Bildkorruptionen und Out-of-Distribution-Daten zu erhöhen. \textcite{lee2022shapeaugmentation} zeigen, dass solche stilbasierten Augmentationsstrategien die Generalisierungsfähigkeit von Modellen deutlich verbessern können.
 
 
 

@@ -13,7 +13,13 @@ Das Gesamtkonzept umfasst vier zentrale Komponenten (siehe Abbildung~\ref{fig:Pi
 \begin{enumerate}
     \item \textbf{Dynamische Texturreduktion:} Eingangsabbilder werden durch variablen Gaussian Blur und probabilistisches Texture-Dropout in ihrer texturellen Information reduziert. Ziel ist es, den Shape-Bias zu verstärken und den nachfolgenden Generator stärker auf Forminformationen auszurichten.
     \item \textbf{Differenzierbare Kantenextraktion (\acs{DS-EMSE}):} Eine \ac{GPU}-basierte, end-to-end-differenzierbare Methode erzeugt Kantenkarten, die als Form-Guidance in die Bildgenerierung eingehen. Damit werden die Grenzen von klassischen Verfahren wie Canny überwunden und die Trainingspipeline deutlich effizienter gestaltet.
-    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
+    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Der Ablauf der Deformierung kann in Abbildung \ref{fig:TSD} eingesehen werden.Die Grafik zeigt die Anwendung einer geometrischen Verzerrung mittels Thin Plate Spline (TPS). Ein 5×5-Raster aus Kontrollpunkten wird über das Bild gelegt, anschließend durch zufällige Offsets gestört. Aus den verschobenen Punkten entsteht ein verzerrtes TPS-Gitter, das zur Bildverformung verwendet wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
+\begin{figure}[htbp]
+        \centering
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsd/tsd.pdf}
+        \caption{Ablauf der Kantendeformierung mittels \acs{TSD}.}
+        \label{fig:TSD}
+\end{figure}
     \item \textbf{Generative Bildtransformation:} Ein Generator-Netzwerk erstellt aus den texturreduzierten Eingaben und den Kantenkarten synthetische Bilder, die reduzierte Textur und verstärkte Formmerkmale aufweisen. Diese Bilder dienen anschließend als Eingabe für den Keypoint-Detektor \ac{xFeat}.
 \end{enumerate}
 \newpage
@@ -48,7 +54,7 @@ wobei $I_{orig}$ das Originalbild bezeichnet, $DS()$ das Downsampling, $Interp()
 Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen führt die Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln anstelle von $32 \times 32$ Pixeln nicht zu einer Verschiebung hin zu einem Shape-Bias.
 Mithilfe eines speziell entwickelten Diagnosetools \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{??}) kann gezeigt werden, dass das Modell die zur Bildgenerierung erforderlichen Informationen fast vollständig aus den texturreduzierten Bildern extrahiert, während die Kantenkarte nahezu ignoriert wird.
 Abbildung~\ref{fig:Kantenverlust} zeigt, dass dieses Verhalten unabhängig vom Grad der Texturreduktion ist und die Kantenkarte somit keinen Einfluss auf den Bildgenerierungsprozess ausübt.
-Dies lässt die Annahme zu, dass in der zweiten Trainingsphase, trotz vervormter Kantenkarte als Eingang, keine Kantendeformierung erreicht wird.
+Dies lässt die Annahme zu, dass in der zweiten Trainingsphase, trotz verformter Kantenkarte als Eingang, keine Kantendeformierung erreicht wird.
 Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})
 
 \begin{figure}[htbp]
@@ -71,22 +77,20 @@ Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})
 \end{figure}
 
 Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen und den Shape-Bias zu fördern, wird ein variabler Gaussian Blur auf die Eingangsbilder angewendet.
-\todo[author=Analena]{Hier das TSG Bild einfügen und beschreiben}
+
+Dieser Ansatz ermöglicht es, die Intensität der Texturreduktion dynamisch zu steuern. 
+Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert. Der Ablauf ist in Abbildung~\ref{fig:TSG} dargestellt. 
+
+Es wird mit einer Wahrscheinlichkeit $p_{heavy}$ ein starkes Downsampling auf die geringe Größe $heavy_{down} \times heavy_{down}$ angewendet. Andernfalls wird der Downsampling-Faktor zufällig innerhalb des Bereichs $[down_{min}, down_{max}]$ gewählt, wodurch eine moderate Texturreduktion erreicht wird.
+Zusätzlich besteht eine Wahrscheinlichkeit $p_{zero}$, dass das Eingangsbild vollständig mit Nullwerten gefüllt wird, was einem harten Texture-Dropout entspricht. 
+Unabhängig von der gewählten Methode wird das Bild anschließend wieder auf die Originalgröße interpoliert.
+Optional kann dem resultierenden Bild leichtes Rauschen mit der Standardabweichung $noise_{std}$ hinzugefügt werden. 
 \begin{figure}[htbp]
         \centering
         \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsg/tsg.pdf}
         \caption{Verschiedene Blur-Stärken, die durch den variablen Gaussian Blur erzeugt werden können.}
         \label{fig:TSG}
 \end{figure}
-Dieser Ansatz ermöglicht es, die Intensität der Texturreduktion dynamisch zu steuern. 
-Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert.
-
-Mit einer Wahrscheinlichkeit $p_{heavy}$ wird ein starkes Downsampling auf die geringe Größe $heavy_{down} \times heavy_{down}$ angewendet. Andernfalls wird der Downsampling-Faktor zufällig innerhalb des Bereichs $[down_{min}, down_{max}]$ gewählt, wodurch eine moderate Texturreduktion erreicht wird.
-Zusätzlich besteht eine Wahrscheinlichkeit $p_{zero}$, dass das Eingangsbild vollständig mit Nullwerten gefüllt wird, was einem harten Texture-Dropout entspricht. 
-Unabhängig von der gewählten Methode wird das Bild anschließend wieder auf die Originalgröße interpoliert.
-Optional kann dem resultierenden Bild leichtes Rauschen mit der Standardabweichung $noise_{std}$ hinzugefügt werden.
-
-
 
 
 \section{Verbesserung der Kantenextraktion für End-to-End-Training}
@@ -111,10 +115,6 @@ Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} lie
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Visualisierung: Vergleich EMSE vs. DS-EMSE}
 \missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Bild von Tool}
 \todo[inline, author=Tim]{Tool für generierung der Parameter beschreiben (Warum, Wieso, Weshalb + entschiedene Werte (config)).}
-
-
-\todo[author=Analena]{Wo wird mal genau die zweite Phase/TSD beschrieben?}
-%Irgendwie fehlt mir das und damit auch die Stelle für das TSD Bild
 
 
 \section{Entwurf einer passenden Netzarchitektur für ImageNet256}
