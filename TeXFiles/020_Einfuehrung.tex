@@ -30,22 +30,43 @@ und schnellere visuelle Regelungsverfahren.
 
 
 
-
-
 \section{Ziel der Arbeit}
 \label{sec:Zielstellung}
 \todo[inline]{Ziel der Arbeit fehlt}
-
-
-
+Das Ziel der Arbeit ist die Entwicklung eines Konzepts zur robusten Feature-Extraktion aus Segmentierungsmasken 
+für Visual Servoing. Dabei soll die Merkmalsqualität so verbessert werden, dass bildbasierte Regelungsverfahren 
+in Robotersystemen zuverlässiger und dynamischer arbeiten können. Hintergrund ist, dass klassische 
+Feature-Detektoren wie SIFT oder ORB empfindlich auf Skalierung, Beleuchtung und komplexe Szenen reagieren 
+und damit in industriellen Anwendungen oft unzureichend sind. Neuere Verfahren wie xFeat sind zwar effizient, 
+unterliegen jedoch dem in neuronalen Netzen verbreiteten Texture Bias, wodurch sie stärker auf Texturen 
+statt auf Formen reagieren. Um dieses Problem zu adressieren, wird untersucht, wie Segmentierungsmasken 
+und generative Verfahren genutzt werden können, um den Shape Bias zu fördern und formbasierte Merkmale 
+zu verstärken. Ziel ist es, damit die Grundlage für robustere und schnellere visuelle Steuerungsverfahren 
+zu schaffen.
 
 
 
 \section{Aufbau der Arbeit}
 \label{sec:Aufbau der Arbeit}
 \todo[inline]{Aufbau der Arbeit fehlt}
+Das Vorgehen in dieser Arbeit gliederte sich in die Analyse, Adaption und Weiterentwicklung bestehender 
+Methoden zur Feature-Extraktion für Visual Servoing. Ausgangspunkt war das ICCV-Paper, das einen 
+zweistufigen Ansatz zur Reduktion des Texture-Bias durch texturreduzierte Bildgenerierung und Kantendeformation 
+vorschlägt \cite{He_2023_ICCV}. Dieses Verfahren wurde zunächst auf hochauflösende Datensätze wie ImageNet256 und MegaDepth 
+übertragen, um es an die Anforderungen des Keypoint-Detektors xFeat anzupassen.
 
+Im Laufe der Arbeit traten zentrale Herausforderungen auf: der Generator nutzte die Kanteninformationen 
+unzureichend, die ursprüngliche Kantenextraktion war nicht differenzierbar und für größere Bilder ungeeignet 
+und die Netzarchitektur lieferte qualitativ schwache Ergebnisse. Als Lösungsansätze wurden eine dynamische 
+Texturreduktion, das differenzierbare Verfahren DS-EMSE zur Kantenextraktion 
+sowie eine angepasste SegNet-basierte Generatorarchitektur entwickelt. Diese Pipeline wurde als 
+Online-Datenaugmentierung umgesetzt, sodass augmentierte Bilder direkt während des Trainings erzeugt wurden.
 
+Die Evaluation auf ImageNet256 und MegaDepth zeigte, dass der Generator prinzipiell in der Lage ist, 
+Formmerkmale zu verstärken, gleichzeitig jedoch Artefakte entstehen, die die Leistung von xFeat im 
+Keypoint-Matching reduzierten. Auf Basis dieser Ergebnisse wurden drei weiterführende Konzepte erarbeitet, 
+von denen insbesondere die Steuerung des Generators anhand der Keypoint-Position auf Kanten als 
+vielversprechender Ansatz für zukünftige Arbeiten identifiziert wurde.
 
 
 

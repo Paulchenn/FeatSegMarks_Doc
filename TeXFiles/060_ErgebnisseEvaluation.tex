@@ -27,6 +27,31 @@ Dazu wird die Analyse entlang der Kriterien aus \textcite{He_2023_ICCV} sowie \t
 \subsection{Evaluation nach He-Paper}
 \label{subsec:Eval_He_ImageNet256}
 \todo[inline, author={Analena, Julia}]{Evaluation nach He-Paper (ImageNet256)}
+Der Generator wird in einem zweistufigen Verfahren trainiert und bewertet. In der ersten Phase erzeugt er 
+texturreduzierte Bilder auf Grundlage von Kantenkarten und vereinfachten Texturkarten, während in der zweiten 
+Phase zusätzlich deformierte Kantenkarten berücksichtigt werden. Die Beurteilung der Bildqualität erfolgt über 
+verschiedene Verlustfunktionen, darunter adversarial loss, Klassifikationsverlust sowie ein 
+Shape-Preservation-Loss, der sicherstellt, dass deformierte Kanten im synthetisierten Bild erhalten 
+bleiben \cite{He_2023_ICCV}.
+
+Für die Evaluation werden sowohl Shape-Bias-Metriken als auch Robustheitsmetriken herangezogen. 
+Das Maß sbGE (Shape-Bias nach Geirhos) gibt den Anteil korrekter Vorhersagen auf einem Datensatz an, der 
+absichtlich Form- und Texturhinweise gegeneinander ausspielt \cite{geirhos2018texturevsshape}.
+sbIS (Shape-Bias nach Islam) basiert auf der Korrelation von Feature-Maps und misst, in welchem Umfang die 
+Netzwerkausgaben zwischen Bildern mit gleicher Form, aber unterschiedlicher Textur 
+übereinstimmen \cite{islam2021shape}.
+Diese beiden Kennzahlen geben Aufschluss darüber, ob ein Modell eher Form- als Texturinformationen für seine 
+Entscheidungen nutzt.
+
+Darüber hinaus wird die Robustheit der mit Generatoraugmentierung trainierten Netze untersucht. 
+Dabei kommen verschiedene adversariale Angriffe zum Einsatz, die gezielt kleine Bildstörungen einfügen, 
+um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, der 
+eine minimale, aber gezielt berechnete Perturbation entlang des Gradienten 
+hinzufügt \cite{goodfellow2014gan}. PGD (Projected Gradient Descent) stellt eine iterative Erweiterung 
+dar, die stärkere Angriffe durch wiederholte kleine Schritte in Richtung des Gradienten 
+erlaubt. Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
+Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger gezielt falsche Vorhersagen 
+treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
 
 
 
