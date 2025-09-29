@@ -38,6 +38,86 @@ Abbildung~\ref{fig:PipelineGesamtkonzept} verdeutlicht die Rolle der Online-Date
 
 
 
+
+
+
+\section{Diagnosetool zur Attribution von Kanten- vs.\ Texturinformation}
+\label{sec:DiagnoseTool}
+Um die in Abschnitt~\ref{sec:Gesamtkonzept} angestrebte Verschiebung hin zum Shape-Bias \emph{nachweisbar} zu machen, wird ein \emph{Diagnosetool} entwickelt. Es beantwortet die Kernfrage, ob der Generator die Kantenkarte ($E$) tatsächlich nutzt oder stattdessen überwiegend aus der texturreduzierten Eingabe ($I_{txt}$) rekonstruiert.
+%\paragraph{Ziel und Einbettung.}
+Das Tool wird nach Phase~1 (ohne Kantendeformation) auf dem jeweils besten Generator-Checkpoint ausgeführt und arbeitet
+\begin{enumerate}
+    \item \textbf{backbone-agnostisch} (keine Änderungen am Netz erforderlich),
+    \item \textbf{end-to-end-differenzierbar} (ausschließlich PyTorch-Operationen),
+    \item \textbf{pipeline-konsistent} (identische Transforms/Loader wie im Training) sowie
+    \item \textbf{label-frei} (kein Klassenwissen notwendig).
+\end{enumerate}
+Damit eignet es sich sowohl für ImageNet256 als auch für COCO/MegaDepth.
+
+%\paragraph{Vorgehen in Kürze.}
+Pro Batch werden zwei komplementäre Prüfungen durchgeführt und über mehrere Batches gemittelt:
+\begin{enumerate}
+    \item \textbf{Ablation:} Wir setzen abwechselnd $E\!\to\!0$ bzw.\ $I_{txt}\!\to\!0$ und messen, wie stark ein kantenorientierter Fehler steigt. Als Kantenproxy dient ein differenzierbarer Sobel-Gradient; optional kann \ac{DS-EMSE} verwendet werden. Hohe Mehrkosten bei $E\!\to\!0$ deuten auf eine echte Kantenabhängigkeit hin.
+    \item \textbf{Gradientenattribution:} Wir vergleichen die mittleren Gradienten\-normen des Kantenfehlers bezüglich $E$ und $I_{txt}$, um die \emph{relative} Sensitivität des Generators gegenüber beiden Eingängen zu bestimmen.
+\end{enumerate}
+
+%\paragraph{Kernmetriken (kompakt).}
+Zur Gesamteinschätzung genügen zwei Metriken (Mittel über alle inspizierten Batches):
+\begin{align}
+    u_{\text{edge-underuse}}
+    &= \overline{\,\Delta L_{\text{edge}}^{\,I=0}\,}
+       \;-\;
+       \overline{\,\Delta L_{\text{edge}}^{\,E=0}\,},
+       \label{eq:edge-underuse}\\[2pt]
+    r_{\text{grad}}
+    &= \frac{ \overline{\,\left\lVert \partial L_{\text{edge}} / \partial E \right\rVert_{2}\,} }
+            { \overline{\,\left\lVert \partial L_{\text{edge}} / \partial I_{\text{txt}} \right\rVert_{2}\,} + \varepsilon },
+       \label{eq:grad-ratio}
+\end{align}
+
+Heuristik: $u_{\text{edge-underuse}} \gg 0$ \emph{und} $r_{\text{grad}} \ll 1$ $\Rightarrow$ der Edge-Pfad wird unter\-nutzt (Textur dominiert). Ziel ist $u_{\text{edge-underuse}} \le 0$ sowie $r_{\text{grad}} \gtrsim 0{.}5$.
+
+%\paragraph{Achsendefinition für die Gradientenplots (vgl.\ Abschnitt~4.2).}
+\subsubsection{Interpretation der L2-Gradientennormen}% (Plot-Achsen, vgl.\ Graphen in Abschnitt~4.2).}
+Sei $L_{\mathrm{edge}}$ der kantenorientierte Fehler (z.\,B.\ $L_1$ zwischen Sobel($I_{\mathrm{out}}$) und Zielkante). Für eine Eingabebatch der Größe $B$ mit $C$ Kanälen und räumlicher Auflösung $H{\times}W$ betrachten wir die \emph{vollständigen Tensorgradienten} von $L_{\mathrm{edge}}$ nach den Eingaben:
+\[
+\frac{\partial L_{\mathrm{edge}}}{\partial E} \in \mathbb{R}^{B \times C \times H \times W}, 
+\qquad
+\frac{\partial L_{\mathrm{edge}}}{\partial I_{txt}} \in \mathbb{R}^{B \times C \times H \times W}.
+\]
+Für jedes Sample $b\!\in\!\{1,\dots,B\}$ wird zunächst eine \emph{per-Sample-L2-Norm} über alle Kanäle und Raumpositionen gebildet:
+\begin{align}
+    \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}^{(b)}
+    &= \sqrt{\sum_{c=1}^{C}\,\sum_{h=1}^{H}\,\sum_{w=1}^{W} 
+    \left(\tfrac{\partial L_{\mathrm{edge}}}{\partial E_{b,c,h,w}}\right)^{\!2}}, \label{eq:l2 per sample E}\\
+    \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial I_{txt}} \right\rVert_{2}^{(b)}
+    &= \sqrt{\sum_{c=1}^{C}\,\sum_{h=1}^{H}\,\sum_{w=1}^{W} 
+    \left(\tfrac{\partial L_{\mathrm{edge}}}{\partial (I_{txt})_{b,c,h,w}}\right)^{\!2}}. \label{eq:l2 per sample I}
+\end{align}
+Die in den Plots verwendeten Achsenwerte sind anschließend die \emph{Batch-Mittel} dieser per-Sample-Normen:
+\begin{align}
+    \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}
+    &= \frac{1}{B}\sum_{b=1}^{B} \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}^{(b)}, 
+    \qquad
+    \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial I_{txt}} \right\rVert_{2}
+    = \frac{1}{B}\sum_{b=1}^{B} \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial I_{txt}} \right\rVert_{2}^{(b)}.
+\end{align}
+
+
+
+
+\subsubsection{Bedeutung:} Große Werte von $\left\lVert \partial L_{\mathrm{edge}}/\partial E \right\rVert_{2}$ zeigen, dass kleine Änderungen in $E$ den Kantenfehler stark beeinflussen (hohe Sensitivität gegenüber der Kantenkarte). Umgekehrt indiziert ein hoher Wert von $\left\lVert \partial L_{\mathrm{edge}}/\partial I_{txt} \right\rVert_{2}$ eine Dominanz der Textur-Eingabe. Das Verhältnis in Gleichung~\eqref{eq:grad-ratio} verdichtet diese Relationen zu einer skalaren Vergleichsgröße.
+
+
+
+
+
+
+
+
+
+
+
 \section{Optimierung der Informationsnutzung der Kantenkarte im Generator}
 In der ersten Phase des Trainings wird keine Deformation der Kanten angestrebt. 
 Stattdessen liegt der Fokus auf einer photorealistischen Bildgenerierung mit verstärkten Kanten und gleichzeitig reduzierter Textur. Der Generator des \ac{GAN} wird darauf trainiert, ein \emph{grob-generiertes} Bild zu erzeugen, das sowohl die Informationen der Kantenkarte als auch die Farbstruktur des texturreduzierten Eingangsbilds integriert.
@@ -111,10 +191,55 @@ Zur Behebung dieser Einschränkungen schlagen wir die \textit{\ac{DS-EMSE}}-Meth
     \item Das einkanalige Kantenbild wird auf drei Kanäle repliziert, um der erwarteten Eingabe des Generator-Netzes zu entsprechen.
 \end{enumerate}
 
-Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
-\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Visualisierung: Vergleich EMSE vs. DS-EMSE}
-\missingfigure[figwidth=\VarPicWidthD, figheight=0.67*\VarPicWidthD]{Bild von Tool}
-\todo[inline, author=Tim]{Tool für generierung der Parameter beschreiben (Warum, Wieso, Weshalb + entschiedene Werte (config)).}
+%Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{\ac{EMSE}} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen. Gleichzeitig wird die Differenzierbarkeit gewährleistet, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich wird.
+
+
+
+
+
+
+Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{EMSE} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen; zugleich bleibt die gesamte Pipeline differenzierbar, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich ist. Der direkte Vergleich ist in Abbildung~\ref{fig:cmp_emse_ds_emse} dargestellt.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/png/flugzeug_emse.png}
+        \caption{EMSE (binär, Canny-basiert).}
+        \label{fig:emse_bin}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/png/flugzeug_ds_emse.png}
+        \caption{DS-EMSE (Graustufe, differentiabel).}
+        \label{fig:emse_ds}
+    \end{subfigure}
+    \caption{Vergleich \textbf{EMSE} vs.\ \textbf{DS-EMSE}. Die Graustufenkarte trägt mehr Forminformation und ist end-to-end differentiabel.}
+    \label{fig:cmp_emse_ds_emse}
+\end{figure}
+
+\subsubsection{Parametrisierung und Stabilisierung der Kantenextraktion}
+Qualität und Stabilität der generierten Kantenkarten hängen maßgeblich von der Schwellenbildung und der nachgeschalteten Filterung ab. Um diese Abhängigkeit kontrolliert und datenabhängig zu justieren, kommt ein interaktives Edge-Tuning zum Einsatz (vgl.\ Abbildung~\ref{fig:edge_tuner_tool}). Die Verarbeitungskette lautet
+
+\noindent
+Vorfilterung (Pre-Blur) $\rightarrow$ Sobel-Magnitude $\rightarrow$
+$\sigma\!\bigl(\beta\cdot(\text{mag}-\tau)\bigr)$ $\rightarrow$
+morphologische Operatoren $\rightarrow$ Invertierung,
+
+\noindent wobei \(\tau\) (Schwelle) und \(\beta\) (Steilheit) die Sigmoid-Gating-Funktion steuern. Die optionalen Morphologie-Operatoren \emph{Opening} und \emph{Closing} dienen der Rauschunterdrückung bzw.\ dem Schließen kleiner Lücken entlang von Konturen. Das Tuning erfolgt mit Live-Vorschau (Original links, Kanten rechts), unterstützt durch Regler für \(\tau\), \(\beta\), die effektive Kernelgröße der Vorfilterung sowie die Größen der Morphologiekerne; Ergebnisse können als Konfiguration gespeichert und als Kantenkarte exportiert werden, siehe Abbildung~\ref{fig:edge_tuner_tool}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.86\textwidth]{Figures/png/edge_tuner.png}
+    \caption{Edge-Tuner-Tool mit Live-Vorschau und Stellgrößen für Schwelle \(\tau\), Steilheit \(\beta\), Vorfilterung (Pre-Blur) sowie die Morphologie-Operatoren \emph{Opening}/\emph{Closing}.}
+    \label{fig:edge_tuner_tool}
+\end{figure}
+
+\subsubsection{Verwendete Einstellungen}
+In den gezeigten Edge-Tuner-Tool erweist sich folgender Parametersatz als robuster Kompromiss zwischen Kantenabdeckung und Rauschunterdrückung (vgl.\ die resultierenden Karten in Abbildung~4.5): Vorfilterung mit einer Kernelgröße von 3 (leichte Glättung; äquivalentes Gauß-\(\sigma \approx 1{,}0\)), keine Morphologie (Opening \(= 0\), Closing \(= 0\)), da bei \(3\times 3\)-Strukturelementen 2-px-Kanten durch die Erosion nicht invariant sind und die nachfolgende Dilatation sie nicht rekonstruieren kann, Schwelle \(\tau = 0{,}25\) und Steilheit \(\beta = 17{,}0\). Diese Konfiguration hält die Kantenkarten hinreichend „weich“ (gute Gradientenflüsse) und zugleich ausreichend selektiv, um dominante Konturen gegenüber feiner Textur zu bevorzugen.
+
+
+
+
 
 
 \section{Entwurf einer passenden Netzarchitektur für ImageNet256}
