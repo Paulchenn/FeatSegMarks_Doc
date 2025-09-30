@@ -159,7 +159,7 @@ Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})
 Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen und den Shape-Bias zu fördern, wird ein variabler Gaussian Blur auf die Eingangsbilder angewendet.
 
 Dieser Ansatz ermöglicht es, die Intensität der Texturreduktion dynamisch zu steuern. 
-Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert. Der Ablauf ist in Abbildung~\ref{fig:TSG} dargestellt. 
+Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert. Der Ablauf dieser \ac{TSG} ist in Abbildung~\ref{fig:TSG} dargestellt. 
 
 Es wird mit einer Wahrscheinlichkeit $p_{heavy}$ ein starkes Downsampling auf die geringe Größe $heavy_{down} \times heavy_{down}$ angewendet. Andernfalls wird der Downsampling-Faktor zufällig innerhalb des Bereichs $[down_{min}, down_{max}]$ gewählt, wodurch eine moderate Texturreduktion erreicht wird.
 Zusätzlich besteht eine Wahrscheinlichkeit $p_{zero}$, dass das Eingangsbild vollständig mit Nullwerten gefüllt wird, was einem harten Texture-Dropout entspricht. 
