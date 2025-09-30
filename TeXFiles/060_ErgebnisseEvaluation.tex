@@ -200,6 +200,8 @@ Hierbei werden vier Konfigurationen untersucht:
     \item Generator-Pipeline mit Kantenverstärkung und Kanten-Deformation in der Inferenz
 \end{enumerate}
 
+\newpage
+
 Tabelle~\ref{tab:xFeat_MegaDepth_Eval} fasst die Ergebnisse zusammen. 
 Die Zahlen liegen leicht über den Resultaten der ImageNet256-basierten Variante, erreichen jedoch noch nicht die Performance der Standardgewichte.
 
@@ -231,16 +233,36 @@ Insbesondere die Kombination aus Kantenverstärkung und -deformation beeinträch
     \label{fig:xFeat_MegaDepth_mAcc}
 \end{figure}
 
-\noindent
 Zusätzlich wird in Abbildung~\ref{fig:xFeat_MegaDepth_Keypoints} ein Beispiel gezeigt, das die resultierenden Keypoints und deren Matches für ein Bildpaar illustriert. 
 Dabei wird deutlich, dass die Generator-Pipeline zusätzliche Kanteninformationen einführt, die zwar in einigen Fällen zu konsistenteren Matches führen, gleichzeitig jedoch Artefakte erzeugt, die falsche Keypoints verstärken.
 
-\begin{figure}[htbp]
+\begin{figure}[htpb]
     \centering
-    \missingfigure[]{Beispielhafte Darstellung der gefundenen und gematchten Keypoints auf dem MegaDepth-Testset.}
-    \caption{Beispielhafte Darstellung der gefundenen und gematchten Keypoints auf dem MegaDepth-Testset.}
+    \begin{subfigure}[t]{\VarPicWidthF}
+        \centering
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatRes__genMegaDepth__DS32__TSD0_035/xFeatWeightsStandard_genUsed_noDef/vis_keypoints_img1.jpg}
+        \caption{Von \ac{xFeat} gefundene Keypoints (grüne Punkte) in einem Bild mit vorgeschaltetem Generator (trainiert auf MegaDepth, Beispiel 1).}
+        \label{fig:xFeat_Ergebniss_GenMegaDepth_1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{\VarPicWidthF}
+        \centering
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatRes__genMegaDepth__DS32__TSD0_035/xFeatWeightsStandard_genUsed_noDef/vis_keypoints_img2.jpg}
+        \caption{Von \ac{xFeat} gefundene Keypoints (grüne Punkte) in einem Bild mit vorgeschaltetem Generator (trainiert auf MegaDepth, Beispiel 2).}
+        \label{fig:xFeat_Ergebniss_GenMegaDepth_2}
+    \end{subfigure}
+    \vfill
+    \begin{subfigure}[t]{\VarPicWidthA}
+        \centering
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/jpg/xFeatRes__genMegaDepth__DS32__TSD0_035/xFeatWeightsStandard_genUsed_noDef/vis_matches_cos0_95.jpg}
+        \caption{Von \ac{xFeat} gematchte Keypoints zwischen Beispiel 1 und 2.}
+        \label{fig:xFeat_Ergebniss_GenMegaDepth_3}
+    \end{subfigure}
+    \caption{Beispielhafte Ergebnisse des auf MegaDepth trainierten Generators als Prepipeline vor \ac{xFeat}.}
     \label{fig:xFeat_MegaDepth_Keypoints}
 \end{figure}
+
+\newpage
 
 
 
