@@ -43,17 +43,47 @@ Netzwerkausgaben zwischen Bildern mit gleicher Form, aber unterschiedlicher Text
 Diese beiden Kennzahlen geben Aufschluss darüber, ob ein Modell eher Form- als Texturinformationen für seine 
 Entscheidungen nutzt.
 
-Darüber hinaus wird die Robustheit der mit Generatoraugmentierung trainierten Netze untersucht. 
-Dabei kommen verschiedene adversariale Angriffe zum Einsatz, die gezielt kleine Bildstörungen einfügen, 
-um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, bei dem durch 
-eine einmalige Anpassung der Pixelwerte entlang des Gradienten eine minimale Störung erzeugt wird, die das Modell 
-zu einer falschen Vorhersage verleiten soll \cite{goodfellow2014explaining}. 
-Im Gegensatz dazu handelt es sich bei PGD (Projected Gradient Descent) um eine iterative Erweiterung, bei der viele 
-kleine Schrittfolgen in Gradientenrichtung durchgeführt werden. Dadurch entstehen deutlich stärkere Angriffe, da 
-das Modell wiederholt in die Irre geführt wird, bis eine möglichst ausgeprägte Fehlklassifikation erreicht ist.
-Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
-Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger gezielt falsche Vorhersagen 
-treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
+
+
+
+
+
+Da die in Abschnitt zuvor eingeführten Kennzahlen einen trainierten Klassifikator voraussetzen, kommen sie für die Bewertung eines isoliert trainierten Generators nicht in Frage. Stattdessen dient das bereits beschriebene Diagnosetool (siehe Abschnitt \ref{sec:DiagnoseTool}) zur direkten Prüfung, ob der Generator Forminformation aus der Kantenkarte $E$ gegenüber Texturinformation aus $I_{\text{txt}}$ bevorzugt. Zentral ist dabei der in Tabelle~\ref{tab:gen_eval} berichtete \emph{grad ratio edge $E$ over $I_{\text{txt}}$}:
+\begin{equation}
+    \frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}
+\end{equation}
+Ein höheres Verhältnis weist darauf hin, dass Änderungen in $E$ den kantenbezogenen Zielfunktionswert stärker beeinflussen als Änderungen in $I_{\text{txt}}$, was auf eine formorientierte Informationsnutzung hindeutet.
+
+Tabelle~\ref{tab:gen_eval} fasst die Ergebnisse zusammen. Die Konfiguration mit Downsampling 32 und \(\lambda_{TSD}=0{,}035\) zeigt von Stage 1 zu Stage 2 einen Anstieg des Verhältnisses von 0{,}40 auf 0{,}50 und damit eine ausgeprägtere Nutzung der Kanteninformation. Für Downsampling 128 und \(\lambda_{TSD}=0{,}015\) sinkt der Wert von 0{,}42 auf 0{,}28, was auf eine stärkere Abhängigkeit vom Texturkanal hinweist. Die Referenz ohne Netzwerkanpassungen liegt mit 0{,}14 deutlich darunter und bestätigt den Nutzen der Anpassungen in Trainingspipeline und Architektur für eine stärker formgetriebene Generierung.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Evaluation der Anpassungen in der Trainingspipeline des Generators sowie diessen Architektur.}
+    \label{tab:gen_eval}
+    \begin{tabularx}{\textwidth}{lYY}
+        \toprule
+        \textbf{Konfiguration} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 1} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 2} \\
+        \midrule
+        ohne Netzwerkanpassungen & 0,14 & -\\
+        Downsampling=32; $\lambda_{TSD}=0,035$ & 0,40 & 0,50\\
+        Downsampling=128; $\lambda_{TSD}=0,015$ & 0,42 & 0,28\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+
+% Darüber hinaus wird die Robustheit der mit Generatoraugmentierung trainierten Netze untersucht. 
+% Dabei kommen verschiedene adversariale Angriffe zum Einsatz, die gezielt kleine Bildstörungen einfügen, 
+% um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, bei dem durch 
+% eine einmalige Anpassung der Pixelwerte entlang des Gradienten eine minimale Störung erzeugt wird, die das Modell 
+% zu einer falschen Vorhersage verleiten soll \cite{goodfellow2014explaining}. 
+% Im Gegensatz dazu handelt es sich bei PGD (Projected Gradient Descent) um eine iterative Erweiterung, bei der viele 
+% kleine Schrittfolgen in Gradientenrichtung durchgeführt werden. Dadurch entstehen deutlich stärkere Angriffe, da 
+% das Modell wiederholt in die Irre geführt wird, bis eine möglichst ausgeprägte Fehlklassifikation erreicht ist.
+% Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
+% Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger gezielt falsche Vorhersagen 
+% treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
 
 
 \begin{table}[htbp]
