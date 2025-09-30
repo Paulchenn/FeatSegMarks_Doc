@@ -7,7 +7,19 @@ In diesem Kapitel werden die experimentellen Ergebnisse des entwickelten Generat
     \item von \textcite{potje2024xfeat} genutzt werden.
 \end{itemize}
 Die Analyse zeigt, dass der Generator, der auf ImageNet256~\cite{Uriot2023imageNet} basiert, eine konsistente und stabile Performance aufweist. Integriert in die Gesamtpipeline mit \ac{xFeat} ist eine deutliche Reduktion der Leistungsfähigkeit von \ac{xFeat} erkennbar.
-\todo[author=Paul, inline]{Überarbeiten, Key-Findings kurz nennen.}
+
+
+\noindent\textbf{Keyfindings:}
+\begin{itemize}
+    \item Klassifikatorbasierte Shape-Bias-Kennzahlen sind für einen isoliert trainierten Generator nicht anwendbar. Zur direkten Beurteilung der Informationsnutzung dient daher das bereits eingeführte Diagnosetool; ausschlaggebend ist das Verhältnis der Gradientenbeiträge von $E$ zu $I_{\text{txt}}$ am kantenbezogenen Zielfunktionsanteil. Hohe Werte zeigen eine stärker formorientierte Nutzung an.
+    \item Die Generatorvarianten unterscheiden sich deutlich im Gradientenverhältnis: Bei Downsampling 32 mit $\lambda_{\text{TSD}}=0{,}035$ steigt der Wert von 0{,}40 auf 0{,}50 zwischen den beiden Trainingsstufen, bei Downsampling 128 mit $\lambda_{\text{TSD}}=0{,}015$ fällt er von 0{,}42 auf 0{,}28. Die Referenz ohne Netzwerkanpassungen liegt mit 0{,}14 deutlich darunter. Dies bestätigt, dass die Konfiguration mit Downsampling 32 die Forminformation aus $E$ am stärksten nutzt.
+    \item In der Gesamtkette mit \ac{xFeat} führt die Generatorvorverarbeitung zu einem ausgeprägten Leistungsabfall beim Keypoint-Matching: Die mittlere Genauigkeit bei zehn Pixeln sinkt von 74{,}7 Prozent auf 38{,}2 Prozent und fällt mit zusätzlicher Kantenverstärkung beziehungsweise Kantenverstärkung plus Deformation weiter in den Bereich von etwa 1{,}5 bis 2{,}1 Prozent. Analog brechen die Flächen unter der Fehlerkurve deutlich ein.
+    \item Die Analyse weist auf Artefakte, Informationsverluste und einen Datensatz-Gap zwischen ImageNet und szenischen Benchmarks hin. Zusätzliche Inferenztransformationen verschärfen diese Effekte.
+    \item Für eine robuste Integration in Matching-Pipelines erscheinen Training auf szenischen Datensätzen mit höherer Auflösung, eine engere Kopplung an die Merkmalsextraktion sowie verlustseitige Erhaltungstermen für Kanten- und Texturdetails sinnvoll.
+\end{itemize}
+
+
+
 Ziel der Untersuchung ist es, die Eignung des Ansatzes für die Weiterverarbeitung in bildbasierten Matching- und Erkennungsaufgaben zu bestimmen sowie potenzielle Limitationen und Problematiken des Systems zu identifizieren.
 
 
@@ -26,7 +38,6 @@ Dazu wird die Analyse entlang der Kriterien aus \textcite{He_2023_ICCV} sowie \t
 
 \subsection{Evaluation nach He-Paper}
 \label{subsec:Eval_He_ImageNet256}
-\todo[inline, author={Analena, Julia}]{Evaluation nach He-Paper (ImageNet256)}
 Der Generator wird in einem zweistufigen Verfahren trainiert und bewertet. In der ersten Phase erzeugt er 
 texturreduzierte Bilder auf Grundlage von Kantenkarten und vereinfachten Texturkarten, während in der zweiten 
 Phase zusätzlich deformierte Kantenkarten berücksichtigt werden. Die Beurteilung der Bildqualität erfolgt über 

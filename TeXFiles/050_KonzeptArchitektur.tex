@@ -39,9 +39,6 @@ Abbildung~\ref{fig:PipelineGesamtkonzept} verdeutlicht die Rolle der Online-Date
 
 
 
-
-
-
 \section{Diagnosetool zur Attribution von Kanten- vs.\ Texturinformation}
 \label{sec:DiagnoseTool}
 Um die in Abschnitt~\ref{sec:Gesamtkonzept} angestrebte Verschiebung hin zum Shape-Bias nachweisbar zu machen, wird ein Diagnosetool entwickelt. Es beantwortet die Kernfrage, ob der Generator die Kantenkarte ($E$) tatsächlich nutzt oder stattdessen überwiegend aus der texturreduzierten Eingabe ($I_{txt}$) rekonstruiert.
@@ -133,7 +130,7 @@ Die Texturreduktion des Eingangsbildes erfolgt durch Downsampling des Originalbi
 wobei $I_{orig}$ das Originalbild bezeichnet, $DS()$ das Downsampling, $Interp()$ die bilineare Interpolation und $I_{txt}$ das resultierende texturreduzierte Bild.
 
 Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen führt die Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln anstelle von $32 \times 32$ Pixeln nicht zu einer Verschiebung hin zu einem Shape-Bias.
-Mithilfe eines speziell entwickelten Diagnosetools \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{sec:DiagnoseTool}) kann gezeigt werden, dass das Modell die zur Bildgenerierung erforderlichen Informationen fast vollständig aus den texturreduzierten Bildern extrahiert, während die Kantenkarte nahezu ignoriert wird.
+Mithilfe eines speziell entwickelten Diagnosetools (siehe~\ref{sec:DiagnoseTool}) kann gezeigt werden, dass das Modell die zur Bildgenerierung erforderlichen Informationen fast vollständig aus den texturreduzierten Bildern extrahiert, während die Kantenkarte nahezu ignoriert wird.
 Abbildung~\ref{fig:Kantenverlust} zeigt, dass dieses Verhalten unabhängig vom Grad der Texturreduktion ist und die Kantenkarte somit keinen Einfluss auf den Bildgenerierungsprozess ausübt.
 Dies lässt die Annahme zu, dass in der zweiten Trainingsphase, trotz verformter Kantenkarte als Eingang, keine Kantendeformierung erreicht wird.
 Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})

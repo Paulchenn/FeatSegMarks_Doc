@@ -4,12 +4,30 @@
 
 \section{Interpretation der Ergebnisse}
 \label{sec:InterpretationErgebnisse}
-\todo[inline]{Interpretation der Ergebnisse}
+
+Die Diagnose der Informationsnutzung zeigt, dass die Konfiguration mit Downsampling 32 und \(\lambda_{\text{TSD}}=0{,}035\) den Kantenpfad gegenüber dem Texturpfad signifikant stärker nutzt: Das Verhältnis \(\big\|\tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}E}\big\|\,/\,\big\|\tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}I_{\text{txt}}}\big\|\) steigt von \(0{,}40\) (Stage~1) auf \(0{,}50\) (Stage~2). Demgegenüber fällt es bei Downsampling 128 und \(\lambda_{\text{TSD}}=0{,}015\) von \(0{,}42\) auf \(0{,}28\). Die Referenz ohne Netzanpassungen liegt mit \(0{,}14\) deutlich darunter. Insgesamt bestätigt dies, dass Architektur- und Pipelineanpassungen die Sensitivität des Generators gegenüber \(E\) erhöhen und damit eine formorientierte Informationsnutzung begünstigen. \,:contentReference[oaicite:0]{index=0}
+
+In der End-to-End-Betrachtung der Gesamtpipeline mit \ac{xFeat} zeigt sich jedoch ein gegensätzliches Bild: Die Integration des Generators reduziert die Matching-Leistung deutlich (z.\,B.\ \(\text{mAcc}@10\): \(74{,}7\,\%\rightarrow 38{,}2\,\%\)); zusätzliche Kantenverstärkung und Deformation in der Inferenz verschärfen diesen Effekt weiter (\(\text{mAcc}@10\) bis etwa \(1{,}5\text{–}2{,}1\,\%\)). Auch die \ac{AUC}-Werte brechen entsprechend ein. \,
+Diese Diskrepanz lässt sich durch drei Faktoren erklären: 
+\begin{enumerate}
+    \item \textbf{Auflösungs- und Skalierungsmismatch.} Der Generator operiert auf \(256{\times}256\), während \ac{xFeat} auf hochauflösenden, szenischen Daten trainiert und evaluiert wird; das notwendige Upscaling führt zu Informationsverlusten und Artefakten, die für die Keypoint-Detektion nachteilig sind (vgl.\ Abbildung~4.9 und Abschnitt~4.7). \,:contentReference[oaicite:2]{index=2}
+    \item \textbf{Domänengap.} ImageNet256 ist klassenbasiert und texturreich, MegaDepth szenenbasiert und hochauflösend. Der Wechsel der Statistiken wirkt sich auf die Nützlichkeit der vom Generator betonten Strukturen für Matching aus (Tabelle~4.2). \,:contentReference[oaicite:3]{index=3}
+    \item \textbf{Objektivinkongruenz.} Das positive Gradientenverhältnis zugunsten \(E\) misst eine interne Sensitivität am Kantenverlust \(L_{\text{edge}}\), korreliert jedoch nicht zwingend mit descriptorgetriebener \(\text{mAcc}/\text{AUC}\) in der nachgelagerten Pipeline. Ohne gemeinsame Zielfunktion kann eine formorientierte Generierung die für Deskriptoren relevanten Gradientenstrukturen ausdünnen oder verformen. \,:contentReference[oaicite:4]{index=4}
+\end{enumerate}
+
+Die Experimente auf MegaDepth deuten an, dass szenenbasiertes Training die Lücke etwas verringert, die Leistung jedoch weiterhin deutlich unter den Standardgewichten von \ac{xFeat} bleibt; zugleich verschlechtern Kantenverstärkung und -deformation in der Inferenz die Ergebnisse erneut. Damit bestätigen die Resultate die Notwendigkeit, Generator und Detektor enger zu koppeln und auf höher aufgelösten Daten zu trainieren. \,
 
 
 \section{Limitationen und Herausforderungen}
 \label{sec:LimitationenHerausforderungen}
-\todo[inline]{Limitationen und Herausforderungen}
+
+\textbf{Architektur- und Auflösungslimitierung.} Die Generatorarchitektur und das Training auf \(256{\times}256\) zielen auf formbetonte, texturarme Ausgaben, kollidieren jedoch mit den Anforderungen hochauflösender, szenischer Matching-Benchmarks. Das notwendige Upscaling begünstigt Artefakte und Detailverluste, die die Lokalisierbarkeit und Wiederholbarkeit von Keypoints beeinträchtigen. \,:contentReference[oaicite:6]{index=6}
+
+\textbf{Datensatz- und Zielmismatch.} Zwischen ImageNet256 (klassenbasiert) und MegaDepth (szenenbasiert) bestehen strukturelle Unterschiede (Organisation, Auflösung, Zusatzinformationen). Anpassungen der Trainingspipeline sind erforderlich; u.\,a.\ entfällt auf MegaDepth der Klassifikationsanteil im Loss (\(\lambda_{\text{CE}}{=}0\)), wodurch sich die Optimierungslandschaft ändert. \,
+
+\textbf{Proxy-Metrik statt Endziel.} Das Verhältnis \(\big\|\tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}E}\big\|\,/\,\big\|\tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}I_{\text{txt}}}\big\|\) bietet eine konsistente, label-freie Diagnose der Kantenabhängigkeit des Generators, ersetzt aber keine aufgabennahe Optimierung. Ohne explizite Kopplung an \(\text{mAcc}/\text{AUC}\) kann eine Verbesserung der Formorientierung die descriptorrelevanten Textur- und Frequenzanteile reduzieren. \,
+
+\textbf{Sensitivität gegenüber Inferenztransformationen.} Kantenverstärkung und -deformation in der Inferenz verschlechtern die Matching-Qualität deutlich; die zusätzlich eingeführten Strukturen sind für Deskriptoren nicht konsistent genug und verschieben das Verteilungsgebiet gegenüber dem Training. \,
 
 
 \section{Weiterführende Konzepte}
