@@ -74,28 +74,28 @@ Untersucht werden vier Konfigurationen:
 \end{enumerate}
 
 \begin{table}[htbp]
-\centering
-\caption{Evaluation der \ac{xFeat}-Leistung auf dem MegaDepth-Testset für verschiedene Generator-Konfigurationen (basierend auf ImageNet256).}
-\label{tab:xFeat_ImageNet256_Eval}
-\begin{tabularx}{\textwidth}{lYYYYYY}
-\toprule
-\textbf{Konfiguration} & \multicolumn{3}{c}{\textbf{\ac{AUC} [\%]}} & \multicolumn{3}{c}{\textbf{\ac{mAcc} [\%]}} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7}
- & @5 & @10 & @20 & @5 & @10 & @20 \\
-\midrule
-Standardgewichte & 42.4 & 56.3 & 67.8 & 63.2 & 74.7 & 82.1 \\
-Generator-Gewichte & 18.3 & 29.6 & 44.2 & 32.2 & 48.9 & 66.5 \\
-Generator + Kantenverstärkung & 6.2 & 13.4 & 25.9 & 13.5 & 27.5 & 48.5 \\
-Generator + Kantenverstärkung + Deformation & 2.9 & 8.2 & 18.6 & 7.8 & 18.9 & 37.9 \\
-\bottomrule
-\end{tabularx}
+    \centering
+    \caption{Evaluation der \ac{xFeat}-Leistung auf dem MegaDepth-Testset für verschiedene Generator-Konfigurationen (basierend auf ImageNet256).}
+    \label{tab:xFeat_ImageNet256_Eval}
+        \begin{tabularx}{\textwidth}{lYYYYYY}
+        \toprule
+        \textbf{Konfiguration} & \multicolumn{3}{c}{\textbf{\ac{AUC} [\%]}} & \multicolumn{3}{c}{\textbf{\ac{mAcc} [\%]}} \\
+        \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+        & @5 & @10 & @20 & @5 & @10 & @20 \\
+        \midrule
+        Standardgewichte & 42,4 & 56,3 & 67,8 & 63,2 & 74,7 & 82,1 \\
+        Generator-Gewichte & 11,5 & 20,7 & 34,2 & 21,5 & 38,2 & 54,3 \\
+        Generator + Kantenverstärkung & 0,1 & 0,4 & 2,6 & 0,2 & 1,5 & 9,1 \\
+        Generator + Kantenverstärkung + Deformation & 0,1 & 0,6 & 3,2 & 0,3 & 2,1 & 11,1 \\
+        \bottomrule
+    \end{tabularx}
 \end{table}
 
 Die Ergebnisse zeigen eine deutliche Reduktion der Keypointmatching-Performance, sobald die Generator-Pipeline integriert wird. 
-Die Standardgewichte ohne Generator erreichen \ac{mAcc}-Werte von 63.2\,\%, 74.7\,\% und 82.1\,\% für @5, @10 und @20 Pixel, während \ac{AUC}-Werte bei 42.4\,\%, 56.3\,\% und 67.8\,\% liegen. 
-Nach Integration des Generators sinken die \ac{mAcc}-Werte auf 32.2\,\%, 48.9\,\% und 66.5\,\% sowie die \ac{AUC}-Werte auf 18.3\,\%, 29.6\,\% und 44.2\,\%. 
-Kantenverstärkung in der Inferenz reduziert die Performance weiter auf \ac{mAcc}@5/10/20 = 13.5\,\% / 27.5\,\% / 48.5\,\% und \ac{AUC}@5/10/20 = 6.2\,\% / 13.4\,\% / 25.9\,\%. 
-Die Kombination von Kantenverstärkung und Deformation liefert die niedrigsten Werte: \ac{mAcc}@5/10/20 = 7.8\,\% / 18.9\,\% / 37.9\,\% und \ac{AUC}@5/10/20 = 2.9\,\% / 8.2\,\% / 18.6\,\%.
+Die Standardgewichte ohne Generator erreichen \ac{mAcc}-Werte von 63,2\,\%, 74,7\,\% und 82,1\,\% für @5, @10 und @20 Pixel, während \ac{AUC}-Werte bei 42,4\,\%, 56,3\,\% und 67,8\,\% liegen. 
+Nach Integration des Generators sinken die \ac{mAcc}-Werte auf 21,5\,\%, 38,2\,\% und 54,3\,\% sowie die \ac{AUC}-Werte auf 11,5\,\%, 20,7\,\% und 34,2\,\%. 
+Kantenverstärkung in der Inferenz reduziert die Performance weiter auf \ac{mAcc}@5/10/20 = 0,1\,\% / 0,4\,\% / 2,6\,\% und \ac{AUC}@5/10/20 = 0,2\,\% / 1,5\,\% / 9,1\,\%. 
+Die Werte bei Kombination von Kantenverstärkung und Deformation liegen zwar leicht über denen ohne Deformation, allerdings immernoch deutlich unter denen, ohne voran geschaltenem Generator: \ac{mAcc}@5/10/20 = 0,1\,\% / 0,6\,\% / 3,2\,\% und \ac{AUC}@5/10/20 = 0,3\,\% / 2,1\,\% / 11,1\,\%.
 Abbildung~\ref{fig:xFeat_ImageNet256_mAcc} verdeutlicht dieses Verhalten.
 
 \begin{figure}[htbp]
@@ -160,10 +160,10 @@ Die Zahlen sind als Platzhalterwerte\todo[author=Paul]{Platzhalterzahlen ersetze
         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
         & @5 & @10 & @20 & @5 & @10 & @20 \\
         \midrule
-        Standardgewichte & 42.4 & 56.3 & 67.8 & 63.2 & 74.7 & 82.1 \\
-        Generator-Gewichte & 22.5 & 34.8 & 49.1 & 36.5 & 52.3 & 68.2 \\
-        Generator + Kantenverstärkung & 9.4 & 16.7 & 29.8 & 15.8 & 29.9 & 50.2 \\
-        Generator + Kantenverstärkung + Deformation & 4.1 & 10.5 & 21.2 & 9.1 & 20.4 & 40.6 \\
+        Standardgewichte & 42,4 & 56,3 & 67,8 & 63,2 & 74,7 & 82,1 \\
+        Generator-Gewichte & 14,6 & 24,4 & 38,1 & 26,6 & 41,3 & 59,1 \\
+        Generator + Kantenverstärkung & 0,1 & 1,1 & 5,8 & 0,5 & 4,1 & 17,3 \\
+        Generator + Kantenverstärkung + Deformation & 0,1 & 1,1 & 5,8 & 0,5 & 4,0 & 17,3 \\
         \bottomrule
     \end{tabularx}
 \end{table}
