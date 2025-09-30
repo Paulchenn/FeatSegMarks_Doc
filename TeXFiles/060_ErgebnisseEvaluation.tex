@@ -56,6 +56,30 @@ Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger 
 treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
 
 
+\begin{table}[htbp]
+    \centering
+    \caption{Evaluation der Anpassungen in der Trainingspipeline des Generators sowie diessen Architektur.}
+    \label{tab:gen_eval}
+    \begin{tabularx}{\textwidth}{lYY}
+        \toprule
+        \textbf{Konfiguration} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 1} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 2} \\
+        %\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+        % & Stage 1 & Stage 2\\\
+        \midrule
+        ohne Netzwerkanpassungen & 0,14 & -\\
+        Downsampling=32; $\lambda_{TSD}=0,035$ & 0,40 & 0,50\\
+        Downsampling=128; $\lambda_{TSD}=0,015$ & 0,42 & 0,28\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+% \begin{figure}[htbp]
+%     \centering
+%     \input{Figures/tikz/generator_evaluation.tex}
+%     \caption{Evaluation der Anpassungen in der Trainingspipeline des Generators sowie diessen Architektur.}
+%     \label{fig:generator_evaluation}
+% \end{figure}
+
+
 
 \subsection{Evaluation nach xFeat-Paper}
 \label{subsec:Eval_xFeat_ImageNet256}
@@ -122,21 +146,9 @@ Die Ergebnisse unterstreichen die Notwendigkeit, den Generator auf hochauflösen
 
 \section{Ergebnisse und Evaluation des Generators basierend auf MegaDepth}
 \label{sec:ErgebEvalGenMegaDepth}
-\todo[inline]{Ergebnisse und Evaluation des Generators basierend auf MegaDepth}
-Die Evaluatuion des auf MegaDepth trainierten Generators erfolgt analog zu Abschnitt~\ref{sec:ErgebEvalGenImageNet256}.
-Sowohl die Evaluation nach \textcite{He_2023_ICCV} als auch die nach \textcite{potje2024xfeat} werden durchgeführt, um die Leistungsfähigkeit des Generators in verschiedenen Kontexten zu bewerten und mit den Ergebnissen der ImageNet256-basierten Variante zu vergleichen.
+Die Evaluation des auf MegaDepth trainierten Generators erfolgt in methodischer Anlehnung an Abschnitt~\ref{sec:ErgebEvalGenImageNet256}. Da die Bewertung der Generatorarchitektur bereits in Abschnitt~\ref{subsec:Eval_He_ImageNet256} vorgenommen wird und die Anpassung des Generators explizit als Reaktion auf die unzureichenden \ac{xFeat}-Resultate erfolgt (vgl. Abschnitt~\ref{sec:ErweiterungAufMegaDepth}), konzentriert sich die nachfolgende Analyse ausschließlich auf die Evaluationskriterien des \ac{xFeat}-Papers. Dies ermöglicht eine direkte Gegenüberstellung der Leistungsfähigkeit des auf MegaDepth trainierten Generators mit jener der auf ImageNet256 basierenden Variante.
 
-
-
-
-\subsection{Evaluation nach He-Paper}
-\todo[inline]{Evaluation nach He-Paper (MegaDepth)}
-
-
-
-
-\subsection{Evaluation nach xFeat-Paper}
-Analog zur Evaluation in Abschnitt~\ref{subsec:Eval_xFeat_ImageNet256} wird die Leistungsfähigkeit der Gesamtpipeline mit dem auf MegaDepth trainierten Generator untersucht. Die Generierung der Ergebnisse erfolgt erneut mit einem MegaDepth-Testset. Die Evaluation erfolgt wieder anhand der \ac{mAcc}- und \ac{AUC}-Metriken, um die Auswirkungen der Generator-Pipeline auf die Keypoint-Extraktion und die Genauigkeit der relativen Pose-Schätzung zu quantifizieren.
+In Analogie zu Abschnitt~\ref{subsec:Eval_xFeat_ImageNet256} wird die Performance der Gesamtpipeline unter Verwendung des auf MegaDepth trainierten Generators untersucht. Die Ergebnisgenerierung erfolgt erneut mittels eines MegaDepth-Testsets. Die Bewertung stützt sich abermals auf die \ac{mAcc}- und \ac{AUC}-Metriken, um die Einflüsse der Generator-Pipeline auf die Keypoint-Extraktion sowie die Präzision der relativen Pose-Schätzung systematisch zu quantifizieren.
 
 Hierbei werden vier Konfigurationen untersucht:
 
@@ -148,7 +160,7 @@ Hierbei werden vier Konfigurationen untersucht:
 \end{enumerate}
 
 Tabelle~\ref{tab:xFeat_MegaDepth_Eval} fasst die Ergebnisse zusammen. 
-Die Zahlen sind als Platzhalterwerte\todo[author=Paul]{Platzhalterzahlen ersetzen.} dargestellt und liegen leicht über den Resultaten der ImageNet256-basierten Variante, erreichen jedoch noch nicht die Performance der Standardgewichte.
+Die Zahlen liegen leicht über den Resultaten der ImageNet256-basierten Variante, erreichen jedoch noch nicht die Performance der Standardgewichte.
 
 \begin{table}[htbp]
     \centering
@@ -168,11 +180,8 @@ Die Zahlen sind als Platzhalterwerte\todo[author=Paul]{Platzhalterzahlen ersetze
     \end{tabularx}
 \end{table}
 
-\noindent
-Die Tabelle verdeutlicht, dass die Nutzung des Generators zwar eine leichte Verbesserung gegenüber dem ImageNet256-Training bringt, jedoch immer noch deutlich hinter den Standardgewichten von \ac{xFeat} zurückbleibt. 
-Insbesondere die Kombination aus Kantenverstärkung und -deformation beeinträchtigt die Matching-Qualität erheblich. 
-
-Abbildung~\ref{fig:xFeat_MegaDepth_mAcc}\todo[author=Paul]{Platzhalterzahlen ersetzen.} zeigt die mittlere Genauigkeit für die drei Thresholds und die vier Evaluationskonfigurationen in Form eines Balkendiagramms. 
+Die Tabelle sowie Abbildung~\ref{fig:xFeat_MegaDepth_mAcc} verdeutlichen, dass die Nutzung des Generators zwar eine leichte Verbesserung gegenüber dem ImageNet256-Training bringt, jedoch immer noch deutlich hinter den Standardgewichten von \ac{xFeat} zurückbleibt. 
+Insbesondere die Kombination aus Kantenverstärkung und -deformation beeinträchtigt die Matching-Qualität erheblich.
 
 \begin{figure}[htbp]
     \centering

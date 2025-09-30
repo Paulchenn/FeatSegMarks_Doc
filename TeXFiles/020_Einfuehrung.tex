@@ -6,11 +6,10 @@
 \section{Problemstellung und Motivation}
 \label{sec:Problemstellung_Motivation}
 \todo[inline]{Problemstellung und Motivation überarbeiten}
-Im Masterstudiengang \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe ist ein 
-Forschungs- und Entwicklungsprojekt vorgesehen. Diese Arbeit behandelt die Berechnung von Merkmalspunkten aus 
-Segmentierungsmasken für Visual Servoing. Als Ergebnis soll ein Konzept zur robusten Featureextraktion aus Segmentierungsmasken erstellt werden, das für bildbasierte 
-Regelungsverfahren in Robotersystemen verbessert. Im Fokus stehen Robustheit und Dynamik, da herkömmliche visuelle Steuerungen 
-oft durch schwache Merkmalsqualität limitiert sind.
+Im Masterstudiengang \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe ist ein Forschungs- und Entwicklungsprojekt vorgesehen.
+Im Rahmen dess wird in dieser Arbeit die Berechnung von Merkmalspunkten aus Segmentierungsmasken für Visual Servoing abgehandelt.
+Als Ergebnis soll ein Konzept zur robusten Featureextraktion aus Segmentierungsmasken erstellt werden, das für bildbasierte Regelungsverfahren in Robotersystemen verbessert.
+Im Fokus stehen Robustheit und Dynamik, da herkömmliche visuelle Steuerungen oft durch schwache Merkmalsqualität limitiert sind.
 
 Die visuelle Regelung gewinnt in der industriellen Robotik zunehmend an Bedeutung. Verfahren des Visual Servoing nutzen 
 Kamerabilder zur direkten Bewegungssteuerung und ermöglichen flexible Automatisierung. Die Qualität hängt jedoch stark von 
@@ -45,16 +44,12 @@ visuelle Regelungsverfahren geschaffen werden.
 
 \section{Aufbau der Arbeit}
 \label{sec:Aufbau der Arbeit}
-Die Arbeit ist wie folgt strukturiert: Kapitel~\ref{ch:Einfuehrung} führt in die Problemstellung, Motivation und 
-Zielsetzung ein. In Kapitel~\ref{ch:Grundlagen} werden die theoretischen Grundlagen und der Stand der Technik 
-dargestellt, mit Fokus auf Encoder-Decoder-Architekturen, generative Modelle sowie geometrische und semantische 
-Transformationstechniken. Kapitel~\ref{ch:Methodik} beschreibt die Entwicklung der Methodik, einschließlich 
-der Analyse des ICCV-Papers \cite{He_2023_ICCV}, der identifizierten Herausforderungen und der abgeleiteten 
-Lösungsansätze. Darauf aufbauend wird in Kapitel~\ref{ch:Konzept} das finale Konzept vorgestellt, das die 
-Online-Datenaugmentierung, die differenzierbare Kantenextraktion und die angepasste Netzarchitektur umfasst. 
-Kapitel~\ref{ch:Ergebnisse} präsentiert die Evaluation der entwickelten Ansätze auf den Datensätzen ImageNet256 
-und MegaDepth. Abschließend werden in Kapitel~\ref{ch:Diskussion} die Ergebnisse diskutiert, Limitationen 
-aufgezeigt und weiterführende Konzepte für zukünftige Arbeiten vorgestellt.
+Die Arbeit ist wie folgt strukturiert: \textbf{Kapitel~\ref{ch:Einfuehrung}~\nameref{ch:Einfuehrung}} führt in die Problemstellung, Motivation und Zielsetzung ein.
+In \textbf{Kapitel~\ref{ch:StandTechnik}~\nameref{ch:StandTechnik}} werden die theoretischen Grundlagen und der Stand der Technik dargestellt, mit Fokus auf Encoder-Decoder-Architekturen, generative Modelle sowie geometrische und semantische Transformationstechniken.
+\textbf{Kapitel~\ref{ch:EntwicklungDerMethodik}~\nameref{ch:EntwicklungDerMethodik}} beschreibt die Entwicklung der Methodik, einschließlich der Analyse des von \textcite{He_2023_ICCV} vorgestellten Papers, der Identifizierung der Herausforderungen sowie der daraus abgeleiteten Lösungsansätze.
+Darauf aufbauend wird in \textbf{Kapitel~\ref{ch:KonzeptArchitekturImplementierung}~\nameref{ch:KonzeptArchitekturImplementierung}} das finale Konzept vorgestellt, das die Online-Datenaugmentierung, die differenzierbare Kantenextraktion und die angepasste Netzarchitektur umfasst. 
+\textbf{Kapitel~\ref{ch:Ergebnisse}~\nameref{ch:Ergebnisse}} präsentiert die Evaluation der entwickelten Ansätze auf den Datensätzen ImageNet256 und MegaDepth.
+Abschließend werden in \textbf{Kapitel~\ref{ch:DiskussionAusblick}~\nameref{ch:DiskussionAusblick}} die Ergebnisse diskutiert, Limitationen aufgezeigt und weiterführende Konzepte für zukünftige Arbeiten vorgestellt.
 
 
 

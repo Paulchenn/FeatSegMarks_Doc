@@ -56,8 +56,10 @@ Bei der anfänglichen Umsetzung stellen wir fest, dass der Generator die zur Ver
 
 
 
-\subsection{Lösungsansatz: Einführung einer dynamischen Texturreduktion}
+\subsection{Lösungsansatz 1: Einführung einer dynamischen Texturreduktion}
 Um den Shape-Bias zu fördern, entwickeln wir eine erweiterte Methode zur Texturreduktion, die den Texture-Bias des Generators gezielt unterdrückt. Unser Lösungsansatz besteht darin, einen variablen Gaussian Blur auf die Eingangsbilder anzuwenden. Dadurch können wir die Intensität der Texturreduktion dynamisch steuern und so einen stärkeren Trainingsreiz auf die Kantenkarte ausüben. Zusätzlich wird eine probabilistische Methode implementiert, die das Eingangsbild mit einer bestimmten Wahrscheinlichkeit vollständig von Texturinformationen befreit (sogenannter Texture-Dropout).
+
+\newpage
 
 
 
@@ -79,6 +81,8 @@ Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfa
     \caption{Ablauf und Parameter der \ac{DS-EMSE}-Methode}
     \label{fig:DS_Emse_Ablauf}
 \end{figure}
+
+\newpage
 
 Um die bestmögliche Leistung der DS-EMSE-Methode zu gewährleisten, ergänzen wir diese durch ein dediziertes Tool zur Identifizierung optimaler Parameter. Dieses Konfigurationstool hilft beim Prozess der Parameterwahl. Die in Abbildung \ref{fig:DS_Emse_Ablauf} gestrichelt umrandeten Parameter sind diese, die mit Hilfe des Tools einstellbar sind. Dies stellt sicher, dass die Kantenkarten als primäre Forminformationen die bestmögliche Qualität aufweisen, was die Robustheit des gesamten Trainingsprozesses maßgeblich erhöht.
 

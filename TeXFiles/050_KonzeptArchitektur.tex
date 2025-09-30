@@ -13,17 +13,18 @@ Das Gesamtkonzept umfasst vier zentrale Komponenten (siehe Abbildung~\ref{fig:Pi
 \begin{enumerate}
     \item \textbf{Dynamische Texturreduktion:} Eingangsabbilder werden durch variablen Gaussian Blur und probabilistisches Texture-Dropout in ihrer texturellen Information reduziert. Ziel ist es, den Shape-Bias zu verstärken und den nachfolgenden Generator stärker auf Forminformationen auszurichten.
     \item \textbf{Differenzierbare Kantenextraktion (\acs{DS-EMSE}):} Eine \ac{GPU}-basierte, end-to-end-differenzierbare Methode erzeugt Kantenkarten, die als Form-Guidance in die Bildgenerierung eingehen. Damit werden die Grenzen von klassischen Verfahren wie Canny überwunden und die Trainingspipeline deutlich effizienter gestaltet.
-    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Der Ablauf der Deformierung kann in Abbildung \ref{fig:TSD} eingesehen werden.Die Grafik zeigt die Anwendung einer geometrischen Verzerrung mittels Thin Plate Spline (TPS). Ein 5 × 5-Raster aus Kontrollpunkten wird über das Bild gelegt und anschließend durch zufällige Offsets gestört. Aus den verschobenen Punkten entsteht ein verzerrtes TPS-Gitter, das zur Bildverformung verwendet wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
+    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Der Ablauf der Deformierung kann in Abbildung \ref{fig:TSD} eingesehen werden.Die Grafik zeigt die Anwendung einer geometrischen Verzerrung mittels \ac{TPS}. Ein $5 \times 5$-Raster aus Kontrollpunkten wird über das Bild gelegt und anschließend durch zufällige Offsets gestört. Aus den verschobenen Punkten entsteht ein verzerrtes \ac{TPS}-Gitter, das zur Bildverformung verwendet wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
+    \item \textbf{Generative Bildtransformation:} Ein Generator-Netzwerk erstellt aus den texturreduzierten Eingaben und den Kantenkarten synthetische Bilder, die reduzierte Textur und verstärkte Formmerkmale aufweisen. Diese Bilder dienen anschließend als Eingabe für den Keypoint-Detektor \ac{xFeat}.
+\end{enumerate}
+
 \begin{figure}[htbp]
         \centering
-        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsd/tsd.pdf}
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/tikz2pdf/tsd/tsd.pdf}
         \caption{Ablauf der Kantendeformierung mittels \acs{TSD}.}
         \label{fig:TSD}
 \end{figure}
-    \item \textbf{Generative Bildtransformation:} Ein Generator-Netzwerk erstellt aus den texturreduzierten Eingaben und den Kantenkarten synthetische Bilder, die reduzierte Textur und verstärkte Formmerkmale aufweisen. Diese Bilder dienen anschließend als Eingabe für den Keypoint-Detektor \ac{xFeat}.
-\end{enumerate}
-\newpage
-Für das Training des Generators sowie des Diskriminators werden unterschiedliche Deformations- und Blur-Faktoren eingesetzt, um die Robustheit der xFeat-Repräsentationen zu untersuchen.
+
+Für das Training des Generators sowie des Diskriminators werden unterschiedliche Deformations- und Blur-Faktoren eingesetzt, um die Robustheit der \ac{xFeat}-Repräsentationen zu untersuchen.
 
 Das Zusammenspiel dieser Komponenten führt zu einem adaptiven System, das nicht nur texturbasierte Verzerrungen eliminiert, sondern gezielt robuste Formmerkmale hervorhebt. Der besondere Vorteil liegt darin, dass die Generierung der Trainingsdaten im selben Schritt wie das Modelltraining erfolgt, wodurch eine konsistente Integration in die Gesamtarchitektur erreicht wird.
 
@@ -167,7 +168,7 @@ Unabhängig von der gewählten Methode wird das Bild anschließend wieder auf di
 Optional kann dem resultierenden Bild leichtes Rauschen mit der Standardabweichung $noise_{std}$ hinzugefügt werden. 
 \begin{figure}[htbp]
         \centering
-        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsg/tsg.pdf}
+        \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthB]{Figures/tikz2pdf/tsg/tsg.pdf}
         \caption{Verschiedene Blur-Stärken, die durch den variablen Gaussian Blur erzeugt werden können.}
         \label{fig:TSG}
 \end{figure}
@@ -214,7 +215,7 @@ Im Gegensatz zur binären Kantenkarte der ursprünglichen EMSE liefert \ac{DS-EM
         \caption{DS-EMSE (Graustufe, differentiabel).}
         \label{fig:emse_ds}
     \end{subfigure}
-    \caption{Vergleich \textbf{EMSE} vs.\ \textbf{DS-EMSE}. Die Graustufenkarte trägt mehr Forminformation und ist end-to-end differentiabel.}
+    \caption{Vergleich EMSE vs. DS-EMSE. Die Graustufenkarte trägt mehr Forminformation und ist end-to-end differentiabel.}
     \label{fig:cmp_emse_ds_emse}
 \end{figure}
 
@@ -236,6 +237,8 @@ morphologische Operatoren $\rightarrow$ Invertierung,
 
 \subsubsection{Verwendete Einstellungen}
 In den gezeigten Edge-Tuner-Tool erweist sich folgender Parametersatz als robuster Kompromiss zwischen Kantenabdeckung und Rauschunterdrückung (vgl.\ die resultierenden Karten in Abbildung~4.5): Vorfilterung mit einer Kernelgröße von 3 (leichte Glättung; äquivalentes Gauß-\(\sigma \approx 1{,}0\)), keine Morphologie (Opening \(= 0\), Closing \(= 0\)), da bei \(3\times 3\)-Strukturelementen 2-px-Kanten durch die Erosion nicht invariant sind und die nachfolgende Dilatation sie nicht rekonstruieren kann, Schwelle \(\tau = 0{,}25\) und Steilheit \(\beta = 17{,}0\). Diese Konfiguration hält die Kantenkarten hinreichend „weich“ (gute Gradientenflüsse) und zugleich ausreichend selektiv, um dominante Konturen gegenüber feiner Textur zu bevorzugen.
+
+\newpage
 
 
 
