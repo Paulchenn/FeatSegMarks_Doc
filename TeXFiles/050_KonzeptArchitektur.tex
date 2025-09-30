@@ -7,13 +7,13 @@ Nachdem in Kapitel \ref{ch:EntwicklungDerMethodik} die Herausforderungen bei der
 
 \section{Gesamtkonzept der Online-Augmentierung}
 \label{sec:Gesamtkonzept}
-Die zentrale Idee des entwickelten Ansatzes besteht darin, die Datenaugmentierung nicht wie traditionell üblich in einem vorgelagerten, statischen Prozess (\textit{Offline-Augmentierung}) durchzuführen, sondern sie dynamisch während des Trainings (\textit{Online-Augmentierung}) zu generieren. Auf diese Weise wird eine größere Variabilität der Trainingsdaten erreicht, ohne dass ein separater Speicher für vorverarbeitete Daten benötigt wird.
+Die zentrale Idee des entwickelten Ansatzes besteht darin, die Datenaugmentierung nicht wie traditionell üblich in einem vorgelagerten, statischen Prozess (Offline-Augmentierung) durchzuführen, sondern sie dynamisch während des Trainings (Online-Augmentierung) zu generieren. Auf diese Weise wird eine größere Variabilität der Trainingsdaten erreicht, ohne dass ein separater Speicher für vorverarbeitete Daten benötigt wird.
 
 Das Gesamtkonzept umfasst vier zentrale Komponenten (siehe Abbildung~\ref{fig:PipelineGesamtkonzept}): 
 \begin{enumerate}
     \item \textbf{Dynamische Texturreduktion:} Eingangsabbilder werden durch variablen Gaussian Blur und probabilistisches Texture-Dropout in ihrer texturellen Information reduziert. Ziel ist es, den Shape-Bias zu verstärken und den nachfolgenden Generator stärker auf Forminformationen auszurichten.
     \item \textbf{Differenzierbare Kantenextraktion (\acs{DS-EMSE}):} Eine \ac{GPU}-basierte, end-to-end-differenzierbare Methode erzeugt Kantenkarten, die als Form-Guidance in die Bildgenerierung eingehen. Damit werden die Grenzen von klassischen Verfahren wie Canny überwunden und die Trainingspipeline deutlich effizienter gestaltet.
-    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Der Ablauf der Deformierung kann in Abbildung \ref{fig:TSD} eingesehen werden.Die Grafik zeigt die Anwendung einer geometrischen Verzerrung mittels Thin Plate Spline (TPS). Ein 5×5-Raster aus Kontrollpunkten wird über das Bild gelegt, anschließend durch zufällige Offsets gestört. Aus den verschobenen Punkten entsteht ein verzerrtes TPS-Gitter, das zur Bildverformung verwendet wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
+    \item \textbf{Deformierung der extrahierten Kanten \acs{TSD}:} In der zweiten Trainingsphase werden die von der \ac{DS-EMSE} extrahierten Kanten deformiert, sodass in den generierten Bildern die Variabilität der verstärken Kanten steigt und die Textur reduziert wird. Der Ablauf der Deformierung kann in Abbildung \ref{fig:TSD} eingesehen werden.Die Grafik zeigt die Anwendung einer geometrischen Verzerrung mittels Thin Plate Spline (TPS). Ein 5 × 5-Raster aus Kontrollpunkten wird über das Bild gelegt und anschließend durch zufällige Offsets gestört. Aus den verschobenen Punkten entsteht ein verzerrtes TPS-Gitter, das zur Bildverformung verwendet wird. Dadurch soll im nachgelagerten Keypointdetektor, respektive -deskriptor, eine Verschiebung zum Shape-Bias stattfinden.
 \begin{figure}[htbp]
         \centering
         \includegraphics[clip, trim=0cm 0cm 0cm 0cm, width=\VarPicWidthA]{Figures/tikz2pdf/tsd/tsd.pdf}
@@ -43,7 +43,7 @@ Abbildung~\ref{fig:PipelineGesamtkonzept} verdeutlicht die Rolle der Online-Date
 
 \section{Diagnosetool zur Attribution von Kanten- vs.\ Texturinformation}
 \label{sec:DiagnoseTool}
-Um die in Abschnitt~\ref{sec:Gesamtkonzept} angestrebte Verschiebung hin zum Shape-Bias \emph{nachweisbar} zu machen, wird ein \emph{Diagnosetool} entwickelt. Es beantwortet die Kernfrage, ob der Generator die Kantenkarte ($E$) tatsächlich nutzt oder stattdessen überwiegend aus der texturreduzierten Eingabe ($I_{txt}$) rekonstruiert.
+Um die in Abschnitt~\ref{sec:Gesamtkonzept} angestrebte Verschiebung hin zum Shape-Bias nachweisbar zu machen, wird ein Diagnosetool entwickelt. Es beantwortet die Kernfrage, ob der Generator die Kantenkarte ($E$) tatsächlich nutzt oder stattdessen überwiegend aus der texturreduzierten Eingabe ($I_{txt}$) rekonstruiert.
 %\paragraph{Ziel und Einbettung.}
 Das Tool wird nach Phase~1 (ohne Kantendeformation) auf dem jeweils besten Generator-Checkpoint ausgeführt und arbeitet
 \begin{enumerate}
@@ -58,7 +58,7 @@ Damit eignet es sich sowohl für ImageNet256 als auch für COCO/MegaDepth.
 Pro Batch werden zwei komplementäre Prüfungen durchgeführt und über mehrere Batches gemittelt:
 \begin{enumerate}
     \item \textbf{Ablation:} Wir setzen abwechselnd $E\!\to\!0$ bzw.\ $I_{txt}\!\to\!0$ und messen, wie stark ein kantenorientierter Fehler steigt. Als Kantenproxy dient ein differenzierbarer Sobel-Gradient; optional kann \ac{DS-EMSE} verwendet werden. Hohe Mehrkosten bei $E\!\to\!0$ deuten auf eine echte Kantenabhängigkeit hin.
-    \item \textbf{Gradientenattribution:} Wir vergleichen die mittleren Gradienten\-normen des Kantenfehlers bezüglich $E$ und $I_{txt}$, um die \emph{relative} Sensitivität des Generators gegenüber beiden Eingängen zu bestimmen.
+    \item \textbf{Gradientenattribution:} Wir vergleichen die mittleren Gradienten\-normen des Kantenfehlers bezüglich $E$ und $I_{txt}$, um die relative Sensitivität des Generators gegenüber beiden Eingängen zu bestimmen.
 \end{enumerate}
 
 %\paragraph{Kernmetriken (kompakt).}
@@ -75,17 +75,17 @@ Zur Gesamteinschätzung genügen zwei Metriken (Mittel über alle inspizierten B
        \label{eq:grad-ratio}
 \end{align}
 
-Heuristik: $u_{\text{edge-underuse}} \gg 0$ \emph{und} $r_{\text{grad}} \ll 1$ $\Rightarrow$ der Edge-Pfad wird unter\-nutzt (Textur dominiert). Ziel ist $u_{\text{edge-underuse}} \le 0$ sowie $r_{\text{grad}} \gtrsim 0{.}5$.
+Heuristik: $u_{\text{edge-underuse}} \gg 0$ und $r_{\text{grad}} \ll 1$ $\Rightarrow$ der Edge-Pfad wird unter\-nutzt (Textur dominiert). Ziel ist $u_{\text{edge-underuse}} \le 0$ sowie $r_{\text{grad}} \gtrsim 0{.}5$.
 
 %\paragraph{Achsendefinition für die Gradientenplots (vgl.\ Abschnitt~4.2).}
 \subsubsection{Interpretation der L2-Gradientennormen}% (Plot-Achsen, vgl.\ Graphen in Abschnitt~4.2).}
-Sei $L_{\mathrm{edge}}$ der kantenorientierte Fehler (z.\,B.\ $L_1$ zwischen Sobel($I_{\mathrm{out}}$) und Zielkante). Für eine Eingabebatch der Größe $B$ mit $C$ Kanälen und räumlicher Auflösung $H{\times}W$ betrachten wir die \emph{vollständigen Tensorgradienten} von $L_{\mathrm{edge}}$ nach den Eingaben:
+Sei $L_{\mathrm{edge}}$ der kantenorientierte Fehler (z.\,B.\ $L_1$ zwischen Sobel($I_{\mathrm{out}}$) und Zielkante). Für eine Eingabebatch der Größe $B$ mit $C$ Kanälen und räumlicher Auflösung $H{\times}W$ betrachten wir die vollständigen Tensorgradienten von $L_{\mathrm{edge}}$ nach den Eingaben:
 \[
 \frac{\partial L_{\mathrm{edge}}}{\partial E} \in \mathbb{R}^{B \times C \times H \times W}, 
 \qquad
 \frac{\partial L_{\mathrm{edge}}}{\partial I_{txt}} \in \mathbb{R}^{B \times C \times H \times W}.
 \]
-Für jedes Sample $b\!\in\!\{1,\dots,B\}$ wird zunächst eine \emph{per-Sample-L2-Norm} über alle Kanäle und Raumpositionen gebildet:
+Für jedes Sample $b\!\in\!\{1,\dots,B\}$ wird zunächst eine per-Sample-L2-Norm über alle Kanäle und Raumpositionen gebildet:
 \begin{align}
     \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}^{(b)}
     &= \sqrt{\sum_{c=1}^{C}\,\sum_{h=1}^{H}\,\sum_{w=1}^{W} 
@@ -94,7 +94,7 @@ Für jedes Sample $b\!\in\!\{1,\dots,B\}$ wird zunächst eine \emph{per-Sample-L
     &= \sqrt{\sum_{c=1}^{C}\,\sum_{h=1}^{H}\,\sum_{w=1}^{W} 
     \left(\tfrac{\partial L_{\mathrm{edge}}}{\partial (I_{txt})_{b,c,h,w}}\right)^{\!2}}. \label{eq:l2 per sample I}
 \end{align}
-Die in den Plots verwendeten Achsenwerte sind anschließend die \emph{Batch-Mittel} dieser per-Sample-Normen:
+Die in den Plots verwendeten Achsenwerte sind anschließend die Batch-Mittel dieser per-Sample-Normen:
 \begin{align}
     \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}
     &= \frac{1}{B}\sum_{b=1}^{B} \left\lVert \tfrac{\partial L_{\mathrm{edge}}}{\partial E} \right\rVert_{2}^{(b)}, 
@@ -120,7 +120,7 @@ Die in den Plots verwendeten Achsenwerte sind anschließend die \emph{Batch-Mitt
 
 \section{Optimierung der Informationsnutzung der Kantenkarte im Generator}
 In der ersten Phase des Trainings wird keine Deformation der Kanten angestrebt. 
-Stattdessen liegt der Fokus auf einer photorealistischen Bildgenerierung mit verstärkten Kanten und gleichzeitig reduzierter Textur. Der Generator des \ac{GAN} wird darauf trainiert, ein \emph{grob-generiertes} Bild zu erzeugen, das sowohl die Informationen der Kantenkarte als auch die Farbstruktur des texturreduzierten Eingangsbilds integriert.
+Stattdessen liegt der Fokus auf einer photorealistischen Bildgenerierung mit verstärkten Kanten und gleichzeitig reduzierter Textur. Der Generator des \ac{GAN} wird darauf trainiert, ein grob-generiertes Bild zu erzeugen, das sowohl die Informationen der Kantenkarte als auch die Farbstruktur des texturreduzierten Eingangsbilds integriert.
 Ziel ist, dass das Generator-Netz die relevanten Informationen aus der Kantenkarte maximal nutzt und lediglich für die Farbdarstellung auf das texturreduzierte Bild zurückgreift.
 
 Die Texturreduktion des Eingangsbildes erfolgt durch Downsampling des Originalbildes und anschließender bilinearer Interpolation~\cite{He_2023_ICCV}:
@@ -132,7 +132,7 @@ Die Texturreduktion des Eingangsbildes erfolgt durch Downsampling des Originalbi
 wobei $I_{orig}$ das Originalbild bezeichnet, $DS()$ das Downsampling, $Interp()$ die bilineare Interpolation und $I_{txt}$ das resultierende texturreduzierte Bild.
 
 Im Gegensatz zu den in~\cite{He_2023_ICCV} dargestellten Ergebnissen führt die Verwendung von Bildern mit einer Auflösung von $256 \times 256$ Pixeln anstelle von $32 \times 32$ Pixeln nicht zu einer Verschiebung hin zu einem Shape-Bias.
-Mithilfe eines speziell entwickelten Diagnosetools \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{??}) kann gezeigt werden, dass das Modell die zur Bildgenerierung erforderlichen Informationen fast vollständig aus den texturreduzierten Bildern extrahiert, während die Kantenkarte nahezu ignoriert wird.
+Mithilfe eines speziell entwickelten Diagnosetools \todo[author=Tim]{Diagnosetool beschreiben.} (siehe~\ref{sec:DiagnoseTool}) kann gezeigt werden, dass das Modell die zur Bildgenerierung erforderlichen Informationen fast vollständig aus den texturreduzierten Bildern extrahiert, während die Kantenkarte nahezu ignoriert wird.
 Abbildung~\ref{fig:Kantenverlust} zeigt, dass dieses Verhalten unabhängig vom Grad der Texturreduktion ist und die Kantenkarte somit keinen Einfluss auf den Bildgenerierungsprozess ausübt.
 Dies lässt die Annahme zu, dass in der zweiten Trainingsphase, trotz verformter Kantenkarte als Eingang, keine Kantendeformierung erreicht wird.
 Dies kann durch visuelle Bewertung bestätigt werden (siehe Anhang~\ref{sec:})
@@ -180,9 +180,9 @@ Die Kantenkarte muss zwei zentrale Anforderungen erfüllen, um in der Online-Dat
 \item Sie muss für die gegebene Bildgröße qualitativ hochwertige Kanteninformationen liefern.
 \end{enumerate}
 
-Die ursprüngliche \textit{\ac{EMSE}}-Methode aus~\cite{He_2023_ICCV} basiert auf dem nicht-differenzierbaren Canny-Algorithmus und erfordert eine aufwendige \ac{CPU}-Verarbeitung. Dies macht sie für eine nahtlose Integration in eine \textbf{End-to-End}-Trainingspipeline ungeeignet, da Backpropagation unterbrochen wird und ein erheblicher Leistungsverlust entsteht.
+Die ursprüngliche \ac{EMSE}-Methode aus~\cite{He_2023_ICCV} basiert auf dem nicht-differenzierbaren Canny-Algorithmus und erfordert eine aufwendige \ac{CPU}-Verarbeitung. Dies macht sie für eine nahtlose Integration in eine \textbf{End-to-End}-Trainingspipeline ungeeignet, da Backpropagation unterbrochen wird und ein erheblicher Leistungsverlust entsteht.
 
-Zur Behebung dieser Einschränkungen schlagen wir die \textit{\ac{DS-EMSE}}-Methode vor. Diese implementiert eine vollständig differenzierbare Kantenextraktion direkt in PyTorch unter Verwendung des Sobel-Filters~\cite{Sobel2014operator}. Die Vorgehensweise umfasst die folgenden Schritte:
+Zur Behebung dieser Einschränkungen schlagen wir die {\ac{DS-EMSE}-Methode vor. Diese implementiert eine vollständig differenzierbare Kantenextraktion direkt in PyTorch unter Verwendung des Sobel-Filters~\cite{Sobel2014operator}. Die Vorgehensweise umfasst die folgenden Schritte:
 \begin{enumerate}
     \item Das Eingangsbild ($I_{orig}$) wird in ein Graustufenbild konvertiert, wodurch die Berechnung vereinfacht und der Fokus auf Luminanzunterschiede gelegt wird.
     \item Ein zweidimensionales Faltungsnetzwerk wendet horizontale ($K_x$) und vertikale ($K_y$) Sobel-Filter an~\cite{Sobel2014operator}, wodurch die Gradienten in x- und y-Richtung ($G_x$, $G_y$) berechnet werden.
@@ -198,7 +198,7 @@ Zur Behebung dieser Einschränkungen schlagen wir die \textit{\ac{DS-EMSE}}-Meth
 
 
 
-Im Gegensatz zur binären Kantenkarte der ursprünglichen \textit{EMSE} liefert \textit{\ac{DS-EMSE}} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen; zugleich bleibt die gesamte Pipeline differenzierbar, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich ist. Der direkte Vergleich ist in Abbildung~\ref{fig:cmp_emse_ds_emse} dargestellt.
+Im Gegensatz zur binären Kantenkarte der ursprünglichen EMSE liefert \ac{DS-EMSE} eine Graustufen-Karte, die die Kantenstärke an jedem Bildpunkt kodiert. Dies erhöht die Informationsdichte und ermöglicht dem Generator, subtile Gradientenunterschiede effektiv zu nutzen; zugleich bleibt die gesamte Pipeline differenzierbar, wodurch \ac{CPU}-Transfers entfallen und eine nahtlose Backpropagation möglich ist. Der direkte Vergleich ist in Abbildung~\ref{fig:cmp_emse_ds_emse} dargestellt.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.48\textwidth}
@@ -226,11 +226,11 @@ Vorfilterung (Pre-Blur) $\rightarrow$ Sobel-Magnitude $\rightarrow$
 $\sigma\!\bigl(\beta\cdot(\text{mag}-\tau)\bigr)$ $\rightarrow$
 morphologische Operatoren $\rightarrow$ Invertierung,
 
-\noindent wobei \(\tau\) (Schwelle) und \(\beta\) (Steilheit) die Sigmoid-Gating-Funktion steuern. Die optionalen Morphologie-Operatoren \emph{Opening} und \emph{Closing} dienen der Rauschunterdrückung bzw.\ dem Schließen kleiner Lücken entlang von Konturen. Das Tuning erfolgt mit Live-Vorschau (Original links, Kanten rechts), unterstützt durch Regler für \(\tau\), \(\beta\), die effektive Kernelgröße der Vorfilterung sowie die Größen der Morphologiekerne; Ergebnisse können als Konfiguration gespeichert und als Kantenkarte exportiert werden, siehe Abbildung~\ref{fig:edge_tuner_tool}.
+\noindent wobei \(\tau\) (Schwelle) und \(\beta\) (Steilheit) die Sigmoid-Gating-Funktion steuern. Die optionalen Morphologie-Operatoren Opening und Closing dienen der Rauschunterdrückung bzw.\ dem Schließen kleiner Lücken entlang von Konturen. Das Tuning erfolgt mit Live-Vorschau (Original links, Kanten rechts), unterstützt durch Regler für \(\tau\), \(\beta\), die effektive Kernelgröße der Vorfilterung sowie die Größen der Morphologiekerne; Ergebnisse können als Konfiguration gespeichert und als Kantenkarte exportiert werden, siehe Abbildung~\ref{fig:edge_tuner_tool}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.86\textwidth]{Figures/png/edge_tuner.png}
-    \caption{Edge-Tuner-Tool mit Live-Vorschau und Stellgrößen für Schwelle \(\tau\), Steilheit \(\beta\), Vorfilterung (Pre-Blur) sowie die Morphologie-Operatoren \emph{Opening}/\emph{Closing}.}
+    \caption{Edge-Tuner-Tool mit Live-Vorschau und Stellgrößen für Schwelle \(\tau\), Steilheit \(\beta\), Vorfilterung (Pre-Blur) sowie die Morphologie-Operatoren Opening / Closing.}
     \label{fig:edge_tuner_tool}
 \end{figure}
 
@@ -263,7 +263,7 @@ Eine schematische Architekur des verwendeten \ac{GAN}-Ansatzes mit Position des 
 
 
 \subsection{Encoder-Struktur (VGG16-basiert)}
-Der Encoder ist direkt an die Architektur von VGG16 angelehnt und besteht aus fünf hierarchischen Blöcken, die jeweils mehrere Faltungsoperationen (\texttt{Conv2D}), Instanznormalisierung und \ac{ReLU}-Aktivierungen enthalten. 
+Der Encoder ist direkt an die Architektur von VGG16 angelehnt und besteht aus fünf hierarchischen Blöcken, die jeweils mehrere Faltungsoperationen (Conv2D), Instanznormalisierung und \ac{ReLU}-Aktivierungen enthalten. 
 Jeder Block wird durch eine Max-Pooling-Operation abgeschlossen, wobei zusätzlich die Pooling-Indizes gespeichert werden. 
 Diese Indizes sind essenziell für den Decoder, da sie eine positionsgenaue Rückprojektion der Merkmale erlauben~\cite{friedrich2025kiProduktion}. 
 Damit unterscheidet sich der Ansatz von alternativen Upsampling-Strategien (z. B. bilinearer Interpolation), die häufig zu Unschärfen führen. 
@@ -278,7 +278,7 @@ Beide Pfade besitzen eine identische VGG16-ähnliche Struktur und liefern komple
 
 
 \subsection{Decoder-Struktur mit Skip-Connections und Pooling-Indizes}
-Der Decoder rekonstruiert die Bildrepräsentation schrittweise durch \texttt{MaxUnpooling}-Operationen, bei denen die im Encoder gespeicherten Indizes genutzt werden. 
+Der Decoder rekonstruiert die Bildrepräsentation schrittweise durch MaxUnpooling-Operationen, bei denen die im Encoder gespeicherten Indizes genutzt werden. 
 Dies stellt sicher, dass relevante Strukturen~\textendash~insbesondere Kanteninformationen aus der \ac{DS-EMSE}-Stufe~\textendash~konsistent und positionsgetreu in das Ausgabebild übertragen werden. 
 Nach jeder Unpooling-Stufe folgen mehrere Faltungen und Aktivierungen, die die rekonstruierten Merkmale verfeinern. 
 Zusätzlich werden \textbf{Skip-Connections} aus beiden Encodern in den Decoder eingebunden. 
@@ -386,7 +386,7 @@ Alle Verlustkomponenten werden durch gewichtende Faktoren ($\lambda$) skaliert. 
 Die Auswahl der Gewichtungsfaktoren folgt einem zielgerichteten Ansatz basierend auf der Phase des Trainings:
 \begin{itemize}
     \item In Phase eins steht die generative Bildqualität im Vordergrund. Entsprechend wird $\lambda_{L1}$ hoch gewählt, um die Rohbilder möglichst realistisch zu rekonstruieren. Gleichzeitig wird der Kanten-Loss moderat skaliert, um die Formtreue zu unterstützen, sowie den Einfluss der Kantenkarte beizubehalten.
-    \item In Phase zwei hingegen liegt der Fokus auf der Verstärkung und Deformierung der Kanten. Da die grobe Bildstruktur bereits durch Phase 1 erzeugt wird, kann $\lambda_{L1}$ reduziert werden. Aufgrund des Ziels der Knatendeformierung wird $\lambda_{edge}$ erhöht. Dadurch wird der Einfluss der Kantenkarte maximiert und die Deformation gefördert. Cross-Entropy sowie Adversarial-Loss bleiben mit geringer Gwichtung zur Stabilisierung erhalten.
+    \item In Phase zwei hingegen liegt der Fokus auf der Verstärkung und Deformierung der Kanten. Da die grobe Bildstruktur bereits durch Phase 1 erzeugt wird, kann $\lambda_{L1}$ reduziert werden. Aufgrund des Ziels der Kantendeformierung wird $\lambda_{edge}$ erhöht. Dadurch wird der Einfluss der Kantenkarte maximiert und die Deformation gefördert. Cross-Entropy sowie Adversarial-Loss bleiben mit geringer Gewichtung zur Stabilisierung erhalten.
 \end{itemize}
 Dieses Vorgehen gewährleistet, dass der Generator in Phase 1 zunächst eine qualitativ hochwertige Basis erzeugt, während Phase 2 gezielt die Formmerkmale optimiert und den Einfluss der Kantenkarte verstärkt.
 
@@ -396,7 +396,7 @@ Dieses Vorgehen gewährleistet, dass der Generator in Phase 1 zunächst eine qua
 
 \section{Erweiterung auf den MegaDepth-Datensatz}
 \label{sec:ErweiterungAufMegaDepth}
-Die bisher vorgestellte Trainings- sowie Netzarchitektur basiert auf dem Datensatz \textit{ImageNet256}~\cite{Uriot2023imageNet} und ist dementsprechend auf eine Bildgröße von $256 \times 256$ Pixel ausgelegt. 
+Die bisher vorgestellte Trainings- sowie Netzarchitektur basiert auf dem Datensatz ImageNet256~\cite{Uriot2023imageNet} und ist dementsprechend auf eine Bildgröße von $256 \times 256$ Pixel ausgelegt. 
 Die Evaluation der Ergebnisse (vgl. Abschnitt~\ref{sec:ErgebEvalGenImageNet256}) zeigt, dass die Architektur konsistent funktionstüchtig ist und erwartungsgemäß Bilder mit verstärkten, deformierten Kanten sowie reduzierter Texturinformation erzeugt.
 
 In Kombination mit dem nachfolgenden Keypoint-Detektor und -Deskriptor \ac{xFeat}, der auf Eingabebilder der Größe $608 \times 800$ Pixel ausgelegt ist, reduziert sich die Gesamtqualität der Pipeline (siehe Abschnitt~\ref{subsec:Eval_xFeat_ImageNet256}).
@@ -442,10 +442,10 @@ Um die Qualität der generierten Bilder zu erhöhen, soll der Generator künftig
 Das bisher auf ImageNet256 trainierte Netz erzeugt regelmäßig schwarze Artefakte, die die Leistungsfähigkeit von \ac{xFeat} beeinträchtigen. 
 In Abbildung~\ref{fig:xFeat_Ergebniss_GenImageNet} sind in beiden Einzelbildern klar erkennbare Artefakte mit rotem Rand zu erkennen. 
 Wie Abbildung~\ref{fig:xFeat_Ergebniss_GenImageNet_3} verdeutlicht, führen diese zu fehlerhaften Keypoint-Matches zwischen nicht zusammengehörenden Bildregionen. 
-In der Literatur wird darauf hingewiesen, dass derartige Artefakte auf eine zu tiefe Netzarchitektur zurückzuführen sein können~\cite{ronneberger2015unet, odena2016deconvolution, karras2017progressive, zhang2019self}. 
+In der Literatur wird darauf hingewiesen, dass solche Artefakte durch eine zu tiefe Netzarchitektur verursacht werden können~\cite{ronneberger2015unet, odena2016deconvolution, karras2017progressive, zhang2019self}. 
 Daraus leiten wir ab, dass die bestehende Netztiefe für Bilder in der Größe von $608 \times 800$ Pixel ausreichend ist, sodass vorerst keine strukturellen Anpassungen der Architektur vorgesehen sind.
 
-Um den Speicherverbrauch zu reduzieren, wird vor jeder Decoderschicht ein \textit{fuse-skip} eingefügt. 
+Um den Speicherverbrauch zu reduzieren, wird vor jeder Decoderschicht ein fuse-skip eingefügt. 
 Bisher werden die geskippten Feature-Maps des Edge- sowie des Blur-Encoders konkateniert und zur Feature-Map der aktuellen Decoderschicht addiert. 
 Aufgrund der größeren Bildgröße stößt diese Variante jedoch an Speichergrenzen der verwendeten \ac{GPU}.
 Daher wird zusätzlich eine $1 \times 1$-Convolution eingefügt, um die Kanalanzahl vor der Addition wieder auf die ursprüngliche Größe zu reduzieren. 

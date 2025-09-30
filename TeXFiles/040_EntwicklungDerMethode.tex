@@ -28,10 +28,10 @@ Das Herzstück der Methode von \textcite{He_2023_ICCV} ist ein \ac{GAN}, das in 
 \subsection{Zweistufiger Trainingsprozess}
 Das Modell wird in einem zweistufigen Prozess trainiert:
 
-\begin{enumerate}
+\begin{itemize}
     \item \textbf{Stage 1: Generierung textur-reduzierter Bilder.} In der ersten Phase wird der Generator auf einem Datensatz wie CIFAR-10~\cite{krizhevsky2009learning} oder ImageNet256~\cite{Uriot2023imageNet} trainiert, um aus einem Originalbild ein neues Bild zu erzeugen, das dieselbe Form und Geometrie, aber eine reduzierte Textur aufweist. Der Fokus liegt hierbei auf der photorealistischen Nachbildung der Form, während die textuellen Details bewusst unterdrückt werden.
     \item \textbf{Stage 2: Fine-Tuning mit Kantenverformung.} In der zweiten Phase wird der Generator mit deformierten Kantenkarten gefüttert, um zu lernen, wie dieser plausible Bilder mit manipulierten Formen erzeugen kann. Laut \textcite{He_2023_ICCV} sollen diese Deformationen einen nachfolgenden Klassifizierer dazu bringen mehr auf die Form eines Objekts zu achten und weniger auf die Textur.
-\end{enumerate}
+\end{itemize}
 
 
 
@@ -71,7 +71,7 @@ Zudem erweist sich die \ac{EMSE}-Methode als unzureichend für die Extraktion vo
 
 
 \subsection{Lösungsansatz: Entwicklung von DS-EMSE}
-Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens entwickeln wir die \textit{\ac{DS-EMSE}} Methode. Diese vollständig differenzierbare Kantenextraktion basiert auf dem Sobel-Filter und ist direkt in die PyTorch-Pipeline integrierbar. Im Gegensatz zum binären Canny-Algorithmus erzeugt unser Verfahren eine Graustufen-Kantenkarte, die die Stärke der Kanten repräsentiert. Dies liefert eine höhere Informationsdichte und ermöglicht eine bessere Nutzung der Kantendaten durch den Generator. Die durchgängige Differenzierbarkeit eliminiert nicht nur den ineffizienten \ac{CPU}-Transfer, sondern verbessert auch die Qualität der Verlustrückpropagierung, was das Training stabilisiert. Der Aufbau der \textit{\ac{DS-EMSE}} ist in Abbildung \ref{fig:DS_Emse_Ablauf} dargestellt.
+Als Antwort auf die Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens entwickeln wir die \ac{DS-EMSE} Methode. Diese vollständig differenzierbare Kantenextraktion basiert auf dem Sobel-Filter und ist direkt in die PyTorch-Pipeline integrierbar. Im Gegensatz zum binären Canny-Algorithmus erzeugt unser Verfahren eine Graustufen-Kantenkarte, die die Stärke der Kanten repräsentiert. Dies liefert eine höhere Informationsdichte und ermöglicht eine bessere Nutzung der Kantendaten durch den Generator. Die durchgängige Differenzierbarkeit eliminiert nicht nur den ineffizienten \ac{CPU}-Transfer, sondern verbessert auch die Qualität der Verlustrückpropagierung, was das Training stabilisiert. Der Aufbau der \ac{DS-EMSE} ist in Abbildung \ref{fig:DS_Emse_Ablauf} dargestellt.
 
 \begin{figure}[htpb]
     \centering
@@ -102,7 +102,7 @@ Die Architektur integriert eine erhöhte Netztiefe mit zusätzlichen Convolution
 
 \section{Abgrenzung zum Stand der Technik}
 \label{sec:AbgrenzungZumStandDerTechnik}
-Die Analyse des Originalansatzes von \textcite{He_2023_ICCV} und unsere anfängliche Umsetzung haben gezeigt, dass eine direkte Skalierung auf hochauflösende Bilder erhebliche Herausforderungen mit sich bringt. Das ursprüngliche Konzept ist in seiner Anwendung auf CIFAR-10~\cite{krizhevsky2009learning} limitiert. Die Hauptprobleme liegen in der ineffektiven Nutzung der Kantenkarte durch den Generator, in der Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens für eine effiziente PyTorch-basierte Trainingspipeline sowie in der Netztiefe der Generator-Netzes bei der verwendung von $256 \times 256$ Pixel großen Bildern.
+Die Analyse des Originalansatzes von \textcite{He_2023_ICCV} und unsere anfängliche Umsetzung haben gezeigt, dass eine direkte Skalierung auf hochauflösende Bilder erhebliche Herausforderungen mit sich bringt. Das ursprüngliche Konzept ist in seiner Anwendung auf CIFAR-10~\cite{krizhevsky2009learning} limitiert. Die Hauptprobleme liegen in der ineffektiven Nutzung der Kantenkarte durch den Generator, in der Inkompatibilität des ursprünglichen Kantenextraktionsverfahrens für eine effiziente PyTorch-basierte Trainingspipeline sowie in der Netztiefe des Generator-Netzes bei der verwendung von $256 \times 256$ Pixel großen Bildern.
 
 Unsere Arbeit grenzt sich vom Stand der Technik ab, indem wir diese Herausforderungen mit innovativen Lösungsansätzen begegnen. Wir entwickeln eine erweiterte Methode zur dynamischen Texturreduktion, um den Texture-Bias des Generators gezielt zu unterdrücken. Darüber hinaus implementieren wir mit der \ac{DS-EMSE}-Methode ein vollständig differenzierbares und \ac{GPU}-basiertes Kantenextraktionsverfahren, das eine nahtlose Integration in die End-to-End-Trainingspipeline ermöglicht. Zudem entwerfen wir eine Netzarchitektur, die auf einer Bildgröße von $256 \times 256$ Pixel basiert. Dazu greifen wir auf Veröffentlichungen zurück, in denen bereits Encode-Decoder-Netze zur Generierung von Bilddaten behandelt wurden~\cite{badrinarayanan2017segnet, ronneberger2015unet, krizhevsky2009learning, isola2018Pix2Pix}.
 
