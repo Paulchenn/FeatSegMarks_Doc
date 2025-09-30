@@ -45,14 +45,15 @@ Entscheidungen nutzt.
 
 Darüber hinaus wird die Robustheit der mit Generatoraugmentierung trainierten Netze untersucht. 
 Dabei kommen verschiedene adversariale Angriffe zum Einsatz, die gezielt kleine Bildstörungen einfügen, 
-um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, der 
-eine minimale, aber gezielt berechnete Perturbation entlang des Gradienten 
-hinzufügt \cite{goodfellow2014gan}. PGD (Projected Gradient Descent) stellt eine iterative Erweiterung 
-dar, die stärkere Angriffe durch wiederholte kleine Schritte in Richtung des Gradienten 
-erlaubt. Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
+um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, bei dem durch 
+eine einmalige Anpassung der Pixelwerte entlang des Gradienten eine minimale Störung erzeugt wird, die das Modell 
+zu einer falschen Vorhersage verleiten soll \cite{goodfellow2014explaining}. 
+Im Gegensatz dazu handelt es sich bei PGD (Projected Gradient Descent) um eine iterative Erweiterung, bei der viele 
+kleine Schrittfolgen in Gradientenrichtung durchgeführt werden. Dadurch entstehen deutlich stärkere Angriffe, da 
+das Modell wiederholt in die Irre geführt wird, bis eine möglichst ausgeprägte Fehlklassifikation erreicht ist.
+Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
 Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger gezielt falsche Vorhersagen 
 treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
-
 
 
 
