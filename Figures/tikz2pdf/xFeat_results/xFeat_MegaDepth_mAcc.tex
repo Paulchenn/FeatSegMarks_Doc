@@ -1,0 +1,57 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        ybar,
+        bar width=0.2cm,
+        width=\VarPicWidthD,
+        height=0.67*\VarPicWidthD,
+        ylabel={\%},
+        symbolic x coords={Standard, Generator, Generator+Kanten, Generator+Kanten+Deformation},
+        xtick=data,
+        x tick label style={rotate=20, anchor=east},
+        legend style={at={(0.98,0.98)}, anchor=north east, legend columns=-1},
+        nodes near coords,
+        ymin=0, ymax=100
+    ]
+    \addplot coordinates {
+        (Standard,63.2)
+        (Generator,26.6)
+        (Generator+Kanten,0.5) [nodes near coords style={anchor=south, yshift=10}]
+        (Generator+Kanten+Deformation,0.5) [nodes near coords style={anchor=south, yshift=10}]
+    };
+    \addplot coordinates {
+        (Standard,74.7)
+        (Generator,41.3)
+        (Generator+Kanten,4.1) [nodes near coords style={anchor=south, yshift=30}]
+        (Generator+Kanten+Deformation,4.0) [nodes near coords style={anchor=south, yshift=10}]
+    };
+    \addplot coordinates {
+        (Standard,82.1)
+        (Generator,59.1)
+        (Generator+Kanten,17.3) [nodes near coords style={anchor=south, yshift=10}]
+        (Generator+Kanten+Deformation,17.3) [nodes near coords style={anchor=south, yshift=10}]
+    };
+    \legend{mAcc@5,mAcc@10,mAcc@20}
+    \end{axis}
+\end{tikzpicture}
+
+% \begin{tikzpicture}
+%     \begin{axis}[
+%         ybar,
+%         bar width=0.2cm,
+%         width=\textwidth,
+%         height=0.5\textwidth,
+%         ylabel={\%},
+%         symbolic x coords={Standard, Generator, Generator+Kanten, Generator+Kanten+Deformation},
+%         xtick=data,
+%         x tick label style={rotate=20, anchor=east}, % <--- hier Labels drehen
+%         legend style={at={(0.98,0.98)}, anchor=north east, legend columns=-1},
+%         nodes near coords,
+%         nodes near coords style={anchor=south, yshift=5}, % <-- Hier hinzufügen
+%         ymin=0, ymax=100
+%     ]
+%     \addplot coordinates {(Standard,63.2) (Generator,26.6) (Generator+Kanten,0.5) (Generator+Kanten+Deformation,0.5)};
+%     \addplot coordinates {(Standard,74.7) (Generator,41.3) (Generator+Kanten,4.1) (Generator+Kanten+Deformation,4.0)};
+%     \addplot coordinates {(Standard,82.1) (Generator,59.1) (Generator+Kanten,17.3) (Generator+Kanten+Deformation,17.3)};
+%     \legend{mAcc@5,mAcc@10,mAcc@20}
+%     \end{axis}
+% \end{tikzpicture}

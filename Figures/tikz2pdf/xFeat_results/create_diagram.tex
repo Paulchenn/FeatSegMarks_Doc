@@ -1,0 +1,17 @@
+% filepath: Figures/tikz2pdf/diagram/xFeat_ImageNet256_mAcc_standalone.tex
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % passe ggf. an deine TeX-Installation an
+
+% Falls das Hauptdokument Variablen/Makros wie \VarPicWidthD definiert,
+% überschreibe sie nicht: providecommand verwendet nur einen Ersatz wenn nicht vorhanden.
+\providecommand{\VarPicWidthD}{0.9\textwidth}
+
+% Falls du in den tikz-Files \acs o.ä. verwendest: einfache Ersatzdefinitionen
+\providecommand{\acs}[1]{#1}
+
+\begin{document}
+% Input des originalen TikZ-Codes (relativer Pfad zum Ordner dieses Files)
+\input{xFeat_ImageNet256_mAcc.tex}
+\end{document}

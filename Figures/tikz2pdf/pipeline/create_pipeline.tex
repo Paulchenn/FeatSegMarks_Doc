@@ -1,0 +1,13 @@
+%%%% filepath: Figures/tikz2pdf/diagram/pipeline_standalone.tex
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage[ngerman]{babel}
+\usepackage{tikz}
+\usetikzlibrary{positioning,calc,arrows.meta,shapes}
+
+% Falls \acs in deinem Hauptdokument durch glossaries/acronyms definiert wird,
+% hier eine einfache Ersatzdefinition für die Standalone-Kompilierung:
+\providecommand{\acs}[1]{#1}
+
+\begin{document}
+\input{pipeline.tex}
+\end{document}
