@@ -1,46 +1,78 @@
 \chapter{Einführung}
 \label{ch:Einfuehrung}
-\todo[inline]{Einführung schreiben}
+
+Industrielle Bildverarbeitung steht vor der Herausforderung, robuste und schnell auswertbare Bildmerkmale für regelungsnahe Aufgaben bereitzustellen. In bildbasierten Regelkreisen (\emph{Visual Servoing}) bestimmt die Qualität der visuellen Merkmale maßgeblich Stabilität, Genauigkeit und Dynamik des Gesamtsystems. Klassische Detektoren liefern in kontrollierten Szenen stabile Ergebnisse, reagieren jedoch empfindlich auf Veränderung von Textur, Beleuchtung und Auflösung. Moderne, lernbasierte Verfahren erhöhen zwar die Effizienz, erben jedoch häufig einen \emph{Texture Bias}: Die Entscheidung stützt sich eher auf Oberflächenmuster als auf Form- und Konturinformation. Für Visual Servoing ist dies nachteilig, da sich Oberflächentexturen mit Blickwinkel, Material oder Sensorik stark verändern, während Kanten und Gestalt invariablere Bezugspunkte bieten.
+
+Vor diesem Hintergrund untersucht diese Arbeit einen generativen Vorverarbeitungsschritt, der Bilder so transformiert, dass formtragende Strukturen betont und irrelevante Texturanteile reduziert werden. Die Online-Erzeugung stellt sicher, dass Variationen nicht statisch vorprozessiert, sondern während des Trainings generiert werden und so eng mit den Optimierungszielen gekoppelt bleiben.
+
+Die Evaluation umfasst zwei Perspektiven: (a) eine generatornahe Analyse der Informationsnutzung (Kante vs. Textur) und (b) eine systemische Bewertung der Auswirkung auf nachgelagertes Feature-Matching mit \ac{xFeat} auf ImageNet256 und MegaDepth. So wird überprüft, ob die formorientierte Generierung nicht nur intern messbar ist, sondern auch in Matching-Güte und Pose-Schätzung einzahlt.
 
 
 \section{Problemstellung und Motivation}
 \label{sec:Problemstellung_Motivation}
-\todo[inline]{Problemstellung und Motivation überarbeiten}
-Im Masterstudiengang \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe ist ein Forschungs- und Entwicklungsprojekt vorgesehen.
-Im Rahmen dess wird in dieser Arbeit die Berechnung von Merkmalspunkten aus Segmentierungsmasken für Visual Servoing abgehandelt.
-Als Ergebnis soll ein Konzept zur robusten Featureextraktion aus Segmentierungsmasken erstellt werden, das für bildbasierte Regelungsverfahren in Robotersystemen verbessert.
-Im Fokus stehen Robustheit und Dynamik, da herkömmliche visuelle Steuerungen oft durch schwache Merkmalsqualität limitiert sind.
 
-Die visuelle Regelung gewinnt in der industriellen Robotik zunehmend an Bedeutung. Verfahren des Visual Servoing nutzen 
-Kamerabilder zur direkten Bewegungssteuerung und ermöglichen flexible Automatisierung. Die Qualität hängt jedoch stark von 
-den verwendeten Bildmerkmalen ab. Klassische Detektoren wie \ac{SIFT} oder \ac{ORB} sind effizient, reagieren aber empfindlich 
-auf Skalierungs-, Rotations- und Beleuchtungsänderungen, besonders in komplexen Szenen~\cite{lowe2004distinctive, rublee2011orb}. 
-Neuere Arbeiten – etwa \textcite{potje2024xfeat} – stellen mit Accelerated Features (\ac{xFeat}) eine hardwareunabhängige, 
-schnelle und präzise Methode vor, die sich auch für mobile Systeme eignet. Gleichzeitig zeigen Studien, dass viele neuronale 
-Netze einem \emph{Texture Bias} unterliegen: Objekte werden anhand von Oberflächenmustern statt Formen erkannt, was sie 
-anfällig für Veränderungen wie Rauschen oder Cartoonisierung macht~\cite{potje2024xfeat}. Menschen hingegen orientieren sich 
-stärker an Gestalt und Kontur (\emph{Shape Bias}). Um den Texture Bias zu reduzieren, können Datenaugmentationsmethoden 
-eingesetzt werden, die Netzwerke gezielt auf Formmerkmale trainieren~\cite{potje2024xfeat}.
+Zuverlässige Merkmale sind die Grundlage bildbasierter Regelung und Greifplanung. In realen Produktionsumgebungen variieren Textur, Beleuchtung, Blickwinkel und Materialspezifika jedoch stark. Klassische Keypoint-Detektoren (\ac{SIFT}, \ac{ORB}) geraten hier an Grenzen; zugleich zeigen neuere, effiziente Verfahren wie \ac{xFeat} eine hohe Performanz, sind aber von den statistischen Eigenschaften der Trainingsdaten abhängig. Insbesondere \emph{Texture Bias} führt dazu, dass für die Regelung sekundäre Oberflächenmuster gegenüber primären Formmerkmalen übergewichtet werden.
 
-Vor diesem Hintergrund bieten Segmentierungsmasken neue Möglichkeiten. Moderne Netze wie Mask~\ac{R-CNN} erkennen Objekte 
-nicht nur, sondern grenzen sie auch präzise von ihrer Umgebung ab~\cite{he2017maskrcnn}. Diese zusätzlichen semantischen 
-Informationen bilden eine solide Grundlage für die Merkmalsextraktion. In Kombination mit effizienten Architekturen 
-wie \ac{xFeat} und robustheitssteigernden Trainingsmethoden ergibt sich ein vielversprechender Ansatz für zuverlässigere 
-und schnellere visuelle Regelungsverfahren.
+\newpage
 
+Die zentrale Problemstellung lautet daher: \emph{Wie lässt sich die Informationsnutzung eines Generators so steuern und nachweisen, dass für nachgelagerte Matching- und Regelungsaufgaben formtragende Strukturen dominieren?} 
+Daraus ergeben sich drei Motivationslinien:
+\begin{enumerate}
+    \item \textbf{Form statt Textur als robuste Bezugsgröße.} Konturen und Kanten variieren über Domänen und Beleuchtungen weniger stark als Texturen und sind damit für Visual Servoing besonders geeignet.
+    \item \textbf{End-to-End-Differenzierbarkeit der Vorverarbeitung.} Kanten sollten \emph{dicht} und differenzierbar extrahiert werden, um als optimierbarer Lernsignalträger in die generative Abbildung und die Verlustfunktion einzufließen (DS-EMSE).
+    \item \textbf{Diagnose der Informationsquelle.} Ein label-freies, pipelinekonsistentes Diagnosetool misst, ob der Generator Änderungen in $E$ stärker berücksichtigt als in $I_{\text{txt}}$ und damit tatsächlich Gestaltinformation priorisiert.
+\end{enumerate}
 
-\section{Ziel der Arbeit}
-\label{sec:Zielstellung}
-Das Ziel der Arbeit ist die Entwicklung eines Konzepts zur robusten Feature-Extraktion aus Segmentierungsmasken 
-für Visual Servoing. Die Qualität der Merkmale soll so verbessert werden, dass bildbasierte Regelungs- und Greifverfahren 
-in Robotersystemen zuverlässiger und dynamischer arbeiten können. Während klassische Feature-Detektoren in komplexen 
-Szenen häufig versagen, zeigen neuere Verfahren wie \ac{xFeat} zwar eine höhere Effizienz, sind jedoch stark vom 
-\emph{Texture Bias} neuronaler Netze geprägt. Um dieses Problem zu adressieren, untersucht die Arbeit, wie 
-Segmentierungsmasken und generative Verfahren kombiniert werden können, um den \emph{Shape Bias} zu fördern und 
-formbasierte Merkmale gezielt zu verstärken. Auf diese Weise soll eine Grundlage für robustere und stabilere 
-visuelle Regelungsverfahren geschaffen werden.
+Daraus leiten sich die leitenden Forschungsfragen ab:
+\begin{itemize}
+    \item \textbf{F1:} Steigt das Verhältnis \(\big\lVert \tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}E}\big\rVert / \big\lVert \tfrac{\mathrm{d}L_{\text{edge}}}{\mathrm{d}I_{\text{txt}}}\big\rVert\) unter Pipeline- und Architektur-Anpassungen und weist damit auf eine stärkere Kantennutzung im Generator hin?
+    \item \textbf{F2:} Verbessert eine formorientierte Generierung nachgelagerte Matching-Metriken (\ac{mAcc}, \ac{AUC}) oder entstehen Zielinkongruenzen zwischen generativer Optimierung und descriptorgetriebenem Matching?
+    \item \textbf{F3:} Welche Rolle spielen Auflösung und Domäne (ImageNet256 vs. MegaDepth) für Übertragbarkeit und Wirksamkeit der Pipeline-Komponenten (DS-EMSE, TSD)?
+\end{itemize}
+
+Die Motivation dieser Arbeit liegt somit in der Entwicklung und \emph{belegbaren} Durchsetzung einer formorientierten Bildrepräsentation als Vorstufe zu \ac{xFeat}. Das vorgeschlagene Konzept verbindet Online-Augmentierung, differenzierbare Kantenextraktion und Generatorarchitektur zu einer konsistenten Pipeline und schließt mit einer generatornahen Diagnose die Lücke zwischen gewünschtem Bias (Shape) und tatsächlich genutzter Information.
 
 
+% \section{Problemstellung und Motivation}
+% \label{sec:Problemstellung_Motivation}
+% \todo[inline]{Problemstellung und Motivation überarbeiten}
+% Im Masterstudiengang \enquote{Robotik und Künstliche Intelligenz in der Produktion} der Hochschule Karlsruhe ist ein Forschungs- und Entwicklungsprojekt vorgesehen.
+% Im Rahmen dess wird in dieser Arbeit die Berechnung von Merkmalspunkten aus Segmentierungsmasken für Visual Servoing abgehandelt.
+% Als Ergebnis soll ein Konzept zur robusten Featureextraktion aus Segmentierungsmasken erstellt werden, das für bildbasierte Regelungsverfahren in Robotersystemen verbessert.
+% Im Fokus stehen Robustheit und Dynamik, da herkömmliche visuelle Steuerungen oft durch schwache Merkmalsqualität limitiert sind.
+
+% Die visuelle Regelung gewinnt in der industriellen Robotik zunehmend an Bedeutung. Verfahren des Visual Servoing nutzen 
+% Kamerabilder zur direkten Bewegungssteuerung und ermöglichen flexible Automatisierung. Die Qualität hängt jedoch stark von 
+% den verwendeten Bildmerkmalen ab. Klassische Detektoren wie \ac{SIFT} oder \ac{ORB} sind effizient, reagieren aber empfindlich 
+% auf Skalierungs-, Rotations- und Beleuchtungsänderungen, besonders in komplexen Szenen~\cite{lowe2004distinctive, rublee2011orb}. 
+% Neuere Arbeiten – etwa \textcite{potje2024xfeat} – stellen mit Accelerated Features (\ac{xFeat}) eine hardwareunabhängige, 
+% schnelle und präzise Methode vor, die sich auch für mobile Systeme eignet. Gleichzeitig zeigen Studien, dass viele neuronale 
+% Netze einem \emph{Texture Bias} unterliegen: Objekte werden anhand von Oberflächenmustern statt Formen erkannt, was sie 
+% anfällig für Veränderungen wie Rauschen oder Cartoonisierung macht~\cite{potje2024xfeat}. Menschen hingegen orientieren sich 
+% stärker an Gestalt und Kontur (\emph{Shape Bias}). Um den Texture Bias zu reduzieren, können Datenaugmentationsmethoden 
+% eingesetzt werden, die Netzwerke gezielt auf Formmerkmale trainieren~\cite{potje2024xfeat}.
+
+% Vor diesem Hintergrund bieten Segmentierungsmasken neue Möglichkeiten. Moderne Netze wie Mask~\ac{R-CNN} erkennen Objekte 
+% nicht nur, sondern grenzen sie auch präzise von ihrer Umgebung ab~\cite{he2017maskrcnn}. Diese zusätzlichen semantischen 
+% Informationen bilden eine solide Grundlage für die Merkmalsextraktion. In Kombination mit effizienten Architekturen 
+% wie \ac{xFeat} und robustheitssteigernden Trainingsmethoden ergibt sich ein vielversprechender Ansatz für zuverlässigere 
+% und schnellere visuelle Regelungsverfahren.
+
+
+% \section{Ziel der Arbeit}
+% \label{sec:Zielstellung}
+% Das Ziel der Arbeit ist die Entwicklung eines Konzepts zur robusten Feature-Extraktion aus Segmentierungsmasken 
+% für Visual Servoing. Die Qualität der Merkmale soll so verbessert werden, dass bildbasierte Regelungs- und Greifverfahren 
+% in Robotersystemen zuverlässiger und dynamischer arbeiten können. Während klassische Feature-Detektoren in komplexen 
+% Szenen häufig versagen, zeigen neuere Verfahren wie \ac{xFeat} zwar eine höhere Effizienz, sind jedoch stark vom 
+% \emph{Texture Bias} neuronaler Netze geprägt. Um dieses Problem zu adressieren, untersucht die Arbeit, wie 
+% Segmentierungsmasken und generative Verfahren kombiniert werden können, um den \emph{Shape Bias} zu fördern und 
+% formbasierte Merkmale gezielt zu verstärken. Auf diese Weise soll eine Grundlage für robustere und stabilere 
+% visuelle Regelungsverfahren geschaffen werden.
+
+
+
+\newpage
 
 \section{Aufbau der Arbeit}
 \label{sec:Aufbau der Arbeit}

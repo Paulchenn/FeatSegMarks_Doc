@@ -51,15 +51,9 @@ absichtlich Form- und Texturhinweise gegeneinander ausspielt \cite{geirhos2018te
 sbIS (Shape-Bias nach Islam) basiert auf der Korrelation von Feature-Maps und misst, in welchem Umfang die 
 Netzwerkausgaben zwischen Bildern mit gleicher Form, aber unterschiedlicher Textur 
 übereinstimmen \cite{islam2021shape}.
+
 Diese beiden Kennzahlen geben Aufschluss darüber, ob ein Modell eher Form- als Texturinformationen für seine 
-Entscheidungen nutzt.
-
-
-
-
-
-
-Da die in Abschnitt zuvor eingeführten Kennzahlen einen trainierten Klassifikator voraussetzen, kommen sie für die Bewertung eines isoliert trainierten Generators nicht in Frage. Stattdessen dient das bereits beschriebene Diagnosetool (siehe Abschnitt \ref{sec:DiagnoseTool}) zur direkten Prüfung, ob der Generator Forminformation aus der Kantenkarte $E$ gegenüber Texturinformation aus $I_{\text{txt}}$ bevorzugt. Zentral ist dabei der in Tabelle~\ref{tab:gen_eval} berichtete \emph{grad ratio edge $E$ over $I_{\text{txt}}$}:
+Entscheidungen nutzt.Da die in Abschnitt zuvor eingeführten Kennzahlen einen trainierten Klassifikator voraussetzen, kommen sie für die Bewertung eines isoliert trainierten Generators nicht in Frage. Stattdessen dient das bereits beschriebene Diagnosetool (siehe Abschnitt \ref{sec:DiagnoseTool}) zur direkten Prüfung, ob der Generator Forminformation aus der Kantenkarte $E$ gegenüber Texturinformation aus $I_{\text{txt}}$ bevorzugt. Zentral ist dabei der in Tabelle~\ref{tab:gen_eval} berichtete \emph{grad ratio edge $E$ over $I_{\text{txt}}$}:
 \begin{equation}
     \frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}
 \end{equation}
@@ -82,8 +76,6 @@ Tabelle~\ref{tab:gen_eval} fasst die Ergebnisse zusammen. Die Konfiguration mit 
     \end{tabularx}
 \end{table}
 
-
-
 % Darüber hinaus wird die Robustheit der mit Generatoraugmentierung trainierten Netze untersucht. 
 % Dabei kommen verschiedene adversariale Angriffe zum Einsatz, die gezielt kleine Bildstörungen einfügen, 
 % um Fehlklassifikationen hervorzurufen. FGSM (Fast Gradient Sign Method) ist ein einstufiger Angriff, bei dem durch 
@@ -95,30 +87,6 @@ Tabelle~\ref{tab:gen_eval} fasst die Ergebnisse zusammen. Die Konfiguration mit 
 % Zusätzlich werden Backdoor-Szenarien betrachtet, bei denen Modelle durch manipulierte 
 % Trainingsdaten so präpariert werden, dass sie unter einem spezifischen Trigger gezielt falsche Vorhersagen 
 % treffen, während sie auf normalen Daten korrekt arbeiten \cite{He_2023_ICCV}.
-
-
-\begin{table}[htbp]
-    \centering
-    \caption{Evaluation der Anpassungen in der Trainingspipeline des Generators sowie diessen Architektur.}
-    \label{tab:gen_eval}
-    \begin{tabularx}{\textwidth}{lYY}
-        \toprule
-        \textbf{Konfiguration} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 1} & \textbf{$\frac{\left\|{dL_{edge}}{dE}\right\|}{\left\|{dL_{edge}}{dI}\right\|}$; Stage 2} \\
-        %\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-        % & Stage 1 & Stage 2\\\
-        \midrule
-        ohne Netzwerkanpassungen & 0,14 & -\\
-        Downsampling=32; $\lambda_{TSD}=0,035$ & 0,40 & 0,50\\
-        Downsampling=128; $\lambda_{TSD}=0,015$ & 0,42 & 0,28\\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-% \begin{figure}[htbp]
-%     \centering
-%     \input{Figures/tikz/generator_evaluation.tex}
-%     \caption{Evaluation der Anpassungen in der Trainingspipeline des Generators sowie diessen Architektur.}
-%     \label{fig:generator_evaluation}
-% \end{figure}
 
 
 

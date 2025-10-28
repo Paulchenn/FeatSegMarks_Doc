@@ -75,6 +75,8 @@ Zur Gesamteinschätzung genügen zwei Metriken (Mittel über alle inspizierten B
 
 Heuristik: $u_{\text{edge-underuse}} \gg 0$ und $r_{\text{grad}} \ll 1$ $\Rightarrow$ der Edge-Pfad wird unter\-nutzt (Textur dominiert). Ziel ist $u_{\text{edge-underuse}} \le 0$ sowie $r_{\text{grad}} \gtrsim 0{.}5$.
 
+\newpage
+
 %\paragraph{Achsendefinition für die Gradientenplots (vgl.\ Abschnitt~4.2).}
 \subsubsection{Interpretation der L2-Gradientennormen}% (Plot-Achsen, vgl.\ Graphen in Abschnitt~4.2).}
 Sei $L_{\mathrm{edge}}$ der kantenorientierte Fehler (z.\,B.\ $L_1$ zwischen Sobel($I_{\mathrm{out}}$) und Zielkante). Für eine Eingabebatch der Größe $B$ mit $C$ Kanälen und räumlicher Auflösung $H{\times}W$ betrachten wir die vollständigen Tensorgradienten von $L_{\mathrm{edge}}$ nach den Eingaben:
@@ -121,6 +123,8 @@ In der ersten Phase des Trainings wird keine Deformation der Kanten angestrebt.
 Stattdessen liegt der Fokus auf einer photorealistischen Bildgenerierung mit verstärkten Kanten und gleichzeitig reduzierter Textur. Der Generator des \ac{GAN} wird darauf trainiert, ein grob-generiertes Bild zu erzeugen, das sowohl die Informationen der Kantenkarte als auch die Farbstruktur des texturreduzierten Eingangsbilds integriert.
 Ziel ist, dass das Generator-Netz die relevanten Informationen aus der Kantenkarte maximal nutzt und lediglich für die Farbdarstellung auf das texturreduzierte Bild zurückgreift.
 
+\newpage
+
 Die Texturreduktion des Eingangsbildes erfolgt durch Downsampling des Originalbildes und anschließender bilinearer Interpolation~\cite{He_2023_ICCV}:
 
 \begin{equation}
@@ -159,6 +163,8 @@ Um den Einfluss der Kantenkarte auf die Bildgenerierung zu erhöhen und den Shap
 Dieser Ansatz ermöglicht es, die Intensität der Texturreduktion dynamisch zu steuern. 
 Die Implementierung erfolgt über eine Downsampling-Funktion, die sowohl die Stärke der Unschärfe als auch eine vollständige Texturentfernung probabilistisch steuert. Der Ablauf dieser \ac{TSG} ist in Abbildung~\ref{fig:TSG} dargestellt. 
 
+\newpage
+
 Es wird mit einer Wahrscheinlichkeit $p_{heavy}$ ein starkes Downsampling auf die geringe Größe $heavy_{down} \times heavy_{down}$ angewendet. Andernfalls wird der Downsampling-Faktor zufällig innerhalb des Bereichs $[down_{min}, down_{max}]$ gewählt, wodurch eine moderate Texturreduktion erreicht wird.
 Zusätzlich besteht eine Wahrscheinlichkeit $p_{zero}$, dass das Eingangsbild vollständig mit Nullwerten gefüllt wird, was einem harten Texture-Dropout entspricht. 
 Unabhängig von der gewählten Methode wird das Bild anschließend wieder auf die Originalgröße interpoliert.
@@ -180,7 +186,11 @@ Die Kantenkarte muss zwei zentrale Anforderungen erfüllen, um in der Online-Dat
 
 Die ursprüngliche \ac{EMSE}-Methode aus~\cite{He_2023_ICCV} basiert auf dem nicht-differenzierbaren Canny-Algorithmus und erfordert eine aufwendige \ac{CPU}-Verarbeitung. Dies macht sie für eine nahtlose Integration in eine \textbf{End-to-End}-Trainingspipeline ungeeignet, da Backpropagation unterbrochen wird und ein erheblicher Leistungsverlust entsteht.
 
-Zur Behebung dieser Einschränkungen schlagen wir die {\ac{DS-EMSE}-Methode vor. Diese implementiert eine vollständig differenzierbare Kantenextraktion direkt in PyTorch unter Verwendung des Sobel-Filters~\cite{Sobel2014operator}. Die Vorgehensweise umfasst die folgenden Schritte:
+Zur Behebung dieser Einschränkungen schlagen wir die {\ac{DS-EMSE}-Methode vor. Diese implementiert eine vollständig differenzierbare Kantenextraktion direkt in PyTorch unter Verwendung des Sobel-Filters~\cite{Sobel2014operator}.
+
+\newpage
+
+Die Vorgehensweise umfasst die folgenden Schritte:
 \begin{enumerate}
     \item Das Eingangsbild ($I_{orig}$) wird in ein Graustufenbild konvertiert, wodurch die Berechnung vereinfacht und der Fokus auf Luminanzunterschiede gelegt wird.
     \item Ein zweidimensionales Faltungsnetzwerk wendet horizontale ($K_x$) und vertikale ($K_y$) Sobel-Filter an~\cite{Sobel2014operator}, wodurch die Gradienten in x- und y-Richtung ($G_x$, $G_y$) berechnet werden.
@@ -216,10 +226,11 @@ Im Gegensatz zur binären Kantenkarte der ursprünglichen EMSE liefert \ac{DS-EM
     \label{fig:cmp_emse_ds_emse}
 \end{figure}
 
-\subsubsection{Parametrisierung und Stabilisierung der Kantenextraktion}
-Qualität und Stabilität der generierten Kantenkarten hängen maßgeblich von der Schwellenbildung und der nachgeschalteten Filterung ab. Um diese Abhängigkeit kontrolliert und datenabhängig zu justieren, kommt ein interaktives Edge-Tuning zum Einsatz (vgl.\ Abbildung~\ref{fig:edge_tuner_tool}). Die Verarbeitungskette lautet
+\newpage
 
-\noindent
+\subsubsection{Parametrisierung und Stabilisierung der Kantenextraktion}
+Qualität und Stabilität der generierten Kantenkarten hängen maßgeblich von der Schwellenbildung und der nachgeschalteten Filterung ab. Um diese Abhängigkeit kontrolliert und datenabhängig zu justieren, kommt ein interaktives Edge-Tuning zum Einsatz (vgl.\ Abbildung~\ref{fig:edge_tuner_tool}). Die Verarbeitungskette lautet:
+
 Vorfilterung (Pre-Blur) $\rightarrow$ Sobel-Magnitude $\rightarrow$
 $\sigma\!\bigl(\beta\cdot(\text{mag}-\tau)\bigr)$ $\rightarrow$
 morphologische Operatoren $\rightarrow$ Invertierung,
@@ -232,10 +243,10 @@ morphologische Operatoren $\rightarrow$ Invertierung,
     \label{fig:edge_tuner_tool}
 \end{figure}
 
+\newpage
+
 \subsubsection{Verwendete Einstellungen}
 In den gezeigten Edge-Tuner-Tool erweist sich folgender Parametersatz als robuster Kompromiss zwischen Kantenabdeckung und Rauschunterdrückung (vgl.\ die resultierenden Karten in Abbildung~4.5): Vorfilterung mit einer Kernelgröße von 3 (leichte Glättung; äquivalentes Gauß-\(\sigma \approx 1{,}0\)), keine Morphologie (Opening \(= 0\), Closing \(= 0\)), da bei \(3\times 3\)-Strukturelementen 2-px-Kanten durch die Erosion nicht invariant sind und die nachfolgende Dilatation sie nicht rekonstruieren kann, Schwelle \(\tau = 0{,}25\) und Steilheit \(\beta = 17{,}0\). Diese Konfiguration hält die Kantenkarten hinreichend „weich“ (gute Gradientenflüsse) und zugleich ausreichend selektiv, um dominante Konturen gegenüber feiner Textur zu bevorzugen.
-
-\newpage
 
 
 
@@ -292,6 +303,8 @@ Im Zentrum der Architektur werden die beiden Encoder-Repräsentationen zunächst
 Daraufhin wird ein Rauschvektor $z$ additiv eingebracht, der für die stochastische Variation in der Bildsynthese sorgt. 
 Dies erweitert die Architektur um eine \ac{GAN}-typische Komponente, die den Generator dazu befähigt, eine höhere Vielfalt plausibler Bildvarianten zu erzeugen.
 
+\newpage
+
 
 
 
@@ -326,6 +339,8 @@ Die Entscheidung für eine SegNet-ähnliche Architektur mit Erweiterungen bietet
 \end{itemize}
 
 Damit stellt die SegNet-basierte Architektur mit ihren Erweiterungen die Grundlage für die gesamte Online-Datenaugmentierung dar und verbindet die vorgelagerten Verarbeitungsschritte (Texturreduktion, \ac{DS-EMSE}, \ac{TSD}) mit der generativen Bildsynthese im \ac{GAN}.
+
+\newpage
 
 
 
